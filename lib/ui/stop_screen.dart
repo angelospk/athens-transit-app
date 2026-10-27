@@ -90,7 +90,7 @@ class _StopScreenState extends State<StopScreen> {
         final quiet = s.lines.where((l) => !groups.any((g) => g.$1.line == l)).toList();
         return Scaffold(
           appBar: AppBar(backgroundColor: t.ground, surfaceTintColor: Colors.transparent),
-          body: ListView(padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
+          body: ListView(padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + MediaQuery.paddingOf(context).bottom), children: [
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

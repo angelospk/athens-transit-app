@@ -60,12 +60,13 @@ class AlertService {
     await sync(store);
   }
 
-  // Notifications (Android 13+) and exact alarms (weekly rules). false when notifications are refused.
-  static Future<bool> ensurePermissions(BuildContext context) async {
+  // Notifications (Android 13+), and exact alarms when a weekly rule needs them. false when
+  // notifications are refused.
+  static Future<bool> ensurePermissions(BuildContext context, {bool weekly = false}) async {
     var p = await FlutterForegroundTask.checkNotificationPermission();
     if (p != NotificationPermission.granted) p = await FlutterForegroundTask.requestNotificationPermission();
     final android = _notes.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    if (android != null && await android.canScheduleExactNotifications() == false) {
+    if (weekly && android != null && await android.canScheduleExactNotifications() == false) {
       await android.requestExactAlarmsPermission();
     }
     return p == NotificationPermission.granted;
@@ -211,7 +212,7 @@ class RuleTask extends TaskHandler {
       final a = arr.first;
       final left = a.stopsLeft;
       final late = (a.delayS ?? 0) >= 90 ? ' · +${(a.delayS! / 60).round()}′' : ' · στην ώρα του';
-      title = '${r.line} · φτάνει στο ${r.stopName} σε ${offline ? '~' : ''}${(a.etaS / 60).round()}′';
+      title = a.etaS < 45 ? '${r.line} · φτάνει τώρα στο ${r.stopName}' : '${r.line} · φτάνει στο ${r.stopName} σε ${offline ? '~' : ''}${(a.etaS / 60).round()}′';
       text = [if (left != null) left == 1 ? 'επόμενη στάση' : '$left στάσεις', if (offline) 'χωρίς σήμα, εκτίμηση' else late.substring(3)].join(' · ');
       break;
     }

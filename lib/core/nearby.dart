@@ -108,3 +108,15 @@ const _plain = {'ά': 'α', 'έ': 'ε', 'ή': 'η', 'ί': 'ι', 'ϊ': 'ι', 'ΐ'
 
 /// For search: lower case, no Greek accents, final sigma as σ.
 String fold(String s) => s.toLowerCase().split('').map((c) => _plain[c] ?? c).join();
+
+/// Every line that stops at a stop named [name] within 200 m of the point (both sides of the street,
+/// and same-name stops the 150 m merge keeps apart).
+List<String> linesAt(TripIndex ix, String name, double lat, double lon) {
+  final per = _linesPerStop(ix);
+  final out = <String>{};
+  for (var i = 0; i < ix.s.length; i++) {
+    final s = ix.s[i];
+    if (s.$1 == name && distM((s.$2, s.$3), (lat, lon)) <= 200) out.addAll(per[i]);
+  }
+  return sortLines(out);
+}

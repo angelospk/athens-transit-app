@@ -238,8 +238,8 @@ class _MapScreenState extends State<MapScreen> {
       final i = int.tryParse(id.substring(1));
       if (i == null || i >= _ix!.s.length) return;
       final s = _ix!.s[i];
-      final near = nearbyStops(_ix!, (s.$2, s.$3), radiusM: 40, max: 1).firstOrNull;
-      Navigator.push(context, MaterialPageRoute(builder: (_) => StopScreen(stop: StopRef(name: s.$1, lat: s.$2, lon: s.$3, lines: near?.lines ?? const []))));
+      
+      Navigator.push(context, MaterialPageRoute(builder: (_) => StopScreen(stop: StopRef(name: s.$1, lat: s.$2, lon: s.$3, lines: linesAt(_ix!, s.$1, s.$2, s.$3)))));
     }
   }
 
@@ -375,9 +375,9 @@ class _NearSheet extends StatelessWidget {
                 : () async {
                     final ixx = ix ?? await d.api.trips();
                     if (!context.mounted) return;
-                    final n = nearbyStops(ixx, (lat!, lon!), radiusM: 60, max: 1).firstOrNull;
+                    final all = linesAt(ixx, name, lat!, lon!);
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => StopScreen(stop: StopRef(name: name, lat: lat, lon: lon, lines: n?.lines ?? lines))));
+                        MaterialPageRoute(builder: (_) => StopScreen(stop: StopRef(name: name, lat: lat, lon: lon, lines: all.isEmpty ? lines : all))));
                   },
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(dist == null ? (fav?.place == Place.work ? 'Δουλειά' : 'Η στάση σου') : 'Κοντά σου · ${dist.round()} μ.',

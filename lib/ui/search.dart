@@ -121,7 +121,7 @@ class _SearchFieldState extends State<SearchField> {
                   subtitle: Text(s.lines.join(', '), maxLines: 1, overflow: TextOverflow.ellipsis),
                   onTap: () {
                     _clear();
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => StopScreen(stop: StopRef(name: s.name, lat: s.lat, lon: s.lon, lines: s.lines))));
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => StopScreen(stop: StopRef(name: s.name, lat: s.lat, lon: s.lon, lines: linesAt(widget.ix!, s.name, s.lat, s.lon)))));
                   },
                 ),
             ]),

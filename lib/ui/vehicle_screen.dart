@@ -87,7 +87,7 @@ class _VehicleScreenState extends State<VehicleScreen> {
           ),
         );
     int kmh(double ms) => (ms * 3.6).round();
-    return ListView(padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
+    return ListView(padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + MediaQuery.paddingOf(context).bottom), children: [
       Row(children: [
         LineBadge(widget.line),
         const SizedBox(width: 12),

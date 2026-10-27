@@ -1,7 +1,10 @@
 // Screen 6 · Περισσότερα: theme, walking time to the home stop, links (ideas, wrong stop, API).
 
 import 'package:flutter/material.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../background/widget.dart';
 
 import 'theme.dart';
 import 'widgets.dart';
@@ -49,6 +52,15 @@ class SettingsScreen extends StatelessWidget {
           ]),
           Text('Για τον κανόνα «πότε να φύγω».', style: TextStyle(fontSize: 13, color: t.muted)),
           const SizedBox(height: 12),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.widgets_outlined),
+            title: const Text('Widget «Η στάση μου» στην αρχική οθόνη'),
+            onTap: () async {
+              await pushWidget(store, Deps.of(context).live, force: true);
+              await HomeWidget.requestPinWidget(androidName: 'StopWidgetProvider');
+            },
+          ),
           Divider(color: t.rule),
           for (final (label, url, icon) in _links)
             ListTile(

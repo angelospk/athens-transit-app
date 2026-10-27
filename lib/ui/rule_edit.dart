@@ -90,7 +90,7 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
     final v = variant, f = fav, l = line;
     if (v == null || f == null || l == null) return;
     final (i, stopId, _) = variants[v]!;
-    await AlertService.ensurePermissions(context);
+    await AlertService.ensurePermissions(context, weekly: true);
     final r = Rule(
       id: widget.rule?.id ?? '${DateTime.now().microsecondsSinceEpoch}',
       line: l,
@@ -141,7 +141,7 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
           TextButton(onPressed: ready ? _save : null, child: const Text('Αποθήκευση')),
         ],
       ),
-      body: ListView(padding: const EdgeInsets.all(20), children: [
+      body: ListView(padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.paddingOf(context).bottom), children: [
         if (store.favs.isEmpty)
           Text('Πρώτα αποθήκευσε μια στάση (καρτέλα Στάσεις).', style: TextStyle(color: t.muted))
         else

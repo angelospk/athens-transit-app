@@ -30,7 +30,7 @@ class _PickerState extends State<_Picker> {
     final others = store.myLines.where((l) => !widget.lines.contains(l)).length;
     final room = maxLines - others;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 24 + MediaQuery.paddingOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('Ποιες γραμμές σε νοιάζουν εδώ;', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),

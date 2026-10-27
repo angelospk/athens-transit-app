@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'background/service.dart';
+import 'background/widget.dart';
 import 'data/api.dart';
 import 'data/live.dart';
 import 'data/store.dart';
@@ -21,6 +22,7 @@ Future<void> main() async {
   final store = AppStore(prefs);
   final live = LiveHub(api)..watch(store.myLines);
   await AlertService.init(store);
+  live.addListener(() => pushWidget(store, live));
   runApp(Deps(store: store, live: live, api: api, child: const TransitApp()));
 }
 
@@ -73,6 +75,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     final d = Deps.of(context);
     d.live.pause(s != AppLifecycleState.resumed);
     if (s == AppLifecycleState.resumed) AlertService.sync(d.store);
+    if (s == AppLifecycleState.paused) pushWidget(d.store, d.live, force: true);
   }
 
   @override

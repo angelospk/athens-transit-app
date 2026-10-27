@@ -169,6 +169,12 @@ void main() {
       expect(got.first.distM, lessThan(30));
     });
 
+    test('linesAt: every line at stops of that name within 200 m', () {
+      expect(linesAt(ix, 'ΠΑΝΕΠΙΣΤΗΜΙΟ', 37.9800, 23.7330), ['040', '550']);
+      expect(linesAt(ix, 'ΑΚΑΔΗΜΙΑΣ', 37.9800, 23.7330), ['040'], reason: '~135 m away, same name');
+      expect(linesAt(ix, 'ΜΑΚΡΙΑ', 37.9800, 23.7330), isEmpty);
+    });
+
     test('fold ignores case, accents and final sigma', () {
       expect(fold('Πανεπιστήμιο'), fold('ΠΑΝΕΠΙΣΤΗΜΙΟ'));
       expect(fold('Λεωφόρος Κηφισίας'), 'λεωφοροσ κηφισιασ');

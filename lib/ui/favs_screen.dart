@@ -78,10 +78,10 @@ class _FavCard extends StatelessWidget {
           onTap: () async {
             final ix = await d.api.trips();
             if (!context.mounted) return;
-            final near = nearbyStops(ix, (fav.lat, fav.lon), radiusM: 60, max: 1).firstOrNull;
+            final all = linesAt(ix, fav.name, fav.lat, fav.lon);
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => StopScreen(stop: StopRef(name: fav.name, lat: fav.lat, lon: fav.lon, lines: near?.lines ?? fav.lines))),
+              MaterialPageRoute(builder: (_) => StopScreen(stop: StopRef(name: fav.name, lat: fav.lat, lon: fav.lon, lines: all.isEmpty ? fav.lines : all))),
             );
           },
           child: Row(children: [

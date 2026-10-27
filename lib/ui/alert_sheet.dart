@@ -89,7 +89,7 @@ class _AlertSheetState extends State<AlertSheet> {
 
   Future<void> _create({required bool weekly}) async {
     final d = Deps.of(context);
-    final ok = await AlertService.ensurePermissions(context);
+    final ok = await AlertService.ensurePermissions(context, weekly: weekly);
     if (!mounted) return;
     d.store.putRule(_rule(weekly: weekly));
     await AlertService.sync(d.store);
@@ -108,7 +108,7 @@ class _AlertSheetState extends State<AlertSheet> {
     final mean = meaning;
     final unit = mode == AlertMode.minutes ? '′ πριν φτάσει' : (n == 1 ? ' στάση πριν' : ' στάσεις πριν');
     return Padding(
-      padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + MediaQuery.of(context).viewInsets.bottom + MediaQuery.paddingOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           LineBadge(widget.line),
@@ -163,7 +163,7 @@ class _AlertSheetState extends State<AlertSheet> {
           value: live,
           onChanged: (x) => setState(() => live = x),
         ),
-        TextButton(onPressed: () => _create(weekly: true), child: const Text('Κάθε μέρα τέτοια ώρα;')),
+        TextButton(onPressed: () => _create(weekly: true), child: const Text('Κάθε καθημερινή τέτοια ώρα;')),
         const SizedBox(height: 4),
         SizedBox(
           width: double.infinity,

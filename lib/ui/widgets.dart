@@ -44,7 +44,7 @@ class LineBadge extends StatelessWidget {
   }
 }
 
-String mins(int s) => '${(s / 60).round()}′';
+String mins(int s) => s < 45 ? 'τώρα' : '${(s / 60).round()}′';
 
 // "+2′ καθυστέρηση", "στην ώρα του", or null when unmatched.
 (String, Color)? delayNote(BuildContext c, int? delayS) {
