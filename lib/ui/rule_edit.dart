@@ -104,6 +104,8 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
       startMin: start,
       endMin: end,
       live: live,
+      enabled: widget.rule?.enabled ?? true,
+      pausedUntilS: widget.rule?.pausedUntilS,
     );
     d.store.putRule(r);
     await AlertService.sync(d.store);

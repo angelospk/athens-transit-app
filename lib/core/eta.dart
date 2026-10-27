@@ -52,12 +52,15 @@ int? etaSeconds(LineStatic st, Vehicle v, int stopIndex, int nowS) {
   var i = 0;
   while (d > 0) {
     final seg = d < _stepM ? d : _stepM;
-    final sp = steps != null && i < steps.length ? (steps[i] ?? own) : _fallbackSpeed;
+    final step = steps != null && i < steps.length ? steps[i] : null;
+    final sp = steps == null || i >= steps.length ? _fallbackSpeed : (step != null && step > 0.5 ? step : own);
     t += seg / sp;
     d -= seg;
     i++;
   }
   final left = t - (nowS - v.positionAt);
+  // Only an old fix (the offline estimate) can run out this far: the bus has gone by.
+  if (left < -maxFixAgeS) return null;
   return (left < 0 ? 0 : left).round();
 }
 

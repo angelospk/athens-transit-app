@@ -21,7 +21,14 @@ Future<void> pushWidget(AppStore store, LiveHub live, {bool force = false}) asyn
   _lastPush = now;
   try {
     final favs = store.favsByTime(DateTime.now().toUtc());
-    if (favs.isEmpty) return;
+    if (favs.isEmpty) {
+      // Back to the layout's own text.
+      for (final k in ['w_title', 'w_sub', 'w_rows', 'w_at']) {
+        await HomeWidget.saveWidgetData<String>(k, null);
+      }
+      await HomeWidget.updateWidget(androidName: _provider);
+      return;
+    }
     final f = favs.first;
     final groups = groupArrivals(live.arrivalsNear(f.name, f.lat, f.lon, only: f.lines));
     final rows = [

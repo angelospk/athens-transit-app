@@ -4,6 +4,7 @@
 // service. No push server is needed: the phone does the watching (the bot's web push stays for the site).
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
@@ -56,7 +57,7 @@ class AlertService {
       foregroundTaskOptions: ForegroundTaskOptions(eventAction: ForegroundTaskEventAction.repeat(_pollMs), allowWakeLock: true),
     );
     await _initNotes();
-    await AndroidAlarmManager.initialize();
+    if (Platform.isAndroid) await AndroidAlarmManager.initialize();
     await sync(store);
   }
 
@@ -94,6 +95,7 @@ class AlertService {
       );
 
   static Future<void> _scheduleNext(List<Rule> rules, DateTime now) async {
+    if (!Platform.isAndroid) return;
     await AndroidAlarmManager.cancel(_alarmId);
     DateTime? next;
     for (final r in rules) {
@@ -101,8 +103,12 @@ class AlertService {
       if (s != null && (next == null || s.isBefore(next))) next = s;
     }
     if (next == null) return;
+    // Without the exact-alarm permission the plugin would skip an exact alarm silently: a late start
+    // beats none.
+    final android = _notes.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final exact = await android?.canScheduleExactNotifications() ?? true;
     await AndroidAlarmManager.oneShotAt(next.toLocal(), _alarmId, alarmFired,
-        exact: true, wakeup: true, allowWhileIdle: true, rescheduleOnReboot: true);
+        exact: exact, wakeup: true, allowWhileIdle: true, rescheduleOnReboot: true);
   }
 }
 
@@ -114,6 +120,9 @@ Future<void> alarmFired() async {
   final prefs = await SharedPreferences.getInstance();
   final now = DateTime.now().toUtc();
   final rules = _rulesFrom(prefs);
+  // The alarm is one-shot: set the next start now, so the rule keeps running with the app closed.
+  await AndroidAlarmManager.initialize();
+  await AlertService._scheduleNext(rules, now.add(const Duration(minutes: 1)));
   if (!rules.any((r) => r.activeAt(now.add(const Duration(minutes: 1))))) return;
   FlutterForegroundTask.init(
     androidNotificationOptions: AndroidNotificationOptions(channelId: 'live', channelName: 'Live πορεία λεωφορείου', onlyAlertOnce: true),
@@ -175,7 +184,7 @@ class RuleTask extends TaskHandler {
       }
       final lives = <String, LineLive>{};
       var offline = false;
-      for (final line in {for (final r in active) r.line}) {
+      for (final line in {for (final r in active) r.line}.take(maxLines)) {
         try {
           _statics[line] ??= await _api.lineStatic(line);
           lives[line] = await _api.live(line);

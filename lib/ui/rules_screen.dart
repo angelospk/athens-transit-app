@@ -100,7 +100,8 @@ class RulesScreen extends StatelessWidget {
   static String _next(Rule r, DateTime now) {
     final n = nextStartUtc(r, now);
     if (n == null) return '';
-    final days = n.difference(now).inHours ~/ 24;
+    final a = athensWall(now), b = athensWall(n);
+    final days = DateTime.utc(b.year, b.month, b.day).difference(DateTime.utc(a.year, a.month, a.day)).inDays;
     final when = days == 0 ? 'σήμερα' : days == 1 ? 'αύριο' : 'σε $days μέρες';
     return 'Επόμενη: $when ${hm(r.startMin)}';
   }

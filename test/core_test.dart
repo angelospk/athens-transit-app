@@ -123,10 +123,24 @@ void main() {
 
     test('ETA never negative, null when passed or unknown variant', () {
       final v = vehicleAt(1990, next: 's2', at: 1000, speeds: List.filled(8, 5.0));
-      expect(etaSeconds(st, v, 2, 2000), 0);
+      expect(etaSeconds(st, v, 2, 1010), 0);
       expect(etaSeconds(st, vehicleAt(2500, next: 's3'), 2, 1000), isNull);
       final other = Vehicle.fromJson({'id': 'x', 'lat': north(500).$1, 'lon': lon0, 'position_at': 1000, 'variant': 'nope', 'next_stop_id': 's1'});
       expect(etaSeconds(st, other, 2, 1000), isNull);
+    });
+
+    test('ETA: a zero or negative step speed falls back to the vehicle speed', () {
+      final v = vehicleAt(1000, next: 's2', at: 1000, speeds: List.filled(8, 0.0), speed: 10);
+      expect(etaSeconds(st, v, 2, 1000)!, closeTo(100, 5));
+      final w = vehicleAt(1000, next: 's2', at: 1000, speeds: List.filled(8, -1.0), speed: null);
+      expect(etaSeconds(st, w, 2, 1000)!, closeTo(1000 / 4.2, 6));
+    });
+
+    test('ETA: an old fix whose estimate ran out more than 120 s ago is dropped', () {
+      // ~2 s from the stop at the fix; 1000 s later the bus has surely gone by.
+      final v = vehicleAt(1990, next: 's2', at: 1000, speeds: List.filled(8, 5.0));
+      expect(etaSeconds(st, v, 2, 1100), 0, reason: 'within 120 s: still "now"');
+      expect(etaSeconds(st, v, 2, 2000), isNull);
     });
 
     test('arrivalsAt lists live vehicles before the stop, soonest first', () {

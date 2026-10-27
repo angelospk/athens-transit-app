@@ -19,6 +19,8 @@ class LiveHub extends ChangeNotifier {
   final statics = <String, LineStatic>{};
   final _timers = <String, Timer>{};
   final _backoff = <String, int>{};
+  final _due = <String, int>{}; // ms epoch: the earliest next poll, kept across pause/resume
+  final _inFlight = <String>{};
   final _rng = Random();
   Set<String> _watched = {};
   bool _paused = false;
@@ -54,7 +56,7 @@ class LiveHub extends ChangeNotifier {
       _timers.clear();
     } else {
       for (final l in _watched) {
-        _start(l);
+        _pollWhenDue(l);
       }
     }
   }
@@ -70,11 +72,18 @@ class LiveHub extends ChangeNotifier {
         notifyListeners();
       }
     }
-    await _poll(line);
+    _pollWhenDue(line);
+  }
+
+  // Never before the line's deadline, so a quick pause/resume or re-watch stays within the contract.
+  void _pollWhenDue(String line) {
+    final wait = max(0, (_due[line] ?? 0) - DateTime.now().millisecondsSinceEpoch);
+    _timers[line]?.cancel();
+    _timers[line] = Timer(Duration(milliseconds: wait), () => _poll(line));
   }
 
   Future<void> _poll(String line) async {
-    if (!_watched.contains(line) || _paused) return;
+    if (!_watched.contains(line) || _paused || !_inFlight.add(line)) return;
     int delayMs;
     try {
       statics[line] ??= await api.lineStatic(line);
@@ -91,7 +100,10 @@ class LiveHub extends ChangeNotifier {
       if (!warm) offline.add(line);
       final b = _backoff[line] = min((_backoff[line] ?? 5000) * 2, 120000);
       delayMs = max(b, 10000);
+    } finally {
+      _inFlight.remove(line);
     }
+    _due[line] = DateTime.now().millisecondsSinceEpoch + delayMs;
     notifyListeners();
     if (!_watched.contains(line) || _paused) return;
     _timers[line]?.cancel();

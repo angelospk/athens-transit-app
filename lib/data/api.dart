@@ -73,7 +73,7 @@ class Api {
 
   Future<LineLive> live(String line) async {
     final j = await _get('$apiBase/v1/lines/${Uri.encodeComponent(line)}');
-    await _cache.write('live_$line', j);
+    await _cache.write('live_$line', j).catchError((_) {}); // a failed save must not fail the fetch
     return LineLive.fromJson(j);
   }
 

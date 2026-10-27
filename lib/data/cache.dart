@@ -28,7 +28,8 @@ class DiskCache {
 
   Future<void> write(String key, Object? json) async {
     final f = await _file(key);
-    final tmp = File('${f.path}.tmp');
+    // Own temp name per write: the UI and the alert service isolates may write the same key.
+    final tmp = File('${f.path}.$pid.${DateTime.now().microsecondsSinceEpoch}.tmp');
     await tmp.writeAsString(jsonEncode(json));
     await tmp.rename(f.path);
   }
