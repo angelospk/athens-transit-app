@@ -122,7 +122,7 @@ Future<void> alarmFired() async {
   final rules = _rulesFrom(prefs);
   // The alarm is one-shot: set the next start now, so the rule keeps running with the app closed.
   await AndroidAlarmManager.initialize();
-  await AlertService._scheduleNext(rules, now.add(const Duration(minutes: 1)));
+  await AlertService._scheduleNext(rules, now); // strictly after now: never this same start again
   if (!rules.any((r) => r.activeAt(now.add(const Duration(minutes: 1))))) return;
   FlutterForegroundTask.init(
     androidNotificationOptions: AndroidNotificationOptions(channelId: 'live', channelName: 'Live πορεία λεωφορείου', onlyAlertOnce: true),

@@ -3,6 +3,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:path_provider/path_provider.dart';
 
@@ -29,7 +30,7 @@ class DiskCache {
   Future<void> write(String key, Object? json) async {
     final f = await _file(key);
     // Own temp name per write: the UI and the alert service isolates may write the same key.
-    final tmp = File('${f.path}.$pid.${DateTime.now().microsecondsSinceEpoch}.tmp');
+    final tmp = File('${f.path}.$pid.${DateTime.now().microsecondsSinceEpoch}.${Random().nextInt(1 << 32)}.tmp');
     await tmp.writeAsString(jsonEncode(json));
     await tmp.rename(f.path);
   }

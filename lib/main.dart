@@ -23,6 +23,7 @@ Future<void> main() async {
   final live = LiveHub(api)..watch(store.myLines);
   await AlertService.init(store);
   live.addListener(() => pushWidget(store, live));
+  store.addListener(() => pushWidget(store, live, force: true)); // a removed or reordered stop shows at once
   runApp(Deps(store: store, live: live, api: api, child: const TransitApp()));
 }
 
