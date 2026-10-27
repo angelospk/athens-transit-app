@@ -245,6 +245,16 @@ void main() {
       expect(w3.check([byMin], st, live, 1010), isEmpty);
     });
 
+    test('watcher ignores a fix older than 120 s (it says nothing about now)', () {
+      final st = {'T1': straightLine()};
+      final live = {
+        'T1': LineLive(line: 'T1', updatedAt: 1000, nextUpdateAt: 1030, vehicles: [
+          vehicleAt(1900, next: 's2', at: 1000, speeds: List.filled(8, 5.0)),
+        ])
+      };
+      expect(RuleWatcher().check([rule()], st, live, 1000 + 121), isEmpty);
+    });
+
     test('hit text matches the web wording', () {
       expect(hitText(const RuleHit(ruleId: 'r', line: '040', vehicleId: 'x', stopsLeft: 1, etaS: 50, delayS: null), 'ΠΑΝΕΠΙΣΤΗΜΙΟ'),
           'Το 040 έρχεται: επόμενη στάση του η ΠΑΝΕΠΙΣΤΗΜΙΟ.');
