@@ -73,6 +73,17 @@ class AlertService {
     return p == NotificationPermission.granted;
   }
 
+  // Exact alarms (Android 12+ special access; off by default for new installs on Android 14). Without
+  // them a weekly rule still starts, through an inexact alarm that Android may delay by some minutes.
+  static Future<bool> exactAllowed() async {
+    if (!Platform.isAndroid) return true;
+    final android = _notes.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    return await android?.canScheduleExactNotifications() ?? true;
+  }
+
+  static Future<void> askExact() async =>
+      _notes.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestExactAlarmsPermission();
+
   // Start or stop the service for the rules active now, and set the alarm for the next weekly start.
   static Future<void> sync(AppStore store) async {
     final now = DateTime.now().toUtc();
@@ -105,10 +116,8 @@ class AlertService {
     if (next == null) return;
     // Without the exact-alarm permission the plugin would skip an exact alarm silently: a late start
     // beats none.
-    final android = _notes.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    final exact = await android?.canScheduleExactNotifications() ?? true;
     await AndroidAlarmManager.oneShotAt(next.toLocal(), _alarmId, alarmFired,
-        exact: exact, wakeup: true, allowWhileIdle: true, rescheduleOnReboot: true);
+        exact: await exactAllowed(), wakeup: true, allowWhileIdle: true, rescheduleOnReboot: true);
   }
 }
 

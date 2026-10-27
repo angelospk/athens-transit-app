@@ -17,9 +17,9 @@ int? stopsLeft(List<String> stops, int i, Vehicle v, int nowS) {
   return i - k + 1;
 }
 
-/// Seconds until [v] reaches stops[stopIndex] of its variant, or null (passed, unknown variant,
-/// off the route).
-int? etaSeconds(LineStatic st, Vehicle v, int stopIndex, int nowS) {
+/// Metres along the shape from [v] to stops[stopIndex] of its variant (negative once past it), or
+/// null: unknown variant, off the route.
+double? metresToStop(LineStatic st, Vehicle v, int stopIndex) {
   final vid = v.variant;
   final variant = vid == null ? null : st.variants[vid];
   if (vid == null || variant == null) return null;
@@ -42,9 +42,27 @@ int? etaSeconds(LineStatic st, Vehicle v, int stopIndex, int nowS) {
     if (c.offM < best.offM) best = c;
   }
 
-  var d = offs[stopIndex] - best.s;
-  if (d < -_passedM) return null;
-  if (d < 0) d = 0;
+  return offs[stopIndex] - best.s;
+}
+
+/// The position alone puts [v] past stops[stopIndex]: every leg of the shape it could be on is past
+/// the stop, so a shape that doubles back near the stop never counts (whatever next_stop_id says).
+bool pastByPosition(LineStatic st, Vehicle v, int stopIndex) {
+  final vid = v.variant;
+  final variant = vid == null ? null : st.variants[vid];
+  if (vid == null || variant == null) return false;
+  final offs = st.offsetsFor(vid);
+  if (stopIndex < 0 || stopIndex >= offs.length) return false;
+  final cands = projectCandidates(variant.shape, (v.lat, v.lon));
+  return cands.isNotEmpty && cands.every((c) => c.s - offs[stopIndex] > _passedM);
+}
+
+/// Seconds until [v] reaches stops[stopIndex] of its variant, or null (passed, unknown variant,
+/// off the route).
+int? etaSeconds(LineStatic st, Vehicle v, int stopIndex, int nowS) {
+  final m = metresToStop(st, v, stopIndex);
+  if (m == null || m < -_passedM) return null;
+  var d = m < 0 ? 0.0 : m;
 
   final steps = v.pathSpeeds;
   final own = (v.speed ?? 0) > 0.5 ? v.speed! : _fallbackSpeed;

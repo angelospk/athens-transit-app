@@ -90,6 +90,7 @@ class _AlertSheetState extends State<AlertSheet> {
   Future<void> _create({required bool weekly}) async {
     final d = Deps.of(context);
     final ok = await AlertService.ensurePermissions(context, weekly: weekly);
+    final exact = !weekly || await AlertService.exactAllowed();
     if (!mounted) return;
     d.store.putRule(_rule(weekly: weekly));
     await AlertService.sync(d.store);
@@ -97,7 +98,7 @@ class _AlertSheetState extends State<AlertSheet> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(ok
-          ? (weekly ? 'Κανόνας: Δε–Πα τέτοια ώρα.' : 'Θα σε ειδοποιήσω για το ${widget.line}.')
+          ? (weekly ? 'Κανόνας: Δε–Πα τέτοια ώρα.${exact ? '' : ' Χωρίς άδεια για ακριβή ξυπνητήρια μπορεί να ξεκινά λίγα λεπτά αργότερα.'}' : 'Θα σε ειδοποιήσω για το ${widget.line}.')
           : 'Χωρίς άδεια ειδοποιήσεων δεν μπορώ να σε ειδοποιήσω.'),
     ));
   }

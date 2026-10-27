@@ -31,15 +31,16 @@ LineStatic straightLine() => LineStatic.fromJson({
       },
     });
 
-Vehicle vehicleAt(double m, {String? next, int at = 1000, List<double?>? speeds, double? speed = 5, int? delay}) =>
+Vehicle vehicleAt(double m,
+        {String? next, int at = 1000, List<double?>? speeds, double? speed = 5, int? delay, String? id, String? trip, bool noTrip = false, String variant = 'v1'}) =>
     Vehicle.fromJson({
-      'id': 'bus$m',
+      'id': id ?? 'bus$m',
       'lat': north(m).$1,
       'lon': north(m).$2,
       'bearing': 0,
       'position_at': at,
-      'variant': 'v1',
-      'trip_id': 'trip$m',
+      'variant': variant,
+      'trip_id': noTrip ? null : (trip ?? 'trip$m'),
       'delay_s': delay,
       'next_stop_id': next,
       'speed': speed,
@@ -269,6 +270,84 @@ void main() {
       // Survives a restart through its snapshot.
       final w3 = RuleWatcher.fromJson(jsonDecode(jsonEncode(w.toJson())));
       expect(w3.check([byMin], st, live, 1010), isEmpty);
+    });
+
+    test('watcher: one bus is one alert, whether or not its trip id shows up later', () {
+      final st = {'T1': straightLine()};
+      LineLive feed(Vehicle v) => LineLive(line: 'T1', updatedAt: 1000, nextUpdateAt: 1030, vehicles: [v]);
+      final w = RuleWatcher();
+      final r = rule();
+      final first = vehicleAt(1200, next: 's2', speeds: List.filled(8, 5.0), id: 'A', noTrip: true);
+      expect(w.check([r], st, {'T1': feed(first)}, 1000), hasLength(1));
+      final named = vehicleAt(1300, next: 's2', at: 1030, speeds: List.filled(8, 5.0), id: 'A', trip: 'T-77');
+      expect(w.check([r], st, {'T1': feed(named)}, 1030), isEmpty, reason: 'trip id appeared: same trip');
+      // Missing from one poll (GPS gap) does not reset it.
+      expect(w.check([r], st, {'T1': LineLive(line: 'T1', updatedAt: 1060, nextUpdateAt: 1090, vehicles: const [])}, 1060), isEmpty);
+      expect(w.check([r], st, {'T1': feed(vehicleAt(1400, next: 's2', at: 1090, speeds: List.filled(8, 5.0), id: 'A', noTrip: true))}, 1090), isEmpty);
+    });
+
+    test('watcher: the same bus alerts again on its next trip', () {
+      final st = {'T1': straightLine()};
+      LineLive feed(Vehicle v, int at) => LineLive(line: 'T1', updatedAt: at, nextUpdateAt: at + 30, vehicles: [v]);
+      final r = rule();
+      Vehicle near(int at) => vehicleAt(1200, next: 's2', at: at, speeds: List.filled(8, 5.0), id: 'A', noTrip: true);
+
+      // Seen past the stop, then back before it (a loop or the next run of the same direction).
+      final w = RuleWatcher();
+      expect(w.check([r], st, {'T1': feed(near(1000), 1000)}, 1000), hasLength(1));
+      expect(w.check([r], st, {'T1': feed(vehicleAt(2500, next: 's3', at: 1300, id: 'A', noTrip: true), 1300)}, 1300), isEmpty);
+      expect(w.check([r], st, {'T1': feed(near(3000), 3000)}, 3000), hasLength(1));
+
+      // Seen on the other direction, then back on this one.
+      final w2 = RuleWatcher();
+      expect(w2.check([r], st, {'T1': feed(near(1000), 1000)}, 1000), hasLength(1));
+      expect(w2.check([r], st, {'T1': feed(vehicleAt(500, next: 's1', at: 1600, id: 'A', noTrip: true, variant: 'v2'), 1600)}, 1600), isEmpty);
+      expect(w2.check([r], st, {'T1': feed(near(3000), 3000)}, 3000), hasLength(1));
+    });
+
+    test('watcher: an unknown variant or a noisy next stop does not end the run', () {
+      final st = {'T1': straightLine()};
+      LineLive feed(Vehicle v, int at) => LineLive(line: 'T1', updatedAt: at, nextUpdateAt: at + 30, vehicles: [v]);
+      final r = rule();
+      Vehicle at(double m, int t, {String next = 's2', String variant = 'v1'}) =>
+          vehicleAt(m, next: next, at: t, speeds: List.filled(8, 5.0), id: 'A', noTrip: true, variant: variant);
+      final w = RuleWatcher();
+      expect(w.check([r], st, {'T1': feed(at(1200, 1000), 1000)}, 1000), hasLength(1));
+      final noVariant = Vehicle.fromJson({'id': 'A', 'lat': north(1300).$1, 'lon': lon0, 'position_at': 1030, 'next_stop_id': 's2'});
+      expect(w.check([r], st, {'T1': feed(noVariant, 1030)}, 1030), isEmpty);
+      // GPS still before s2, but next_stop_id already says s3.
+      expect(w.check([r], st, {'T1': feed(at(1400, 1060, next: 's3'), 1060)}, 1060), isEmpty);
+      expect(w.check([r], st, {'T1': feed(at(1500, 1090), 1090)}, 1090), isEmpty, reason: 'same run all along');
+    });
+
+    test('watcher: on an out-and-back shape a noisy next stop does not end the run', () {
+      // North 0 → 2000 m, then back south on a street 10 m to the east. The target is at 1500 m going north.
+      Pt east(Pt p) => (p.$1, p.$2 + 10 / 87760);
+      final shape = [north(0), north(2000), east(north(2000)), east(north(0))];
+      final st = {
+        'T1': LineStatic.fromJson({
+          'id': 'T1',
+          'variants': {
+            'v1': {
+              'headsign': 'ΚΥΚΛΙΚΗ',
+              'direction': 0,
+              'shape': [for (final p in shape) [p.$1, p.$2]],
+              'stops': ['a', 't', 'turn', 'b', 'end'],
+            }
+          },
+          'stops': {
+            for (final (id, p) in [('a', north(500)), ('t', north(1500)), ('turn', north(2000)), ('b', east(north(1000))), ('end', east(north(0)))])
+              id: {'name': id, 'lat': p.$1, 'lon': p.$2},
+          },
+        })
+      };
+      final r = rule().copyWith(stopIndex: 1, stopId: 't');
+      Vehicle at(int t, String next) => vehicleAt(1200, next: next, at: t, speeds: List.filled(30, 5.0), id: 'A', noTrip: true);
+      LineLive feed(Vehicle v, int t) => LineLive(line: 'T1', updatedAt: t, nextUpdateAt: t + 30, vehicles: [v]);
+      final w = RuleWatcher();
+      expect(w.check([r], st, {'T1': feed(at(1000, 't'), 1000)}, 1000), hasLength(1));
+      expect(w.check([r], st, {'T1': feed(at(1030, 'b'), 1030)}, 1030), isEmpty);
+      expect(w.check([r], st, {'T1': feed(at(1060, 't'), 1060)}, 1060), isEmpty, reason: 'same place, same run');
     });
 
     test('watcher ignores a fix older than 120 s (it says nothing about now)', () {

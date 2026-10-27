@@ -69,6 +69,7 @@ class RulesScreen extends StatelessWidget {
                   },
                 ),
               head('Κάθε εβδομάδα'),
+              if (weekly.any((r) => r.enabled)) const _ExactHint(),
               if (weekly.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -141,6 +142,58 @@ class _RuleCard extends StatelessWidget {
           ]),
         ),
       ),
+    );
+  }
+}
+
+// Weekly rules without the exact-alarm access start late (an inexact alarm): say so, with a way to
+// grant it. Checked again whenever the app comes back from the settings screen.
+class _ExactHint extends StatefulWidget {
+  const _ExactHint();
+
+  @override
+  State<_ExactHint> createState() => _ExactHintState();
+}
+
+class _ExactHintState extends State<_ExactHint> with WidgetsBindingObserver {
+  bool exact = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _check();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState s) {
+    if (s == AppLifecycleState.resumed) _check();
+  }
+
+  Future<void> _check() async {
+    final ok = await AlertService.exactAllowed();
+    if (mounted && ok != exact) setState(() => exact = ok);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (exact) return const SizedBox.shrink();
+    final t = context.tones;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+      decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(16)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Οι κανόνες μπορεί να ξεκινούν λίγα λεπτά αργότερα: το Android δεν μας έχει δώσει άδεια για ακριβή ξυπνητήρια.',
+            style: TextStyle(fontSize: 14, height: 1.35)),
+        Align(alignment: Alignment.centerRight, child: TextButton(onPressed: AlertService.askExact, child: const Text('Δώσε άδεια'))),
+      ]),
     );
   }
 }

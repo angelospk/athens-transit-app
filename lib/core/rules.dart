@@ -155,7 +155,9 @@ class RuleHit {
   });
 }
 
-/// Fires each trip once per rule.
+/// Fires once per rule for each run of a bus to the stop. The bus (vehicle id) is the identity, so a
+/// trip id that shows up mid-trip changes nothing; seeing the bus past the stop or on another variant
+/// ends the run, so its next one alerts again. A bus missing from a poll keeps its run.
 class RuleWatcher {
   static const _keepS = 2 * 3600;
   final Map<String, int> _fired; // key -> when fired (s)
@@ -177,7 +179,13 @@ class RuleWatcher {
       final stops = st?.variants[r.variant]?.stops;
       if (st == null || stops == null) continue;
       for (final v in lives[r.line]?.vehicles ?? const <Vehicle>[]) {
-        if (v.variant != r.variant || nowS - v.positionAt > maxFixAgeS) continue;
+        if (nowS - v.positionAt > maxFixAgeS) continue;
+        final key = '${r.id}|${v.id}';
+        if (v.variant == null) continue; // unknown: neither a hit nor the end of the run
+        if (v.variant != r.variant || _pastStop(st, stops, r.stopIndex, v)) {
+          _fired.remove(key);
+          continue;
+        }
         final left = stopsLeft(stops, r.stopIndex, v, nowS);
         final eta = etaSeconds(st, v, r.stopIndex, nowS);
         final fire = switch (r.mode) {
@@ -185,7 +193,6 @@ class RuleWatcher {
           AlertMode.stops => left != null && left >= 1 && left <= r.n,
         };
         if (!fire) continue;
-        final key = '${r.id}|${v.tripId ?? '${v.id}|${v.variant}'}';
         if (_fired.containsKey(key)) continue;
         _fired[key] = nowS;
         hits.add(RuleHit(ruleId: r.id, line: r.line, vehicleId: v.id, stopsLeft: left, etaS: eta, delayS: v.delayS));
@@ -193,6 +200,15 @@ class RuleWatcher {
     }
     return hits;
   }
+}
+
+// Past stops[i] by both the next stop and the position, so one noisy next_stop_id does not end a run.
+// A next stop the variant passes twice (loops) says nothing about which pass it is: never past.
+bool _pastStop(LineStatic st, List<String> stops, int i, Vehicle v) {
+  final next = v.nextStopId;
+  if (next == null) return false;
+  final k = stops.indexOf(next);
+  return k > i && stops.indexOf(next, k + 1) < 0 && pastByPosition(st, v, i);
 }
 
 /// "Το 622 είναι 2 στάσεις πριν από ΑΓΟΡΑ (καθυστέρηση 3′), σε ~5′."
