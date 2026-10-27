@@ -10,6 +10,17 @@ Sibling projects:
 | [athens-transit-map](https://github.com/angelospk/athens-transit-map) | `~/athens-transit-map` | The web map (bus.haroldpoi.dev). Source of `trips.json` and `metro.json`. |
 | [athens-transit-rt](https://github.com/angelospk/athens-transit-rt) | `~/athens-transit-rt` | Go backend (transit.haroldpoi.dev) and static GTFS data. Owns the API contract: `docs/CONTRACT.md`. |
 
+## Install
+
+Signed APKs are on the [releases page](https://github.com/angelospk/athens-transit-app/releases):
+`arm64-v8a` for most phones, `armeabi-v7a` for older ones, `universal` when unsure. Release
+certificate SHA-256: `1F:D3:91:FC:BA:70:5F:B3:A6:48:F1:4D:D6:55:B0:AB:10:BF:BC:6F:95:09:5C:EC:CE:1C:3C:AD:90:B5:A7:63`.
+
+A `v*` tag builds and publishes them (`.github/workflows/release.yml`); the tag message is the release
+notes. The signing key is not in the repo: CI reads it from the `ANDROID_KEYSTORE_B64` and
+`ANDROID_KEYSTORE_PASSWORD` secrets, local builds from `~/.config/athens-transit-app/key.properties`
+(without it, release builds use the debug key). Losing the key means no updates for installed copies.
+
 ## Data
 
 - Live: `https://transit.haroldpoi.dev/v1/lines/{id}` for the user's lines (max 5, as the contract asks)

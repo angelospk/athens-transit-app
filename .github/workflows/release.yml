@@ -1,0 +1,66 @@
+# A version tag (v0.1.0) builds signed release APKs and publishes them as a GitHub pre-release.
+# The annotated tag's message becomes the release notes.
+name: Release APK
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      # Public certificate digest of the release key; the job fails if an APK is signed with anything else.
+      CERT_SHA256: 1fd391fcba705fb3a648f14dd655b0ab10bfbc6f95095cecce1c3cad90b5a763
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter test
+
+      - name: Signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=release\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/release.jks" "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > "$RUNNER_TEMP/key.properties"
+          echo "ATHENS_TRANSIT_KEY_PROPERTIES=$RUNNER_TEMP/key.properties" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          flutter build apk --release
+          mkdir -p out
+          cp build/app/outputs/flutter-apk/app-release.apk "out/athens-transit-${GITHUB_REF_NAME}-universal.apk"
+          flutter build apk --release --split-per-abi
+          for abi in arm64-v8a armeabi-v7a; do
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "out/athens-transit-${GITHUB_REF_NAME}-$abi.apk"
+          done
+
+      - name: Check signatures
+        run: |
+          apksigner="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner"
+          for f in out/*.apk; do
+            "$apksigner" verify --print-certs "$f" | grep -q "SHA-256 digest: $CERT_SHA256" || { echo "wrong signer: $f"; exit 1; }
+          done
+          (cd out && sha256sum *.apk > SHA256SUMS.txt)
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" out/* --prerelease --verify-tag --notes-from-tag --title "Athens Transit $GITHUB_REF_NAME"

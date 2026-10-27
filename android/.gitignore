@@ -12,3 +12,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Signing keys live outside the repo (~/.config/athens-transit-app).
+key.properties
+*.jks
+*.keystore
