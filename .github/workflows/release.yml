@@ -16,9 +16,9 @@ jobs:
       # Public certificate digest of the release key; the job fails if an APK is signed with anything else.
       CERT_SHA256: 1fd391fcba705fb3a648f14dd655b0ab10bfbc6f95095cecce1c3cad90b5a763
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
