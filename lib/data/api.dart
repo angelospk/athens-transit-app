@@ -8,12 +8,14 @@ import 'package:http/http.dart' as http;
 
 import '../core/geo.dart';
 import '../core/models.dart';
+import '../core/stats.dart';
 import 'cache.dart';
 
 const apiBase = 'https://transit.haroldpoi.dev';
 const staticBase = 'https://angelospk.github.io/athens-transit-rt/static/v1';
 const tripsUrl = 'https://bus.haroldpoi.dev/trips.json';
 const metroUrl = 'https://bus.haroldpoi.dev/metro.json'; // metro, ISAP, tram: STASY GTFS + OSM tracks
+const statsUrl = 'https://raw.githubusercontent.com/angelospk/athens-transit-rt/stats/v1/latest.json'; // newest day, once a day
 const pushBase = 'https://push.haroldpoi.dev';
 const placesUrl = 'https://photon.komoot.io/api/'; // OSM geocoder: addresses, areas, shops, landmarks
 
@@ -69,6 +71,21 @@ class Api {
   }
 
   Future<List<LineInfo>> lines() => _once('lines', () => _static('lines', '$staticBase/lines.json').then(parseLines));
+
+  // A new day every day: the network first (each time the screen opens), the disk copy only without one.
+  Future<DayStats> stats() async {
+    Object? raw;
+    try {
+      raw = await _get(statsUrl);
+      await _cache.write('stats', raw);
+    } catch (_) {
+      raw = await _cache.read('stats');
+      if (raw == null) rethrow;
+    }
+    final j = raw as Map<String, dynamic>;
+    if (j['version'] != 1 || (j['hours'] as List?)?.length != 24) throw const FormatException('stats: unknown format');
+    return DayStats.fromJson(j);
+  }
 
   Future<TripIndex> trips() => _once('trips', () => _static('trips', tripsUrl).then((j) => TripIndex.fromJson(j)));
 

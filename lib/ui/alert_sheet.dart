@@ -45,7 +45,7 @@ class AlertSheet extends StatefulWidget {
 class _AlertSheetState extends State<AlertSheet> {
   AlertMode mode = AlertMode.minutes;
   int n = 5;
-  bool live = true;
+  late bool live = Deps.of(context).store.liveDefault;
 
   Variant get v => widget.st.variants[widget.variantId]!;
 

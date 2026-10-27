@@ -239,3 +239,21 @@ DateTime? nextStartUtc(Rule r, DateTime nowUtc) {
   }
   return null;
 }
+
+/// Until when "Σταμάτα" on the live card stops a rule: a one-off rule for good (its own end), a weekly
+/// rule for the rest of the Athens day, so tomorrow's run alerts again.
+int stopUntilS(Rule r, DateTime utc) {
+  if (r.untilS != null) return r.untilS!;
+  final w = athensWall(utc);
+  // Midnight on the Athens wall clock, at the offset of that moment (a DST change may lie between).
+  final wall = DateTime.utc(w.year, w.month, w.day + 1);
+  var at = wall.subtract(const Duration(hours: 2));
+  if (athensOffsetHours(at) == 3) at = wall.subtract(const Duration(hours: 3));
+  return at.millisecondsSinceEpoch ~/ 1000;
+}
+
+/// The rule ids of stop entries ("id|untilS") still in force at [nowS].
+Set<String> stoppedIds(Iterable<String> entries, int nowS) => {
+      for (final e in entries)
+        if (e.split('|') case [final id, final until] when (int.tryParse(until) ?? 0) > nowS) id,
+    };

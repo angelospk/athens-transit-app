@@ -10,17 +10,56 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.PluginRegistry
 
 private const val CHANNEL = "live_card"
 private const val PREFS = "live_card"
-private const val ENDED = "ended"
+private const val ENDED = "ended_ids" // rule ids whose card's end button was pressed, until the service reads them
 private const val EXTRA_ID = "id"
+private const val EXTRA_RULE = "rule"
+private const val EXTRA_OPEN = "dev.haroldpoi.live_card.OPEN"
 
-class LiveCardPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
+// Also attached to the app's activity: a tap on the card starts or resumes it with EXTRA_OPEN, which the
+// app takes once ("takeOpen") to show that bus.
+class LiveCardPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware, PluginRegistry.NewIntentListener {
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
+    private var activity: ActivityPluginBinding? = null
+
+    override fun onAttachedToActivity(b: ActivityPluginBinding) {
+        activity = b
+        b.addOnNewIntentListener(this)
+        take(b.activity.intent)
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() = onDetachedFromActivity()
+
+    override fun onReattachedToActivityForConfigChanges(b: ActivityPluginBinding) = onAttachedToActivity(b)
+
+    override fun onDetachedFromActivity() {
+        activity?.removeOnNewIntentListener(this)
+        activity = null
+    }
+
+    override fun onNewIntent(intent: Intent): Boolean {
+        take(intent)
+        // The app may be in front already: no resume follows, so hand the payload to Dart now.
+        pendingOpen?.let {
+            pendingOpen = null
+            channel.invokeMethod("open", it)
+        }
+        return false
+    }
+
+    private fun take(i: Intent?) {
+        val o = i?.getStringExtra(EXTRA_OPEN) ?: return
+        pendingOpen = o
+        i.removeExtra(EXTRA_OPEN) // a later re-attach (rotation) must not open it again
+    }
 
     override fun onAttachedToEngine(b: FlutterPlugin.FlutterPluginBinding) {
         context = b.applicationContext
@@ -42,20 +81,28 @@ class LiveCardPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
                     call.argument<Int>("progress") ?: -1,
                     call.argument<String>("chip"),
                     call.argument<String>("endLabel") ?: "End",
+                    call.argument<String>("ruleId") ?: "",
+                    call.argument<String>("open"),
                 )
                 result.success(null)
             }
             "takeEnded" -> {
                 val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                val ended = p.getBoolean(ENDED, false)
-                if (ended) p.edit().remove(ENDED).apply()
+                val ended = p.getStringSet(ENDED, null)?.toList() ?: emptyList()
+                if (ended.isNotEmpty()) p.edit().remove(ENDED).commit()
                 result.success(ended)
+            }
+            "takeOpen" -> {
+                result.success(pendingOpen)
+                pendingOpen = null
             }
             else -> result.notImplemented()
         }
     }
 
     companion object {
+        @Volatile var pendingOpen: String? = null
+
         private fun ensureChannel(nm: NotificationManager) {
             if (Build.VERSION.SDK_INT < 26 || nm.getNotificationChannel(CHANNEL) != null) return
             // Default importance: shown on the lock screen and allowed to be a Live Update. No sound:
@@ -69,15 +116,18 @@ class LiveCardPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
             nm.createNotificationChannel(c)
         }
 
-        fun show(ctx: Context, id: Int, title: String, text: String, sub: String?, progress: Int, chip: String?, endLabel: String) {
-            // "Τέλος" after the service read the flag: keep the plain card until the next tick reads it.
-            if (ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(ENDED, false)) return
+        fun show(ctx: Context, id: Int, title: String, text: String, sub: String?, progress: Int, chip: String?, endLabel: String, ruleId: String, openWith: String?) {
+            // Ended, and the service has not read it yet: keep the receiver's short card until it does.
+            if (ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getStringSet(ENDED, null)?.contains(ruleId) == true) return
             val nm = ctx.getSystemService(NotificationManager::class.java)
             ensureChannel(nm)
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             val open = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
+                ?.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                ?.also { if (openWith != null) it.putExtra(EXTRA_OPEN, openWith) }
                 ?.let { PendingIntent.getActivity(ctx, 0, it, flags) }
-            val end = PendingIntent.getBroadcast(ctx, 1, Intent(ctx, LiveCardEndReceiver::class.java).putExtra(EXTRA_ID, id), flags)
+            val end = PendingIntent.getBroadcast(
+                ctx, 1, Intent(ctx, LiveCardEndReceiver::class.java).putExtra(EXTRA_ID, id).putExtra(EXTRA_RULE, ruleId), flags)
             val icon = ctx.resources.getIdentifier("ic_stat_bus", "drawable", ctx.packageName)
             val b = NotificationCompat.Builder(ctx, CHANNEL)
                 .setSmallIcon(if (icon != 0) icon else ctx.applicationInfo.icon)
@@ -111,20 +161,22 @@ class LiveCardPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 }
 
-// The card's end button: remember it for the service (which stops the live card for the rules active
-// now) and show at once a plain card, which the service keeps while it runs.
+// The card's end button: remember the rule for the service (which stops it for today, and stops itself
+// when no other rule is active) and show at once a short card that goes away by itself.
 class LiveCardEndReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(ENDED, true).apply()
+        val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val rule = intent.getStringExtra(EXTRA_RULE) ?: ""
+        p.edit().putStringSet(ENDED, (p.getStringSet(ENDED, null) ?: emptySet()) + rule).commit()
         val id = intent.getIntExtra(EXTRA_ID, 0)
         val nm = ctx.getSystemService(NotificationManager::class.java)
         val icon = ctx.resources.getIdentifier("ic_stat_bus", "drawable", ctx.packageName)
         val n = NotificationCompat.Builder(ctx, "live") // the service's own low channel
             .setSmallIcon(if (icon != 0) icon else ctx.applicationInfo.icon)
-            .setContentTitle("Athens Transit")
-            .setContentText("Σε ειδοποιώ όταν έρθει το λεωφορείο.")
-            .setOngoing(true)
+            .setContentTitle("Η ειδοποίηση σταμάτησε")
+            .setContentText("Δεν θα σε ειδοποιήσω ξανά για αυτό σήμερα.")
             .setShowWhen(false)
+            .setTimeoutAfter(15_000)
             .build()
         nm.notify(id, n)
     }

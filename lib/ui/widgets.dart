@@ -75,7 +75,7 @@ class ArrivalRow extends StatelessWidget {
     final note = delayNote(context, first.delayS);
     final left = first.stopsLeft;
     final parts = [
-      if (left != null) left == 1 ? 'επόμενη στάση' : '$left στάσεις',
+      if (left != null) left == 1 ? 'επόμενη στάση του' : '$left στάσεις πριν',
       if (estimate) 'εκτίμηση' else if (note != null) note.$1,
     ];
     final tilde = estimate ? '~' : '';
@@ -103,7 +103,7 @@ class ArrivalRow extends StatelessWidget {
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
             Text('$tilde${mins(first.etaS)}',
                 style: TextStyle(fontSize: big ? 32 : 26, fontWeight: FontWeight.w700, height: 1, fontFeatures: const [FontFeature.tabularFigures()])),
-            if (then.isNotEmpty) Text('μετά ${then.take(2).map((a) => mins(a.etaS)).join(', ')}', style: TextStyle(fontSize: 12, color: t.muted)),
+            if (then.isNotEmpty) Text('επόμενο ${then.take(2).map((a) => mins(a.etaS)).join(', ')}', style: TextStyle(fontSize: 12, color: t.muted)),
           ]),
           if (trailing != null) ...[const SizedBox(width: 10), trailing!],
         ]),

@@ -24,8 +24,9 @@ class BusSel extends MapSel {
 }
 
 class LineSel extends MapSel {
-  const LineSel(this.line);
+  const LineSel(this.line, {this.variants});
   final String line;
+  final Set<String>? variants; // one direction picked in the line's sheet; null: all
 }
 
 class PlaceSel extends MapSel {

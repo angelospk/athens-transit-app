@@ -1,18 +1,22 @@
 // A whole line in the map's sheet: its directions with the buses on the road now, and a star that
-// makes it one of "my lines". The map draws every direction with its arrows.
+// makes it one of "my lines". The map draws every direction with its arrows; a direction chip keeps
+// one direction on the map, with its buses and its stops (a stop opens in the sheet), as on the web.
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 
 import '../core/models.dart';
+import '../core/nearby.dart';
 import 'map_sel.dart';
+import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
 class LinePanel extends StatefulWidget {
-  const LinePanel({super.key, required this.line, required this.scroll});
+  const LinePanel({super.key, required this.line, this.variants, required this.scroll});
   final String line;
+  final Set<String>? variants; // the direction on the map; null: all
   final ScrollController scroll;
 
   @override
@@ -106,14 +110,7 @@ class _LinePanelState extends State<LinePanel> {
           ]),
           const SizedBox(height: 8),
           if (s == null) const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator())),
-          if (s != null)
-            for (final e in s.variants.entries) ...[
-              Padding(
-                padding: const EdgeInsets.only(top: 12, bottom: 4),
-                child: Text('→ ${titleCase(e.value.headsign)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-              ),
-              ..._buses(t, s, e.key, vs.where((v) => v.variant == e.key).toList()),
-            ],
+          if (s != null) ..._directions(t, s, vs),
           const SizedBox(height: 16),
           const LiveNote(),
         ]);
@@ -121,7 +118,75 @@ class _LinePanelState extends State<LinePanel> {
     );
   }
 
-  List<Widget> _buses(Tones t, LineStatic s, String variant, List<Vehicle> vs) {
+  // Directions by headsign (a line may run several variants to the same end). All of them: each with
+  // its buses. One picked: its buses and every stop on its way.
+  List<Widget> _directions(Tones t, LineStatic s, List<Vehicle> vs) {
+    final groups = <String, Set<String>>{};
+    for (final e in s.variants.entries) {
+      (groups[e.value.headsign] ??= {}).add(e.key);
+    }
+    final picked = widget.variants;
+    final on = picked == null ? null : groups.entries.where((g) => g.value.any(picked.contains)).firstOrNull;
+    void pick(Set<String>? v) => mapSel.value = LineSel(widget.line, variants: v);
+    final chips = Wrap(spacing: 8, runSpacing: 4, children: [
+      ChoiceChip(label: const Text('Όλες'), selected: on == null, onSelected: (_) => pick(null)),
+      for (final g in groups.entries)
+        ChoiceChip(label: Text('→ ${titleCase(g.key)}'), selected: on?.key == g.key, onSelected: (_) => pick(g.value)),
+    ]);
+    if (on == null) {
+      return [
+        chips,
+        for (final g in groups.entries) ...[
+          InkWell(
+            onTap: () => pick(g.value),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 14, bottom: 4),
+              child: Row(children: [
+                Expanded(child: Text('→ ${titleCase(g.key)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
+                Text('στάσεις', style: TextStyle(fontSize: 13, color: t.muted)),
+                Icon(Icons.chevron_right, size: 18, color: t.muted),
+              ]),
+            ),
+          ),
+          ..._buses(t, s, vs.where((v) => g.value.contains(v.variant)).toList()),
+        ],
+      ];
+    }
+    // The longest variant of the direction lists its stops; a bus shows at the stop it goes to next.
+    final main = on.value.reduce((a, b) => s.variants[a]!.stops.length >= s.variants[b]!.stops.length ? a : b);
+    final mine = vs.where((v) => on.value.contains(v.variant)).toList();
+    final busAt = {for (final v in mine) ?v.nextStopId};
+    return [
+      chips,
+      const SizedBox(height: 8),
+      ..._buses(t, s, mine),
+      Padding(
+        padding: const EdgeInsets.only(top: 14, bottom: 4),
+        child: Text('Στάσεις · πάτα μία για τις αφίξεις της', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+      ),
+      for (final id in s.variants[main]!.stops)
+        if (s.stops[id] case final st?)
+          InkWell(
+            onTap: () async {
+              final d = Deps.of(context);
+              final ix = await d.api.trips();
+              final all = linesAt(ix, st.name, st.lat, st.lon);
+              mapSel.value = StopSel(StopRef(name: st.name, lat: st.lat, lon: st.lon, lines: all.isEmpty ? [widget.line] : all));
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 9),
+              child: Row(children: [
+                Icon(busAt.contains(id) ? Icons.directions_bus : Icons.circle_outlined, size: busAt.contains(id) ? 18 : 12, color: busAt.contains(id) ? t.ink : t.muted),
+                const SizedBox(width: 12),
+                Expanded(child: Text(titleCase(st.name), style: const TextStyle(fontSize: 15))),
+                Icon(Icons.chevron_right, size: 18, color: t.muted),
+              ]),
+            ),
+          ),
+    ];
+  }
+
+  List<Widget> _buses(Tones t, LineStatic s, List<Vehicle> vs) {
     if (vs.isEmpty) return [Text('Κανένα λεωφορείο με GPS τώρα.', style: TextStyle(fontSize: 13, color: t.muted))];
     return [
       for (final v in vs)

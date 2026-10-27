@@ -24,6 +24,7 @@ class LiveHub extends ChangeNotifier {
   final _rng = Random();
   Set<String> _watched = {};
   bool _paused = false;
+  Timer? _recount; // the times count down between polls, as on the live card (every 10 s)
 
   // Lines whose last fetch failed and whose data is the saved copy.
   final offline = <String>{};
@@ -34,9 +35,14 @@ class LiveHub extends ChangeNotifier {
   int get nowS => DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
   void watch(Iterable<String> lines) {
+    _recount ??= Timer.periodic(const Duration(seconds: 10), (_) {
+      if (!_paused && lives.isNotEmpty) notifyListeners();
+    });
     final next = lines.toSet();
     for (final l in _watched.difference(next)) {
       _timers.remove(l)?.cancel();
+      lives.remove(l); // no longer polled: a screen showing it polls it itself
+      offline.remove(l);
     }
     final added = next.difference(_watched);
     _watched = next;
@@ -88,6 +94,7 @@ class LiveHub extends ChangeNotifier {
     try {
       statics[line] ??= await api.lineStatic(line);
       final l = await api.live(line);
+      if (!_watched.contains(line)) return; // unwatched while the request ran: its screen polls it now
       lives[line] = l;
       offline.remove(line);
       _backoff.remove(line);
@@ -158,6 +165,7 @@ class LiveHub extends ChangeNotifier {
 
   @override
   void dispose() {
+    _recount?.cancel();
     for (final t in _timers.values) {
       t.cancel();
     }

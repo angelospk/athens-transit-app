@@ -24,14 +24,16 @@ Geo routesGeo(Iterable<DrawnLine> lines) => _fc([
             },
     ]);
 
-// The stops of one variant in order, or of every variant, each stop once.
-Geo lineStopsGeo(LineStatic st, String color, {String? variant}) {
-  final ids = variant != null ? (st.variants[variant]?.stops ?? const <String>[]) : {for (final v in st.variants.values) ...v.stops};
+// The stops of one variant in order, of some variants, or of every variant, each stop once.
+Geo lineStopsGeo(LineStatic st, String color, {String? variant, Iterable<String>? variants}) {
+  final vs = variant != null ? [variant] : variants ?? st.variants.keys;
+  final ids = {for (final v in vs) ...?st.variants[v]?.stops};
   return _fc([
     for (final id in ids)
       if (st.stops[id] case final s?)
         {
           'type': 'Feature',
+          'id': 'rs|$id', // the map's tap finds the stop by it
           'properties': {'id': id, 'name': s.name, 'color': color},
           'geometry': {'type': 'Point', 'coordinates': [s.lon, s.lat]},
         },

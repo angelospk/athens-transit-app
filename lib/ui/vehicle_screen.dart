@@ -1,10 +1,13 @@
 // Screen 12 · Λεωφορείο: one bus — delay, speed now against the usual, GPS age, and the next stops.
 // The content of the map's sheet; the map draws the bus's route with its direction arrows.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/eta.dart';
 import '../core/models.dart';
+import '../core/nearby.dart';
 import '../data/live.dart';
 import 'alert_sheet.dart';
 import 'map_sel.dart';
@@ -26,11 +29,24 @@ class _VehiclePanelState extends State<VehiclePanel> {
   LineLive? live;
   LineStatic? st;
   Object? error;
+  bool allStops = false;
+  Timer? _timer;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // A line the hub does not poll is asked again every 15 s: the bus moves on, and a failed load (no
+    // network) recovers by itself.
+    _timer ??= Timer.periodic(const Duration(seconds: 15), (_) {
+      if (!Deps.of(context).live.lives.containsKey(widget.line) || error != null) _load();
+    });
     if (st == null) _load();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -47,12 +63,13 @@ class _VehiclePanelState extends State<VehiclePanel> {
   Future<void> _load() async {
     final d = Deps.of(context);
     try {
-      final s = await d.api.lineStatic(widget.line);
+      final s = st ?? await d.api.lineStatic(widget.line);
       final l = d.live.lives[widget.line] ?? await d.api.live(widget.line);
       if (mounted) {
         setState(() {
           st = s;
           live = l;
+          error = null;
         });
       }
     } catch (e) {
@@ -74,10 +91,19 @@ class _VehiclePanelState extends State<VehiclePanel> {
           return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
             const SheetHandle(),
             Row(children: [_back(), LineBadge(widget.line), const Spacer(), const CloseSel()]),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: error != null || (l != null && v == null) ? const Text('Δεν βρέθηκε το λεωφορείο.') : const CircularProgressIndicator()),
-            ),
+            if (error == null && (l == null || s == null))
+              const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: CircularProgressIndicator()))
+            else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                    error != null
+                        ? 'Δεν φορτώνει το λεωφορείο: χωρίς σύνδεση. Ξαναδοκιμάζω σε λίγο.'
+                        : 'Το λεωφορείο #${widget.vehicleId} δεν στέλνει θέση τώρα: μάλλον τελείωσε το δρομολόγιό του.',
+                    style: TextStyle(fontSize: 15, color: t.muted)),
+              ),
+              FilledButton.tonal(onPressed: () => mapSel.value = LineSel(widget.line), child: Text('Δες τα λεωφορεία του ${widget.line}')),
+            ],
           ]);
         }
         return _details(context, t, s, v, d.live.nowS);
@@ -134,41 +160,43 @@ class _VehiclePanelState extends State<VehiclePanel> {
         const SizedBox(width: 8),
         cell('Όχημα', '#${v.id}', '', t.muted),
       ]),
-      const SizedBox(height: 14),
-      if (nextK >= 0)
-        for (var k = nextK; k < stops.length && k < nextK + 8; k++)
-          _stopRow(t, s, v, stops, k, now, myIds.contains(stops[k])),
-      if (nextK < 0) Text('Το λεωφορείο δεν έχει αντιστοιχιστεί σε δρομολόγιο.', style: TextStyle(color: t.muted)),
-      const SizedBox(height: 16),
-      Row(children: [
-        Expanded(
-          child: SizedBox(
-            height: 48,
-            child: ValueListenableBuilder(
-              valueListenable: followBus,
-              builder: (context, on, _) => FilledButton.tonal(
-                onPressed: () => followBus.value = !on,
-                child: Text(on ? 'Σταμάτα να ακολουθείς' : 'Ακολούθησε'),
-              ),
-            ),
+      if (widget.stop != null) ...[
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 48,
+          width: double.infinity,
+          child: FilledButton.icon(
+            icon: const Icon(Icons.notifications_outlined),
+            label: Text('Ειδοποίησέ με πριν φτάσει στο ${titleCase(widget.stop!.name)}', overflow: TextOverflow.ellipsis),
+            onPressed: () {
+              final arr = arrivalsAt(myIds.isEmpty ? '' : myIds.first, {widget.line: s}, {widget.line: LineLive(line: widget.line, updatedAt: now, nextUpdateAt: now, vehicles: [v])}, now);
+              if (arr.isNotEmpty) showAlertSheet(context, stop: widget.stop!, arrival: arr.first);
+            },
           ),
         ),
-        if (widget.stop != null) ...[
-          const SizedBox(width: 8),
-          Expanded(
-            child: SizedBox(
-              height: 48,
-              child: FilledButton(
-                onPressed: () {
-                  final arr = arrivalsAt(myIds.isEmpty ? '' : myIds.first, {widget.line: s}, {widget.line: LineLive(line: widget.line, updatedAt: now, nextUpdateAt: now, vehicles: [v])}, now);
-                  if (arr.isNotEmpty) showAlertSheet(context, stop: widget.stop!, arrival: arr.first);
-                },
-                child: const Text('Ειδοποίησέ με'),
-              ),
-            ),
-          ),
-        ],
+      ],
+      const SizedBox(height: 4),
+      // The map keeps this bus in the middle while the sheet shows it.
+      ValueListenableBuilder(
+        valueListenable: followBus,
+        builder: (context, on, _) => SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          secondary: const Icon(Icons.my_location),
+          title: const Text('Ο χάρτης ακολουθεί το λεωφορείο'),
+          value: on,
+          onChanged: (x) => followBus.value = x,
+        ),
+      ),
+      Row(children: [
+        Expanded(child: Text('Επόμενες στάσεις · πάτα μία για τις αφίξεις της', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted))),
+        TextButton(onPressed: () => mapSel.value = LineSel(widget.line, variants: v.variant == null ? null : {v.variant!}), child: const Text('Η γραμμή')),
       ]),
+      if (nextK >= 0)
+        for (var k = nextK; k < stops.length && (allStops || k < nextK + 8); k++)
+          _stopRow(t, s, v, stops, k, now, myIds.contains(stops[k])),
+      if (nextK >= 0 && !allStops && stops.length > nextK + 8)
+        TextButton(onPressed: () => setState(() => allStops = true), child: Text('Όλες οι επόμενες (${stops.length - nextK})')),
+      if (nextK < 0) Text('Το λεωφορείο δεν έχει αντιστοιχιστεί σε δρομολόγιο.', style: TextStyle(color: t.muted)),
     ]);
   }
 
@@ -179,12 +207,16 @@ class _VehiclePanelState extends State<VehiclePanel> {
 
   Widget _stopRow(Tones t, LineStatic s, Vehicle v, List<String> stops, int k, int now, bool mine) {
     final eta = etaSeconds(s, v, k, now);
-    final name = titleCase(s.stops[stops[k]]?.name ?? stops[k]);
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 1),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      decoration: mine ? BoxDecoration(color: t.indicator, borderRadius: BorderRadius.circular(12)) : null,
-      child: Row(children: [
+    final info = s.stops[stops[k]];
+    final name = titleCase(info?.name ?? stops[k]);
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: info == null ? null : () => _openStop(info),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        decoration: mine ? BoxDecoration(color: t.indicator, borderRadius: BorderRadius.circular(12)) : null,
+        child: Row(children: [
         Icon(Icons.circle_outlined, size: mine ? 16 : 12, color: mine ? t.ink : palette[0].bg),
         const SizedBox(width: 12),
         Expanded(child: Text(mine ? '$name · η στάση σου' : name, style: TextStyle(fontSize: 15, fontWeight: mine ? FontWeight.w700 : FontWeight.w400))),
@@ -199,7 +231,20 @@ class _VehiclePanelState extends State<VehiclePanel> {
           ),
         ],
       ]),
+      ),
     );
+  }
+
+  // A stop of the bus's way opens in the sheet with every line that stops there.
+  Future<void> _openStop(StopInfo info) async {
+    final from = widget.stop;
+    if (from != null && from.name == info.name) {
+      mapSel.value = StopSel(from);
+      return;
+    }
+    final ix = await Deps.of(context).api.trips();
+    final all = linesAt(ix, info.name, info.lat, info.lon);
+    mapSel.value = StopSel(StopRef(name: info.name, lat: info.lat, lon: info.lon, lines: all.isEmpty ? [widget.line] : all));
   }
 
   // An alert is about a stop: this bus's arrival at the stop of the row.

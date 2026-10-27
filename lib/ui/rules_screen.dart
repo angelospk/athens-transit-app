@@ -22,8 +22,40 @@ String hm(int m) => '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString
 
 String whenText(Rule r) => r.mode == AlertMode.minutes ? '${r.n}′ πριν' : '${r.n} ${r.n == 1 ? 'στάση' : 'στάσεις'} πριν';
 
-class RulesScreen extends StatelessWidget {
+class RulesScreen extends StatefulWidget {
   const RulesScreen({super.key});
+
+  @override
+  State<RulesScreen> createState() => _RulesScreenState();
+}
+
+// Rules stopped from the live card ("Σταμάτα") say so, with a way to run them again today. Read again
+// when the app comes back and whenever the rules change.
+class _RulesScreenState extends State<RulesScreen> with WidgetsBindingObserver {
+  Set<String> stopped = {};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _check();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState s) {
+    if (s == AppLifecycleState.resumed) _check();
+  }
+
+  Future<void> _check() async {
+    final s = await AlertService.stoppedNow();
+    if (mounted && (s.length != stopped.length || !s.containsAll(stopped))) setState(() => stopped = s);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +64,7 @@ class RulesScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: d.store,
       builder: (context, _) {
+        _check();
         final now = DateTime.now().toUtc();
         final nowS = now.millisecondsSinceEpoch ~/ 1000;
         final oneOff = d.store.rules.where((r) => r.untilS != null && r.untilS! > nowS).toList();
@@ -62,7 +95,8 @@ class RulesScreen extends StatelessWidget {
                 _RuleCard(
                   rule: r,
                   text: '${titleCase(r.stopName)} · ${whenText(r)}',
-                  sub: '${r.live ? 'Live στην οθόνη κλειδώματος · ' : ''}ως ${hm(_wallMin(r.untilS!))}',
+                  sub: stopped.contains(r.id) ? 'Σταμάτησε από την κάρτα live' : '${r.live ? 'Live στην οθόνη κλειδώματος · ' : ''}ως ${hm(_wallMin(r.untilS!))}',
+                  resume: stopped.contains(r.id) ? () => _resume(d, r) : null,
                   onDelete: () async {
                     d.store.removeRule(r.id);
                     await AlertService.sync(d.store);
@@ -79,7 +113,8 @@ class RulesScreen extends StatelessWidget {
                 _RuleCard(
                   rule: r,
                   text: '${daysText(r.days)}, ${hm(r.startMin)}–${hm(r.endMin)}, ${whenText(r)} ${r.stopIndex >= 0 ? 'στο' : ''} ${titleCase(r.stopName)}',
-                  sub: !r.enabled ? 'Σε παύση' : (r.activeAt(now) ? 'Τρέχει τώρα' : _next(r, now)),
+                  sub: !r.enabled ? 'Σε παύση' : stopped.contains(r.id) ? 'Σταμάτησε για σήμερα' : (r.activeAt(now) ? 'Τρέχει τώρα' : _next(r, now)),
+                  resume: r.enabled && stopped.contains(r.id) ? () => _resume(d, r) : null,
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RuleEditScreen(rule: r))),
                   toggle: (on) async {
                     d.store.putRule(r.copyWith(enabled: on));
@@ -91,6 +126,11 @@ class RulesScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _resume(Deps d, Rule r) async {
+    await AlertService.resume(d.store, r.id);
+    await _check();
   }
 
   static int _wallMin(int unixS) {
@@ -109,10 +149,10 @@ class RulesScreen extends StatelessWidget {
 }
 
 class _RuleCard extends StatelessWidget {
-  const _RuleCard({required this.rule, required this.text, required this.sub, this.onTap, this.onDelete, this.toggle});
+  const _RuleCard({required this.rule, required this.text, required this.sub, this.onTap, this.onDelete, this.toggle, this.resume});
   final Rule rule;
   final String text, sub;
-  final VoidCallback? onTap, onDelete;
+  final VoidCallback? onTap, onDelete, resume;
   final ValueChanged<bool>? toggle;
 
   @override
@@ -137,8 +177,9 @@ class _RuleCard extends StatelessWidget {
                 if (sub.isNotEmpty) Text(sub, style: TextStyle(fontSize: 13, color: t.muted)),
               ]),
             ),
+            if (resume != null) TextButton(onPressed: resume, child: const Text('Συνέχισε')),
             if (toggle != null) Switch(value: rule.enabled, onChanged: toggle),
-            if (onDelete != null) IconButton(tooltip: 'Τέλος', onPressed: onDelete, icon: const Icon(Icons.close)),
+            if (onDelete != null) IconButton(tooltip: 'Διαγραφή', onPressed: onDelete, icon: const Icon(Icons.close)),
           ]),
         ),
       ),

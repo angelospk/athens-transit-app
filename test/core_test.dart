@@ -229,6 +229,23 @@ void main() {
           endMin: end,
         );
 
+    test('"Σταμάτα" stops a weekly rule until Athens midnight, a one-off rule until its end', () {
+      final now = DateTime.utc(2026, 10, 27, 6, 10); // Tue 08:10 Athens (EET, +2)
+      final nowS = now.millisecondsSinceEpoch ~/ 1000;
+      expect(stopUntilS(rule(), now), DateTime.utc(2026, 10, 27, 22).millisecondsSinceEpoch ~/ 1000);
+      final once = Rule.fromJson({...rule(days: 0).toJson(), 'untilS': nowS + 3600});
+      expect(stopUntilS(once, now), nowS + 3600);
+    });
+
+    test('"Σταμάτα" on the night clocks go back ends at Athens midnight, not an hour off', () {
+      // Clocks go back at 04:00 EEST on Sun 25 Oct 2026. Stopped Sun 01:00 EEST (Sat 22:00 UTC): Mon 00:00 EET.
+      expect(stopUntilS(rule(), DateTime.utc(2026, 10, 24, 22)), DateTime.utc(2026, 10, 25, 22).millisecondsSinceEpoch ~/ 1000);
+    });
+
+    test('stop entries count until their end; malformed ones never', () {
+      expect(stoppedIds(['a|200', 'b|100', 'c', 'd|x'], 150), {'a'});
+    });
+
     test('active on its days and minutes (Athens wall clock)', () {
       final r = rule();
       expect(r.activeAt(DateTime.utc(2026, 10, 27, 6, 10)), isTrue); // Tue 08:10 Athens

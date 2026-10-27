@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/athens_time.dart';
 import '../core/geo.dart';
+import '../core/marker.dart';
 import '../core/rules.dart';
 import '../core/nearby.dart';
 
@@ -60,6 +61,9 @@ class AppStore extends ChangeNotifier {
   List<Rule> rules = [];
   int walkMin = 4; // to the home stop, for "when to leave"
   bool showMetro = true, showTram = true; // tracks and stations on the map
+  Others others = Others.hide; // the other buses while one is open, as on the web
+  bool onlyFresh = false, onlyOnTime = false, showAges = false; // the map's filters and age labels
+  bool liveDefault = true; // a new alert starts with its live card on
 
   void _load(Map<String, dynamic> j) {
     onboarded = j['onboarded'] == true;
@@ -72,6 +76,11 @@ class AppStore extends ChangeNotifier {
     walkMin = j['walkMin'] as int? ?? 4;
     showMetro = j['showMetro'] != false;
     showTram = j['showTram'] != false;
+    others = Others.values.where((o) => o.name == j['others']).firstOrNull ?? Others.hide;
+    onlyFresh = j['onlyFresh'] == true;
+    onlyOnTime = j['onlyOnTime'] == true;
+    showAges = j['showAges'] == true;
+    liveDefault = j['liveDefault'] != false;
   }
 
   Map<String, dynamic> toJson() => {
@@ -85,6 +94,11 @@ class AppStore extends ChangeNotifier {
         'walkMin': walkMin,
         'showMetro': showMetro,
         'showTram': showTram,
+        'others': others.name,
+        'onlyFresh': onlyFresh,
+        'onlyOnTime': onlyOnTime,
+        'showAges': showAges,
+        'liveDefault': liveDefault,
       };
 
   void _save() {
@@ -155,6 +169,19 @@ class AppStore extends ChangeNotifier {
   void setRail({bool? metro, bool? tram}) {
     showMetro = metro ?? showMetro;
     showTram = tram ?? showTram;
+    _save();
+  }
+
+  void setMapView({Others? others, bool? fresh, bool? onTime, bool? ages}) {
+    this.others = others ?? this.others;
+    onlyFresh = fresh ?? onlyFresh;
+    onlyOnTime = onTime ?? onlyOnTime;
+    showAges = ages ?? showAges;
+    _save();
+  }
+
+  void setLiveDefault(bool v) {
+    liveDefault = v;
     _save();
   }
 

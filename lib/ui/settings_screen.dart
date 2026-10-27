@@ -1,11 +1,13 @@
-// Screen 6 · Περισσότερα: theme, walking time to the home stop, links (ideas, wrong stop, API).
+// Screen 6 · Περισσότερα: theme, walking time to the home stop, live cards, how the map reads, network
+// statistics, links (ideas, wrong stop, API).
 
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../background/widget.dart';
-
+import 'help.dart';
+import 'stats_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -60,6 +62,29 @@ class SettingsScreen extends StatelessWidget {
               await pushWidget(store, Deps.of(context).live, force: true);
               await HomeWidget.requestPinWidget(androidName: 'StopWidgetProvider');
             },
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.lock_clock_outlined),
+            title: const Text('Live κάρτα στις νέες ειδοποιήσεις'),
+            subtitle: const Text('Η πορεία του λεωφορείου στην οθόνη κλειδώματος. Αλλάζει και σε κάθε ειδοποίηση.'),
+            value: store.liveDefault,
+            onChanged: store.setLiveDefault,
+          ),
+          Divider(color: t.rule),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.help_outline),
+            title: const Text('Πώς διαβάζεται ο χάρτης'),
+            subtitle: const Text('Χρώματα, σύμβολα, από πού έρχονται οι χρόνοι'),
+            onTap: () => showMapHelp(context),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.query_stats),
+            title: const Text('Στατιστικά δικτύου'),
+            subtitle: const Text('Χθες: δρομολόγια που έγιναν, οι πιο αργές γραμμές'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const StatsScreen())),
           ),
           Divider(color: t.rule),
           for (final (label, url, icon) in _links)
