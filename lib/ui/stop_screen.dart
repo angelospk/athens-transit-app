@@ -1,4 +1,5 @@
-// Screen 2 · Στάση: arrivals at one stop, the user's lines first ("Οι γραμμές μου | Όλες").
+// Screen 2 · Στάση: arrivals at one stop, the user's lines first ("Οι γραμμές μου | Όλες"). It is the
+// content of the map's sheet: a bus opens in the same sheet.
 
 import 'dart:async';
 
@@ -11,7 +12,7 @@ import '../data/store.dart';
 import 'alert_sheet.dart';
 import 'lines_picker.dart';
 import 'theme.dart';
-import 'vehicle_screen.dart';
+import 'map_sel.dart';
 import 'widgets.dart';
 
 class StopRef {
@@ -21,15 +22,16 @@ class StopRef {
   final List<String> lines; // every line that stops here
 }
 
-class StopScreen extends StatefulWidget {
-  const StopScreen({super.key, required this.stop});
+class StopPanel extends StatefulWidget {
+  const StopPanel({super.key, required this.stop, required this.scroll});
   final StopRef stop;
+  final ScrollController scroll;
 
   @override
-  State<StopScreen> createState() => _StopScreenState();
+  State<StopPanel> createState() => _StopPanelState();
 }
 
-class _StopScreenState extends State<StopScreen> {
+class _StopPanelState extends State<StopPanel> {
   bool all = false;
   Map<String, LineLive> others = {};
   Timer? _timer;
@@ -49,6 +51,16 @@ class _StopScreenState extends State<StopScreen> {
     if (rest.isEmpty) return;
     final got = await d.live.nearbyLives(s.lat, s.lon, rest);
     if (mounted) setState(() => others = got);
+  }
+
+  @override
+  void didUpdateWidget(StopPanel old) {
+    super.didUpdateWidget(old);
+    if (old.stop != widget.stop) {
+      all = false;
+      others = {};
+      _loadOthers();
+    }
   }
 
   @override
@@ -88,9 +100,8 @@ class _StopScreenState extends State<StopScreen> {
         final groups = groupArrivals(_arrivals(showAll));
         final estimate = d.live.isOffline;
         final quiet = s.lines.where((l) => !groups.any((g) => g.$1.line == l)).toList();
-        return Scaffold(
-          appBar: AppBar(backgroundColor: t.ground, surfaceTintColor: Colors.transparent),
-          body: ListView(padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + MediaQuery.paddingOf(context).bottom), children: [
+        return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
+            const SheetHandle(),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -107,6 +118,7 @@ class _StopScreenState extends State<StopScreen> {
                 selectedIcon: const Icon(Icons.star),
                 onPressed: () => fav == null ? _save(context) : d.store.removeFav(fav),
               ),
+              const CloseSel(),
             ]),
             const SizedBox(height: 12),
             if (mine.isNotEmpty)
@@ -119,6 +131,14 @@ class _StopScreenState extends State<StopScreen> {
                 onSelectionChanged: (v) => setState(() => all = v.first),
               ),
             const SizedBox(height: 4),
+            if (estimate && groups.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(color: const Color(0xFFFFF0D1), borderRadius: BorderRadius.circular(14)),
+                child: const Text('Οι χρόνοι είναι εκτίμηση από τα τελευταία δεδομένα και την ταχύτητα που έχει συνήθως η γραμμή. Διορθώνονται μόλις βρεθεί σήμα.',
+                    style: TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF3D2800))),
+              ),
             if (groups.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
@@ -131,7 +151,7 @@ class _StopScreenState extends State<StopScreen> {
                   first: first,
                   then: then,
                   estimate: estimate,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => VehicleScreen(line: first.line, vehicleId: first.vehicleId, stop: s))),
+                  onTap: () => mapSel.value = BusSel(first.line, first.vehicleId, stop: s),
                   trailing: IconButton.filled(
                     tooltip: 'Ειδοποίηση για το ${first.line}',
                     style: IconButton.styleFrom(backgroundColor: t.surface, foregroundColor: t.ink),
@@ -146,8 +166,7 @@ class _StopScreenState extends State<StopScreen> {
             ],
             const SizedBox(height: 16),
             const LiveNote(),
-          ]),
-        );
+          ]);
       },
     );
   }

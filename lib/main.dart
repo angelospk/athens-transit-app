@@ -9,6 +9,7 @@ import 'data/live.dart';
 import 'data/store.dart';
 import 'ui/favs_screen.dart';
 import 'ui/map_screen.dart';
+import 'ui/map_sel.dart';
 import 'ui/onboard_screen.dart';
 import 'ui/rules_screen.dart';
 import 'ui/settings_screen.dart';
@@ -52,7 +53,7 @@ class TransitApp extends StatelessWidget {
 
 class Shell extends StatefulWidget {
   const Shell({super.key});
-  static final tab = ValueNotifier(0);
+  static final tab = appTab;
 
   @override
   State<Shell> createState() => _ShellState();

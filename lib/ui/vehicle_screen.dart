@@ -1,4 +1,5 @@
 // Screen 12 · Λεωφορείο: one bus — delay, speed now against the usual, GPS age, and the next stops.
+// The content of the map's sheet; the map draws the bus's route with its direction arrows.
 
 import 'package:flutter/material.dart';
 
@@ -6,20 +7,22 @@ import '../core/eta.dart';
 import '../core/models.dart';
 import '../data/live.dart';
 import 'alert_sheet.dart';
+import 'map_sel.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-class VehicleScreen extends StatefulWidget {
-  const VehicleScreen({super.key, required this.line, required this.vehicleId, this.stop});
+class VehiclePanel extends StatefulWidget {
+  const VehiclePanel({super.key, required this.line, required this.vehicleId, this.stop, required this.scroll});
   final String line, vehicleId;
   final StopRef? stop;
+  final ScrollController scroll;
 
   @override
-  State<VehicleScreen> createState() => _VehicleScreenState();
+  State<VehiclePanel> createState() => _VehiclePanelState();
 }
 
-class _VehicleScreenState extends State<VehicleScreen> {
+class _VehiclePanelState extends State<VehiclePanel> {
   LineLive? live;
   LineStatic? st;
   Object? error;
@@ -28,6 +31,17 @@ class _VehicleScreenState extends State<VehicleScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (st == null) _load();
+  }
+
+  @override
+  void didUpdateWidget(VehiclePanel old) {
+    super.didUpdateWidget(old);
+    if (old.line != widget.line) {
+      st = null;
+      live = null;
+      error = null;
+      _load();
+    }
   }
 
   Future<void> _load() async {
@@ -56,13 +70,17 @@ class _VehicleScreenState extends State<VehicleScreen> {
         final l = d.live.lives[widget.line] ?? live;
         final v = l?.vehicles.where((x) => x.id == widget.vehicleId).firstOrNull;
         final s = st;
-        Widget body;
         if (s == null || v == null) {
-          body = Center(child: error != null ? const Text('Δεν βρέθηκε το λεωφορείο.') : const CircularProgressIndicator());
-        } else {
-          body = _details(context, t, s, v, d.live.nowS);
+          return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
+            const SheetHandle(),
+            Row(children: [_back(), LineBadge(widget.line), const Spacer(), const CloseSel()]),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: error != null || (l != null && v == null) ? const Text('Δεν βρέθηκε το λεωφορείο.') : const CircularProgressIndicator()),
+            ),
+          ]);
         }
-        return Scaffold(appBar: AppBar(backgroundColor: t.ground, surfaceTintColor: Colors.transparent), body: body);
+        return _details(context, t, s, v, d.live.nowS);
       },
     );
   }
@@ -87,8 +105,10 @@ class _VehicleScreenState extends State<VehicleScreen> {
           ),
         );
     int kmh(double ms) => (ms * 3.6).round();
-    return ListView(padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + MediaQuery.paddingOf(context).bottom), children: [
+    return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
+      const SheetHandle(),
       Row(children: [
+        _back(),
         LineBadge(widget.line),
         const SizedBox(width: 12),
         Expanded(
@@ -103,6 +123,7 @@ class _VehicleScreenState extends State<VehicleScreen> {
                 style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: delay >= 90 ? t.late : t.onTime)),
             Text('από πρόγραμμα', style: TextStyle(fontSize: 12, color: t.muted)),
           ]),
+        const CloseSel(),
       ]),
       const SizedBox(height: 14),
       Row(children: [
@@ -119,19 +140,42 @@ class _VehicleScreenState extends State<VehicleScreen> {
           _stopRow(t, s, v, stops, k, now, myIds.contains(stops[k])),
       if (nextK < 0) Text('Το λεωφορείο δεν έχει αντιστοιχιστεί σε δρομολόγιο.', style: TextStyle(color: t.muted)),
       const SizedBox(height: 16),
-      if (widget.stop != null)
-        SizedBox(
-          height: 48,
-          child: FilledButton(
-            onPressed: () {
-              final arr = arrivalsAt(myIds.isEmpty ? '' : myIds.first, {widget.line: s}, {widget.line: LineLive(line: widget.line, updatedAt: now, nextUpdateAt: now, vehicles: [v])}, now);
-              if (arr.isNotEmpty) showAlertSheet(context, stop: widget.stop!, arrival: arr.first);
-            },
-            child: const Text('Ειδοποίησέ με'),
+      Row(children: [
+        Expanded(
+          child: SizedBox(
+            height: 48,
+            child: ValueListenableBuilder(
+              valueListenable: followBus,
+              builder: (context, on, _) => FilledButton.tonal(
+                onPressed: () => followBus.value = !on,
+                child: Text(on ? 'Σταμάτα να ακολουθείς' : 'Ακολούθησε'),
+              ),
+            ),
           ),
         ),
+        if (widget.stop != null) ...[
+          const SizedBox(width: 8),
+          Expanded(
+            child: SizedBox(
+              height: 48,
+              child: FilledButton(
+                onPressed: () {
+                  final arr = arrivalsAt(myIds.isEmpty ? '' : myIds.first, {widget.line: s}, {widget.line: LineLive(line: widget.line, updatedAt: now, nextUpdateAt: now, vehicles: [v])}, now);
+                  if (arr.isNotEmpty) showAlertSheet(context, stop: widget.stop!, arrival: arr.first);
+                },
+                child: const Text('Ειδοποίησέ με'),
+              ),
+            ),
+          ),
+        ],
+      ]),
     ]);
   }
+
+  // Back to the stop the bus was opened from.
+  Widget _back() => widget.stop == null
+      ? const SizedBox.shrink()
+      : IconButton(tooltip: 'Πίσω στη στάση', icon: const Icon(Icons.arrow_back), onPressed: () => mapSel.value = StopSel(widget.stop!));
 
   Widget _stopRow(Tones t, LineStatic s, Vehicle v, List<String> stops, int k, int now, bool mine) {
     final eta = etaSeconds(s, v, k, now);

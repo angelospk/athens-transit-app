@@ -1,10 +1,11 @@
-// The map's search: lines and stops by name, accents and case ignored. A line joins "my lines" and the
-// map shows only those; a stop opens its screen.
+// The map's search: lines and stops by name, accents and case ignored. A line or a stop opens in the
+// map's sheet.
 
 import 'package:flutter/material.dart';
 
 import '../core/models.dart';
 import '../core/nearby.dart';
+import 'map_sel.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -106,12 +107,8 @@ class _SearchFieldState extends State<SearchField> {
                   title: Text(titleCase(l.name), maxLines: 1, overflow: TextOverflow.ellipsis),
                   trailing: Icon(store.myLines.contains(l.id) ? Icons.star : Icons.star_outline),
                   onTap: () {
-                    final ok = store.myLines.contains(l.id) || store.toggleMyLine(l.id);
-                    if (ok) store.setOnlyMine(true);
                     _clear();
-                    if (!ok) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ως 5 γραμμές. Βγάλε μία από τις γραμμές σου πρώτα.')));
-                    }
+                    mapSel.value = LineSel(l.id);
                   },
                 ),
               for (final s in _stopHits)
@@ -121,7 +118,7 @@ class _SearchFieldState extends State<SearchField> {
                   subtitle: Text(s.lines.join(', '), maxLines: 1, overflow: TextOverflow.ellipsis),
                   onTap: () {
                     _clear();
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => StopScreen(stop: StopRef(name: s.name, lat: s.lat, lon: s.lon, lines: linesAt(widget.ix!, s.name, s.lat, s.lon)))));
+                    mapSel.value = StopSel(StopRef(name: s.name, lat: s.lat, lon: s.lon, lines: linesAt(widget.ix!, s.name, s.lat, s.lon)));
                   },
                 ),
             ]),

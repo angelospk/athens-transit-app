@@ -1,5 +1,6 @@
 // Screen 10 · Κανόνας ως πρόταση: "Κάθε Δε–Πα από 08:00 ως 08:40, πες μου 5′ πριν φτάσει το 602 στην
-// 5η Καλογρέζας." Each underlined word opens its choice.
+// 5η Καλογρέζας." Each changeable word has a chevron beside it, as in Apple's Shortcuts: a tap turns
+// the chevron and opens the word's choices under the sentence.
 
 import 'package:flutter/material.dart';
 
@@ -13,6 +14,8 @@ import 'theme.dart';
 import 'widgets.dart';
 
 enum When { minutes, stops, leave }
+
+enum _Word { days, start, end, when, line, stop }
 
 class RuleEditScreen extends StatefulWidget {
   const RuleEditScreen({super.key, this.rule});
@@ -34,6 +37,7 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
   // variant id → (stop index, headsign) for the chosen line at the chosen stop
   Map<String, (int, String, String)> variants = {};
   String? variant;
+  _Word? open; // the word whose choices show under the sentence
 
   @override
   void didChangeDependencies() {
@@ -63,6 +67,10 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
     final d = Deps.of(context);
     final f = fav, l = line;
     if (f == null || l == null) return;
+    setState(() {
+      variants = {}; // the old line's direction must not be saved with the new line
+      variant = null;
+    });
     final LineStatic st;
     try {
       st = await d.api.lineStatic(l);
@@ -75,7 +83,7 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
       final i = v.stops.indexWhere(ids.contains);
       if (i >= 0 && i < v.stops.length - 1) out[id] = (i, v.stops[i], v.headsign); // not the last stop
     });
-    if (mounted) {
+    if (mounted && fav == f && line == l) {
       setState(() {
         variants = out;
         variant = out.keys.firstOrNull;
@@ -116,8 +124,26 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
   Widget build(BuildContext context) {
     final t = context.tones;
     final store = Deps.of(context).store;
-    final word = TextStyle(fontWeight: FontWeight.w700, decoration: TextDecoration.underline, decorationColor: t.muted, color: t.ink);
-    Widget w(String s, VoidCallback onTap) => InkWell(onTap: onTap, child: Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Text(s, style: word)));
+    final accent = Theme.of(context).colorScheme.primary;
+    Widget w(_Word k, String text) {
+      final on = open == k;
+      return InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => setState(() => open = on ? null : k),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Text(text, style: TextStyle(fontWeight: FontWeight.w700, color: accent)),
+            AnimatedRotation(
+              turns: on ? .5 : 0,
+              duration: const Duration(milliseconds: 180),
+              child: Icon(Icons.expand_more, size: 26, color: accent),
+            ),
+          ]),
+        ),
+      );
+    }
+
     final whenWord = switch (when) {
       When.minutes => '$n′ πριν φτάσει',
       When.stops => '$n ${n == 1 ? 'στάση' : 'στάσεις'} πριν φτάσει',
@@ -151,19 +177,32 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
             style: const TextStyle(fontSize: 24, height: 1.5),
             child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 6, children: [
               const Text('Κάθε'),
-              w(daysText(days), _days),
+              w(_Word.days, daysText(days)),
               const Text('από'),
-              w(hm(start), () => _time(true)),
+              w(_Word.start, hm(start)),
               const Text('ως'),
-              w('${hm(end)},', () => _time(false)),
+              w(_Word.end, hm(end)),
               const Text('πες μου'),
-              w(whenWord, _when),
+              w(_Word.when, whenWord),
               const Text('για το'),
-              w(line ?? '—', _line),
+              w(_Word.line, line ?? '—'),
               const Text('στο'),
-              w('${titleCase(fav?.name ?? '—')}.', _stop),
+              w(_Word.stop, titleCase(fav?.name ?? '—')),
             ]),
           ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 180),
+          alignment: Alignment.topCenter,
+          child: open == null
+              ? const SizedBox(width: double.infinity)
+              : Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(20)),
+                  child: _choices(open!),
+                ),
+        ),
         const SizedBox(height: 16),
         if (variants.length > 1)
           Wrap(spacing: 8, children: [
@@ -184,82 +223,61 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
     );
   }
 
-  Future<void> _days() async {
-    var sel = days;
-    final r = await showModalBottomSheet<int>(
-      context: context,
-      showDragHandle: true,
-      builder: (c) => StatefulBuilder(
-        builder: (c, set) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Wrap(spacing: 8, children: [
-              for (var i = 0; i < 7; i++)
-                FilterChip(label: Text(dayNames[i]), selected: sel & (1 << i) != 0, onSelected: (_) => set(() => sel ^= 1 << i)),
-            ]),
-            const SizedBox(height: 16),
-            FilledButton(onPressed: sel == 0 ? null : () => Navigator.pop(c, sel), child: const Text('Εντάξει')),
-          ]),
-        ),
-      ),
-    );
-    if (r != null) setState(() => days = r);
-  }
+  void _setWhen(When w, int v) => setState(() {
+        when = w;
+        n = v;
+      });
 
-  Future<void> _time(bool isStart) async {
-    final m = isStart ? start : end;
-    final r = await showTimePicker(context: context, initialTime: TimeOfDay(hour: m ~/ 60, minute: m % 60));
-    if (r == null) return;
-    setState(() => isStart ? start = r.hour * 60 + r.minute : end = r.hour * 60 + r.minute);
-  }
-
-  Future<void> _when() async {
-    final r = await showModalBottomSheet<(When, int)>(
-      context: context,
-      showDragHandle: true,
-      builder: (c) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          for (final m in [3, 5, 10]) ListTile(title: Text('$m′ πριν φτάσει'), onTap: () => Navigator.pop(c, (When.minutes, m))),
-          for (final s in [2, 3, 5]) ListTile(title: Text('$s στάσεις πριν φτάσει'), onTap: () => Navigator.pop(c, (When.stops, s))),
-          ListTile(title: const Text('πότε να φύγω (περπάτημα + 5′)'), onTap: () => Navigator.pop(c, (When.leave, 0))),
-        ]),
-      ),
-    );
-    if (r == null) return;
-    setState(() {
-      when = r.$1;
-      if (r.$1 != When.leave) n = r.$2;
-    });
-  }
-
-  Future<void> _line() async {
-    final f = fav;
-    if (f == null) return;
-    final r = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (c) => SafeArea(
-        child: Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final l in f.lines) ActionChip(label: Text(l), onPressed: () => Navigator.pop(c, l)),
-        ]),
-      ),
-    );
-    if (r == null) return;
-    setState(() => line = r);
-    await _loadVariants();
-  }
-
-  Future<void> _stop() async {
+  // The choices of one word, under the sentence.
+  Widget _choices(_Word k) {
     final store = Deps.of(context).store;
-    final r = await showModalBottomSheet<FavStop>(
-      context: context,
-      showDragHandle: true,
-      builder: (c) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          for (final f in store.favs) ListTile(title: Text(titleCase(f.name)), subtitle: Text(f.lines.join(', ')), onTap: () => Navigator.pop(c, f)),
-        ]),
-      ),
-    );
-    if (r != null) await _pickStop(r);
+    Widget chip(String label, bool on, VoidCallback tap) => ChoiceChip(label: Text(label), selected: on, onSelected: (_) => tap());
+    Widget wrap(List<Widget> c) => Wrap(spacing: 8, runSpacing: 8, children: c);
+    switch (k) {
+      case _Word.days:
+        return wrap([
+          for (var i = 0; i < 7; i++)
+            FilterChip(
+              label: Text(dayNames[i]),
+              selected: days & (1 << i) != 0,
+              onSelected: (_) => setState(() => days = (days ^ (1 << i)) == 0 ? days : days ^ (1 << i)),
+            ),
+          chip('Δε–Πα', days == 0x1F, () => setState(() => days = 0x1F)),
+          chip('Κάθε μέρα', days == 0x7F, () => setState(() => days = 0x7F)),
+        ]);
+      case _Word.start || _Word.end:
+        final isStart = k == _Word.start;
+        final m = isStart ? start : end;
+        void set(int v) => setState(() => isStart ? start = v.clamp(0, 24 * 60 - 1) : end = v.clamp(0, 24 * 60 - 1));
+        return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          IconButton.filledTonal(tooltip: '15′ νωρίτερα', onPressed: () => set(m - 15), icon: const Icon(Icons.remove)),
+          TextButton(
+            onPressed: () async {
+              final r = await showTimePicker(context: context, initialTime: TimeOfDay(hour: m ~/ 60, minute: m % 60));
+              if (r != null) set(r.hour * 60 + r.minute);
+            },
+            child: Text(hm(m), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()])),
+          ),
+          IconButton.filledTonal(tooltip: '15′ αργότερα', onPressed: () => set(m + 15), icon: const Icon(Icons.add)),
+        ]);
+      case _Word.when:
+        return wrap([
+          for (final m in [3, 5, 10]) chip('$m′ πριν φτάσει', when == When.minutes && n == m, () => _setWhen(When.minutes, m)),
+          for (final x in [2, 3, 5]) chip('$x στάσεις πριν', when == When.stops && n == x, () => _setWhen(When.stops, x)),
+          chip('πότε να φύγω', when == When.leave, () => setState(() => when = When.leave)),
+        ]);
+      case _Word.line:
+        final f = fav;
+        if (f == null) return const Text('Διάλεξε πρώτα στάση.');
+        return wrap([
+          for (final l in f.lines)
+            chip(l, line == l, () async {
+              setState(() => line = l);
+              await _loadVariants();
+            }),
+        ]);
+      case _Word.stop:
+        return wrap([for (final f in store.favs) chip(titleCase(f.name), fav?.key == f.key, () => _pickStop(f))]);
+    }
   }
 }

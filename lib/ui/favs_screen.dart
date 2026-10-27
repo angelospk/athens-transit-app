@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../core/athens_time.dart';
 import '../core/nearby.dart';
 import '../data/store.dart';
+import 'map_sel.dart';
 import 'onboard_screen.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
@@ -77,12 +78,8 @@ class _FavCard extends StatelessWidget {
         InkWell(
           onTap: () async {
             final ix = await d.api.trips();
-            if (!context.mounted) return;
             final all = linesAt(ix, fav.name, fav.lat, fav.lon);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => StopScreen(stop: StopRef(name: fav.name, lat: fav.lat, lon: fav.lon, lines: all.isEmpty ? fav.lines : all))),
-            );
+            showOnMap(StopSel(StopRef(name: fav.name, lat: fav.lat, lon: fav.lon, lines: all.isEmpty ? fav.lines : all)));
           },
           child: Row(children: [
             Expanded(

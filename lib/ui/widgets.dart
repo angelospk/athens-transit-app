@@ -4,6 +4,7 @@ import '../core/eta.dart';
 import '../data/api.dart';
 import '../data/live.dart';
 import '../data/store.dart';
+import 'map_sel.dart';
 import 'theme.dart';
 
 // The app's services, reachable from any screen.
@@ -153,4 +154,26 @@ class LiveNote extends StatelessWidget {
       },
     );
   }
+}
+
+// The grab handle at the top of the map's sheet.
+class SheetHandle extends StatelessWidget {
+  const SheetHandle({super.key});
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Container(
+          width: 32,
+          height: 4,
+          margin: const EdgeInsets.only(top: 8, bottom: 10),
+          decoration: BoxDecoration(color: context.tones.muted.withValues(alpha: .4), borderRadius: BorderRadius.circular(2)),
+        ),
+      );
+}
+
+// Closes what the map's sheet shows; the sheet goes back to the nearest stop.
+class CloseSel extends StatelessWidget {
+  const CloseSel({super.key});
+  @override
+  Widget build(BuildContext context) =>
+      IconButton(tooltip: 'Κλείσιμο', icon: const Icon(Icons.close), onPressed: () => mapSel.value = null);
 }

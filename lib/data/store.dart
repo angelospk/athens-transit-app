@@ -59,6 +59,7 @@ class AppStore extends ChangeNotifier {
   ThemeMode theme = ThemeMode.system;
   List<Rule> rules = [];
   int walkMin = 4; // to the home stop, for "when to leave"
+  bool showMetro = true, showTram = true; // tracks and stations on the map
 
   void _load(Map<String, dynamic> j) {
     onboarded = j['onboarded'] == true;
@@ -69,6 +70,8 @@ class AppStore extends ChangeNotifier {
     theme = ThemeMode.values.where((t) => t.name == j['theme']).firstOrNull ?? ThemeMode.system;
     rules = [for (final r in j['rules'] as List? ?? const []) Rule.fromJson(r as Map<String, dynamic>)];
     walkMin = j['walkMin'] as int? ?? 4;
+    showMetro = j['showMetro'] != false;
+    showTram = j['showTram'] != false;
   }
 
   Map<String, dynamic> toJson() => {
@@ -80,6 +83,8 @@ class AppStore extends ChangeNotifier {
         'theme': theme.name,
         'rules': [for (final r in rules) r.toJson()],
         'walkMin': walkMin,
+        'showMetro': showMetro,
+        'showTram': showTram,
       };
 
   void _save() {
@@ -142,6 +147,12 @@ class AppStore extends ChangeNotifier {
 
   void setOnlyMine(bool v) {
     onlyMine = v;
+    _save();
+  }
+
+  void setRail({bool? metro, bool? tram}) {
+    showMetro = metro ?? showMetro;
+    showTram = tram ?? showTram;
     _save();
   }
 
