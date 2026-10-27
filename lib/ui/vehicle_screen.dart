@@ -113,7 +113,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('→ ${titleCase(variant?.headsign ?? '')}', style: Theme.of(context).textTheme.titleLarge),
+            Text('→ ${titleCase(variant?.headsign ?? '')}', maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleLarge),
             if (v.tripLabel != null) Text('δρομολόγιο ${v.tripLabel}', style: TextStyle(fontSize: 13, color: t.muted)),
           ]),
         ),
@@ -189,7 +189,27 @@ class _VehiclePanelState extends State<VehiclePanel> {
         const SizedBox(width: 12),
         Expanded(child: Text(mine ? '$name · η στάση σου' : name, style: TextStyle(fontSize: 15, fontWeight: mine ? FontWeight.w700 : FontWeight.w400))),
         Text(eta == null ? '' : mins(eta), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        if (eta != null) ...[
+          const SizedBox(width: 4),
+          IconButton(
+            tooltip: 'Ειδοποίησέ με πριν φτάσει στο $name',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.notifications_outlined, size: 20),
+            onPressed: () => _alertAt(s, v, stops[k], now),
+          ),
+        ],
       ]),
     );
+  }
+
+  // An alert is about a stop: this bus's arrival at the stop of the row.
+  void _alertAt(LineStatic s, Vehicle v, String stopId, int now) {
+    final info = s.stops[stopId];
+    if (info == null) return;
+    final arr = arrivalsAt(stopId, {widget.line: s}, {widget.line: LineLive(line: widget.line, updatedAt: now, nextUpdateAt: now, vehicles: [v])}, now);
+    if (arr.isEmpty) return;
+    final from = widget.stop; // the stop the bus was opened from keeps its full line list
+    final same = from != null && stopIdsNear(s, from.name, from.lat, from.lon).contains(stopId);
+    showAlertSheet(context, stop: same ? from : StopRef(name: info.name, lat: info.lat, lon: info.lon, lines: [widget.line]), arrival: arr.first);
   }
 }

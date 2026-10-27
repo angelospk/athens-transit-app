@@ -6,6 +6,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../core/geo.dart';
 import '../core/models.dart';
 import 'cache.dart';
 
@@ -14,6 +15,12 @@ const staticBase = 'https://angelospk.github.io/athens-transit-rt/static/v1';
 const tripsUrl = 'https://bus.haroldpoi.dev/trips.json';
 const metroUrl = 'https://bus.haroldpoi.dev/metro.json'; // metro, ISAP, tram: STASY GTFS + OSM tracks
 const pushBase = 'https://push.haroldpoi.dev';
+const placesUrl = 'https://photon.komoot.io/api/'; // OSM geocoder: addresses, areas, shops, landmarks
+
+// Photon answers 403 to the default "Dart/x (dart:io)" agent.
+const _ua = {'user-agent': 'athens-transit (github.com/angelospk/athens-transit-app)'};
+
+typedef Place = ({String name, String detail, double lat, double lon});
 
 class ApiError implements Exception {
   ApiError(this.status, this.url);
@@ -34,7 +41,7 @@ class Api {
   final DiskCache _cache;
 
   Future<dynamic> _get(String url) async {
-    final r = await _client.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
+    final r = await _client.get(Uri.parse(url), headers: _ua).timeout(const Duration(seconds: 15));
     if (r.statusCode != 200) throw ApiError(r.statusCode, url);
     return jsonDecode(utf8.decode(r.bodyBytes));
   }
@@ -90,6 +97,26 @@ class Api {
       nextUpdateAt: j['next_update_at'] as int,
       vehicles: [for (final v in j['vehicles'] as List) Vehicle.fromJson(v as Map<String, dynamic>)],
     );
+  }
+
+  // Places and addresses in Attica that match the text, nearest to the centre first.
+  Future<List<Place>> places(String q) async {
+    final u = Uri.parse(placesUrl).replace(queryParameters: {'q': q, 'limit': '6', 'lat': '37.98', 'lon': '23.73', 'bbox': '23.3,37.6,24.2,38.35'});
+    final j = await _get(u.toString()) as Map<String, dynamic>;
+    final out = <Place>[];
+    for (final f in j['features'] as List? ?? const []) {
+      final p = f['properties'] as Map<String, dynamic>;
+      final c = f['geometry']['coordinates'] as List;
+      final street = [p['street'], p['housenumber']].whereType<String>().join(' ');
+      final name = p['name'] as String? ?? street;
+      if (name.isEmpty) continue;
+      final detail = [if (street != name) street, p['locality'] ?? p['district'] ?? p['city']].whereType<String>().where((x) => x.isNotEmpty).join(', ');
+      final at = ((c[1] as num).toDouble(), (c[0] as num).toDouble());
+      // OSM often has one place twice (node and way); two shops of a chain are further apart.
+      if (out.any((o) => o.name == name && o.detail == detail && distM((o.lat, o.lon), at) < 50)) continue;
+      out.add((name: name, detail: detail, lat: at.$1, lon: at.$2));
+    }
+    return out;
   }
 
   Future<Map<String, dynamic>> status() async => (await _get('$apiBase/v1/status')) as Map<String, dynamic>;

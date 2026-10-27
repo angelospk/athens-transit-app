@@ -28,6 +28,12 @@ class LineSel extends MapSel {
   final String line;
 }
 
+class PlaceSel extends MapSel {
+  const PlaceSel(this.name, this.at);
+  final String name; // an address or a place from the search
+  final Pt at;
+}
+
 final mapSel = ValueNotifier<MapSel?>(null);
 final followBus = ValueNotifier(false); // the map keeps the open bus in view
 final appTab = ValueNotifier(0); // the bottom bar's tab

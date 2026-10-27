@@ -8,6 +8,7 @@ import 'data/api.dart';
 import 'data/live.dart';
 import 'data/store.dart';
 import 'ui/favs_screen.dart';
+import 'ui/island_nav.dart';
 import 'ui/map_screen.dart';
 import 'ui/map_sel.dart';
 import 'ui/onboard_screen.dart';
@@ -90,14 +91,14 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
         live.watch(store.myLines);
         return Scaffold(
           body: IndexedStack(index: Shell.tab.value, children: const [MapScreen(), FavsScreen(), RulesScreen(), SettingsScreen()]),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: Shell.tab.value,
-            onDestinationSelected: (i) => Shell.tab.value = i,
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Χάρτης'),
-              NavigationDestination(icon: Icon(Icons.star_outline), selectedIcon: Icon(Icons.star), label: 'Στάσεις'),
-              NavigationDestination(icon: Icon(Icons.notifications_outlined), selectedIcon: Icon(Icons.notifications), label: 'Ειδοποιήσεις'),
-              NavigationDestination(icon: Icon(Icons.menu), label: 'Περισσότερα'),
+          bottomNavigationBar: IslandNav(
+            index: Shell.tab.value,
+            onTap: (i) => Shell.tab.value = i,
+            items: const [
+              IslandItem(Icons.map_outlined, 'Χάρτης'),
+              IslandItem(Icons.star_outline, 'Στάσεις'),
+              IslandItem(Icons.notifications_outlined, 'Ειδοποιήσεις'),
+              IslandItem(Icons.menu, 'Περισσότερα'),
             ],
           ),
         );

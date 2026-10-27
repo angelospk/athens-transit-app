@@ -54,6 +54,8 @@ class _MapScreenState extends State<MapScreen> {
   int _routesGen = 0; // the newest route draw; an older one stops before writing
   String? _routesPending; // the key being drawn: the same draw is not started twice
   Pt? _followedAt; // where "follow" last centred the bus
+  final _menu = MenuController(); // the filter's menu: back closes it before anything else
+  bool _menuOpen = false;
   (bool, bool)? _rail; // metro and tram visibility applied to the map
   double _h = 700; // the map's height: the sheet's sizes are fractions of it
 
@@ -99,6 +101,8 @@ class _MapScreenState extends State<MapScreen> {
         final v = _vehicles(Deps.of(context).store).where((x) => x.id == vehicleId && x.line == line).firstOrNull;
         final p = v == null ? at : _glidePos(v, DateTime.now().millisecondsSinceEpoch ~/ 1000); // where it is drawn
         if (p != null) _focus(p.$1, p.$2, max(_map?.cameraPosition?.zoom ?? 15, 15));
+      case PlaceSel(:final at):
+        _focus(at.$1, at.$2, 16);
       case LineSel(:final line):
         Deps.of(context).api.lineStatic(line).then((st) {
           if (identical(mapSel.value, s)) _fit(st); // not after another selection
@@ -383,7 +387,7 @@ class _MapScreenState extends State<MapScreen> {
         want[line] = vv == null ? null : {vv};
       case LineSel(:final line):
         want[line] = null;
-      case StopSel():
+      case StopSel() || PlaceSel():
         break;
       case null:
         if (store.onlyMine) {
@@ -392,7 +396,11 @@ class _MapScreenState extends State<MapScreen> {
           }
         }
     }
-    final picked = sel is StopSel ? sel.stop : null;
+    final picked = switch (sel) {
+      StopSel(:final stop) => (name: stop.name, lat: stop.lat, lon: stop.lon),
+      PlaceSel(:final name, :final at) => (name: name, lat: at.$1, lon: at.$2),
+      _ => null,
+    };
     final key = '${want.entries.map((e) => '${e.key}:${e.value}').join(',')}|${picked?.name}|${store.myLines}';
     if (key == _routesPending) return;
     if (key == _routesKey) {
@@ -456,9 +464,14 @@ class _MapScreenState extends State<MapScreen> {
     final start = _me ?? athensCentre;
     final sel = mapSel.value;
     return PopScope(
-      canPop: sel == null,
+      canPop: sel == null && !_menuOpen,
       onPopInvokedWithResult: (popped, _) {
-        if (!popped) mapSel.value = null;
+        if (popped) return;
+        if (_menuOpen) {
+          _menu.close();
+        } else {
+          mapSel.value = null;
+        }
       },
       child: ListenableBuilder(
         listenable: Listenable.merge([d.store, d.live]),
@@ -486,17 +499,6 @@ class _MapScreenState extends State<MapScreen> {
               onStyleLoadedCallback: _onStyle,
               onCameraIdle: _loadTiles,
             ),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  SearchField(ix: _ix),
-                  const SizedBox(height: 10),
-                  _chips(context, d.store, t),
-                  if (d.live.isOffline) ...[const SizedBox(height: 10), _OfflineBanner(at: d.live.lastOkAt, now: d.live.nowS)],
-                ]),
-              ),
-            ),
             // Map buttons ride on the sheet's edge and hide when it is nearly full.
             if (_extent < .7)
               Positioned(
@@ -511,8 +513,8 @@ class _MapScreenState extends State<MapScreen> {
                     onPressed: () => _layers(context, d.store),
                     child: const Icon(Icons.layers_outlined),
                   ),
-                  const SizedBox(height: 10),
-                  FloatingActionButton(
+                  const SizedBox(height: 8),
+                  FloatingActionButton.small(
                     heroTag: 'locate',
                     tooltip: 'Η θέση μου',
                     backgroundColor: t.ground,
@@ -550,9 +552,21 @@ class _MapScreenState extends State<MapScreen> {
                     BusSel(:final line, :final vehicleId, :final stop) =>
                       VehiclePanel(key: ValueKey('$line|$vehicleId'), line: line, vehicleId: vehicleId, stop: stop, scroll: scroll),
                     LineSel(:final line) => LinePanel(key: ValueKey(line), line: line, scroll: scroll),
+                    PlaceSel(:final name, :final at) => _PlacePanel(name: name, at: at, ix: _ix, scroll: scroll),
                     null => d.store.onlyMine ? _MyLinesSheet(scroll: scroll) : _NearSheet(me: _me, ix: _ix, scroll: scroll),
                   },
                 ),
+              ),
+            ),
+            // Last, so the search results lie over the map buttons and the sheet.
+            if (_extent < .8)
+              SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  SearchField(ix: _ix, trailing: _linesMenu(context, d.store, t)),
+                  if (d.live.isOffline) ...[const SizedBox(height: 4), _OfflineBanner(at: d.live.lastOkAt, now: d.live.nowS)],
+                ]),
               ),
             ),
           ]);
@@ -593,36 +607,60 @@ class _MapScreenState extends State<MapScreen> {
         ),
       );
 
-  Widget _chips(BuildContext context, AppStore store, Tones t) {
-    final chips = <Widget>[
-      FilterChip(
-        avatar: Icon(store.onlyMine ? Icons.star : Icons.star_outline, size: 18),
-        label: const Text('Μόνο οι γραμμές μου'),
-        selected: store.onlyMine,
-        showCheckmark: false,
-        backgroundColor: t.ground,
-        onSelected: store.myLines.isEmpty
-            ? null
-            : (v) {
-                store.setOnlyMine(v);
-                if (!v) _loadTiles(force: true);
+  // A filter button beside the search that says what the map shows: "Όλα" or "Οι γραμμές μου". Its
+  // menu switches between the two and picks which of my lines show.
+  Widget _linesMenu(BuildContext context, AppStore store, Tones t) {
+    void only(bool v) {
+      store.setOnlyMine(v);
+      if (!v) _loadTiles(force: true);
+    }
+
+    return MenuAnchor(
+      controller: _menu,
+      onOpen: () => setState(() => _menuOpen = true),
+      onClose: () => setState(() => _menuOpen = false),
+      alignmentOffset: const Offset(0, 6),
+      menuChildren: [
+        if (store.myLines.isEmpty)
+          const Padding(padding: EdgeInsets.all(16), child: Text('Βάλε αστέρι σε μια γραμμή\nγια να τη βλέπεις εδώ.'))
+        else ...[
+          RadioMenuButton<bool>(
+              value: false, groupValue: store.onlyMine, closeOnActivate: false, onChanged: (_) => only(false), child: const Text('Όλα τα λεωφορεία')),
+          RadioMenuButton<bool>(
+              value: true, groupValue: store.onlyMine, closeOnActivate: false, onChanged: (_) => only(true), child: const Text('Μόνο οι γραμμές μου')),
+          const Divider(height: 8),
+          for (final l in store.myLines)
+            CheckboxMenuButton(
+              value: !store.hiddenLines.contains(l),
+              closeOnActivate: false,
+              onChanged: (v) {
+                final show = v ?? false;
+                if (!store.onlyMine) only(true); // picking a line means: show only my lines (all of them)
+                if (store.hiddenLines.contains(l) == show) store.toggleHidden(l);
               },
-      ),
-      if (store.onlyMine)
-        for (final l in store.myLines)
-          FilterChip(
-            label: Text(l, style: TextStyle(fontWeight: FontWeight.w700, color: store.hiddenLines.contains(l) ? t.muted : lineColor(store, l).fg)),
-            selected: !store.hiddenLines.contains(l),
-            selectedColor: lineColor(store, l).bg,
-            backgroundColor: t.ground,
-            showCheckmark: false,
-            tooltip: store.hiddenLines.contains(l) ? 'Δείξε το $l' : 'Κρύψε το $l',
-            onSelected: (_) => store.toggleHidden(l),
+              child: LineBadge(l),
+            ),
+        ],
+      ],
+      builder: (context, c, _) => Material(
+        color: store.onlyMine ? t.indicator : t.ground,
+        elevation: 3,
+        shadowColor: const Color(0x33000000),
+        borderRadius: BorderRadius.circular(28),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(28),
+          onTap: () => c.isOpen ? c.close() : c.open(),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 13, 8, 13),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.filter_list, size: 20),
+              const SizedBox(width: 6),
+              Text(store.onlyMine ? 'Οι γραμμές μου' : 'Όλα', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              const Icon(Icons.arrow_drop_down),
+            ]),
           ),
-    ];
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(children: [for (final c in chips) Padding(padding: const EdgeInsets.only(right: 8), child: c)]),
+        ),
+      ),
     );
   }
 }
@@ -707,6 +745,44 @@ class _NearSheet extends StatelessWidget {
   }
 }
 
+// A place or an address from the search: the stops around it, nearest first.
+class _PlacePanel extends StatelessWidget {
+  const _PlacePanel({required this.name, required this.at, required this.ix, required this.scroll});
+  final String name;
+  final Pt at;
+  final TripIndex? ix;
+  final ScrollController scroll;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    final stops = ix == null ? const <NearbyStop>[] : nearbyStops(ix!, at, radiusM: 600, max: 6);
+    return ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
+      const SheetHandle(),
+      Row(children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Στάσεις κοντά', style: TextStyle(fontSize: 13, color: t.muted, fontWeight: FontWeight.w500)),
+            Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+          ]),
+        ),
+        const CloseSel(),
+      ]),
+      const SizedBox(height: 4),
+      if (stops.isEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text('Καμία στάση σε 600 μ.', style: TextStyle(color: t.muted))),
+      for (final s in stops)
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.directions_bus_outlined),
+          title: Text(titleCase(s.name)),
+          subtitle: Text('${s.distM.round()} μ. · ${s.lines.take(8).join(', ')}', maxLines: 1, overflow: TextOverflow.ellipsis),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => mapSel.value = StopSel(StopRef(name: s.name, lat: s.lat, lon: s.lon, lines: linesAt(ix!, s.name, s.lat, s.lon))),
+        ),
+    ]);
+  }
+}
+
 // Screen 3's sheet: "Οι γραμμές μου τώρα" — buses on the road, how many are late, next at the stop.
 class _MyLinesSheet extends StatelessWidget {
   const _MyLinesSheet({required this.scroll});
@@ -750,6 +826,11 @@ class _MyLinesSheet extends StatelessWidget {
       const Text('Οι γραμμές μου τώρα', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
       Text('τα άλλα λεωφορεία κρυμμένα · πάτα μια γραμμή για τη διαδρομή της', style: TextStyle(fontSize: 13, color: t.muted)),
       ...rows,
+      if (rows.isEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Text('Καμία γραμμή επιλεγμένη. Διάλεξε από το φίλτρο πάνω δεξιά.', style: TextStyle(color: t.muted)),
+        ),
     ]);
   }
 }

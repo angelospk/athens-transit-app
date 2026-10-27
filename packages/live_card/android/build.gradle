@@ -1,0 +1,54 @@
+group 'dev.haroldpoi.live_card'
+version '1.0'
+
+buildscript {
+    ext.kotlin_version = '1.9.0'
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+def isAgp9OrAbove = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize('.')[0].toInteger() >= 9
+def builtInKotlinProperty = project.findProperty('android.builtInKotlin') ?: rootProject.findProperty('android.builtInKotlin')
+def useBuiltInKotlin = isAgp9OrAbove && (builtInKotlinProperty == null ? true : builtInKotlinProperty.toString().toBoolean())
+
+apply plugin: 'com.android.library'
+if (!useBuiltInKotlin) {
+    apply plugin: 'kotlin-android'
+}
+
+android {
+    namespace 'dev.haroldpoi.live_card'
+    compileSdk 36
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    defaultConfig {
+        minSdkVersion 23
+    }
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+    }
+    if (!useBuiltInKotlin) {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
+}
+
+dependencies {
+    implementation "androidx.core:core:1.17.0" // setRequestPromotedOngoing, setShortCriticalText
+}

@@ -39,11 +39,14 @@ class LineBadge extends StatelessWidget {
       constraints: BoxConstraints(minWidth: big ? 52 : 48),
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: big ? 7 : 6),
       decoration: BoxDecoration(color: c.bg, borderRadius: BorderRadius.circular(8)),
-      alignment: Alignment.center,
-      child: Text(line, style: TextStyle(color: c.fg, fontSize: big ? 17 : 15, fontWeight: FontWeight.w700)),
+      // No alignment: it would stretch the badge to all the width it is offered (a ListTile's leading).
+      child: Text(line, textAlign: TextAlign.center, style: TextStyle(color: c.fg, fontSize: big ? 17 : 15, fontWeight: FontWeight.w700)),
     );
   }
 }
+
+// "8″" under a minute, "4′" after.
+String ago(int s) => s < 60 ? '$s″' : '${s ~/ 60}′';
 
 String mins(int s) => s < 45 ? 'τώρα' : '${(s / 60).round()}′';
 
@@ -72,8 +75,8 @@ class ArrivalRow extends StatelessWidget {
     final note = delayNote(context, first.delayS);
     final left = first.stopsLeft;
     final parts = [
-      if (estimate) 'εκτίμηση' else if (note != null) note.$1,
       if (left != null) left == 1 ? 'επόμενη στάση' : '$left στάσεις',
+      if (estimate) 'εκτίμηση' else if (note != null) note.$1,
     ];
     final tilde = estimate ? '~' : '';
     return InkWell(
@@ -87,8 +90,14 @@ class ArrivalRow extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('→ ${titleCase(first.headsign)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
               const SizedBox(height: 3),
-              Text(parts.join(' · '),
-                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: estimate ? t.muted : note?.$2 ?? t.muted)),
+              Row(children: [
+                if (left != null) ...[StopsDots(left, color: lineColor(Deps.of(context).store, first.line).bg), const SizedBox(width: 6)],
+                Flexible(
+                  child: Text(parts.join(' · '),
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: estimate ? t.muted : note?.$2 ?? t.muted)),
+                ),
+              ]),
             ]),
           ),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
@@ -122,6 +131,29 @@ String titleCase(String s) {
   return words.replaceAll(RegExp(r'σ(?=$|[\s.,)\-])'), 'ς');
 }
 
+// The bus (a dot in its line's colour), the stops in between, and your stop as a ring: "●··◯".
+class StopsDots extends StatelessWidget {
+  const StopsDots(this.left, {super.key, required this.color});
+  final int left; // stops from the bus to yours
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    final between = (left - 1).clamp(0, 3);
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Dot(color, size: 8),
+      for (var i = 0; i < between; i++) Padding(padding: const EdgeInsets.only(left: 3), child: Dot(t.muted.withValues(alpha: .5), size: 5)),
+      Container(
+        width: 9,
+        height: 9,
+        margin: const EdgeInsets.only(left: 3),
+        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: t.ink, width: 2)),
+      ),
+    ]);
+  }
+}
+
 class Dot extends StatelessWidget {
   const Dot(this.color, {super.key, this.size = 8});
   final Color color;
@@ -144,12 +176,13 @@ class LiveNote extends StatelessWidget {
         final at = live.lastOkAt;
         if (live.isOffline) {
           final when = at == null ? '' : ' · τελευταία δεδομένα πριν ${mins(live.nowS - at)}';
-          return Row(children: [Dot(t.late), const SizedBox(width: 6), Flexible(child: Text('Χωρίς σύνδεση$when', style: TextStyle(fontSize: 12, color: t.muted)))]);
+          // No Flexible: the note often sits in a Row beside an Expanded, where its width is unbounded.
+          return Row(mainAxisSize: MainAxisSize.min, children: [Dot(t.late), const SizedBox(width: 6), Text('Χωρίς σύνδεση$when', style: TextStyle(fontSize: 12, color: t.muted))]);
         }
         return Row(children: [
           Dot(t.onTime),
           const SizedBox(width: 6),
-          Text(at == null ? 'Live' : 'Live · ενημέρωση πριν ${live.nowS - at}″', style: TextStyle(fontSize: 12, color: t.muted)),
+          Text(at == null ? 'Live' : 'Live · ενημέρωση πριν ${ago(live.nowS - at)}', style: TextStyle(fontSize: 12, color: t.muted)),
         ]);
       },
     );

@@ -100,6 +100,8 @@ class _StopPanelState extends State<StopPanel> {
         final groups = groupArrivals(_arrivals(showAll));
         final estimate = d.live.isOffline;
         final quiet = s.lines.where((l) => !groups.any((g) => g.$1.line == l)).toList();
+        // With "my lines", the other lines come below in short rows: "Περνούν επίσης".
+        final also = showAll ? const <(Arrival, List<Arrival>)>[] : groupArrivals(_arrivals(true)).where((g) => !mine.contains(g.$1.line)).take(4).toList();
         return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
             const SheetHandle(),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -160,6 +162,33 @@ class _StopPanelState extends State<StopPanel> {
                   ),
                 ),
               ),
+            if (also.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 16, bottom: 4),
+                child: Text('Περνούν επίσης', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+              ),
+              for (final (a, _) in also)
+                InkWell(
+                  onTap: () => mapSel.value = BusSel(a.line, a.vehicleId, stop: s),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(children: [
+                      LineBadge(a.line),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          ['→ ${titleCase(a.headsign)}', if (a.stopsLeft != null) a.stopsLeft == 1 ? 'επόμενη στάση' : '${a.stopsLeft} στάσεις'].join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 14, color: t.muted),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('${estimate ? '~' : ''}${mins(a.etaS)}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                    ]),
+                  ),
+                ),
+            ],
             if (quiet.isNotEmpty && showAll) ...[
               const SizedBox(height: 12),
               Text('Χωρίς λεωφορείο κοντά τώρα: ${quiet.join(', ')}', style: TextStyle(fontSize: 13, color: t.muted)),

@@ -145,8 +145,10 @@ class AppStore extends ChangeNotifier {
     _save();
   }
 
+  // "Only my lines" starts with every line of mine shown; the user unticks the ones to hide.
   void setOnlyMine(bool v) {
     onlyMine = v;
+    if (v) hiddenLines = {};
     _save();
   }
 

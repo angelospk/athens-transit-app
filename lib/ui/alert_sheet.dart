@@ -107,7 +107,8 @@ class _AlertSheetState extends State<AlertSheet> {
   Widget build(BuildContext context) {
     final t = context.tones;
     final mean = meaning;
-    final unit = mode == AlertMode.minutes ? '′ πριν φτάσει' : (n == 1 ? ' στάση πριν' : ' στάσεις πριν');
+    final unit = mode == AlertMode.minutes ? '′' : '';
+    final under = mode == AlertMode.minutes ? 'πριν φτάσει' : (n == 1 ? 'στάση πριν' : 'στάσεις πριν');
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + MediaQuery.of(context).viewInsets.bottom + MediaQuery.paddingOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -139,9 +140,15 @@ class _AlertSheetState extends State<AlertSheet> {
         const SizedBox(height: 16),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           IconButton.filledTonal(tooltip: 'Λιγότερο', onPressed: n > 1 ? () => setState(() => n--) : null, icon: const Icon(Icons.remove)),
-          const SizedBox(width: 16),
-          Text('$n$unit', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700)),
-          const SizedBox(width: 16),
+          const SizedBox(width: 24),
+          SizedBox(
+            width: 140,
+            child: Column(children: [
+              Text('$n$unit', style: const TextStyle(fontSize: 52, fontWeight: FontWeight.w700, height: 1, fontFeatures: [FontFeature.tabularFigures()])),
+              Text(under, style: TextStyle(fontSize: 14, color: t.muted)),
+            ]),
+          ),
+          const SizedBox(width: 24),
           IconButton.filledTonal(
               tooltip: 'Περισσότερο', onPressed: n < (mode == AlertMode.minutes ? 30 : 10) ? () => setState(() => n++) : null, icon: const Icon(Icons.add)),
         ]),
@@ -150,12 +157,25 @@ class _AlertSheetState extends State<AlertSheet> {
           width: double.infinity,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(14)),
-          child: Text(
-            mean == null
-                ? 'Η στάση σου είναι κοντά στην αφετηρία: θα σε ειδοποιήσω μόλις ξεκινήσει.'
-                : 'Τώρα αυτό σημαίνει: όταν είναι στο ${titleCase(mean.$1)}, ${mean.$2} ${mean.$2 == 1 ? 'στάση' : 'στάσεις'} πριν. Ο χρόνος διορθώνεται με κάθε στίγμα GPS.',
-            style: const TextStyle(fontSize: 14, height: 1.35),
-          ),
+          child: mean == null
+              ? const Text('Η στάση σου είναι κοντά στην αφετηρία: θα σε ειδοποιήσω μόλις ξεκινήσει.', style: TextStyle(fontSize: 14, height: 1.35))
+              : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Τώρα αυτό σημαίνει', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    StopsDots(mean.$2, color: lineColor(Deps.of(context).store, widget.line).bg),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text.rich(TextSpan(children: [
+                        const TextSpan(text: 'όταν είναι στο '),
+                        TextSpan(text: titleCase(mean.$1), style: const TextStyle(fontWeight: FontWeight.w700)),
+                        TextSpan(text: ', ${mean.$2} ${mean.$2 == 1 ? 'στάση' : 'στάσεις'} πριν'),
+                      ])),
+                    ),
+                  ]),
+                  const SizedBox(height: 6),
+                  Text('Ο χρόνος διορθώνεται με κάθε στίγμα GPS.', style: TextStyle(fontSize: 13, color: t.muted)),
+                ]),
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
@@ -164,7 +184,13 @@ class _AlertSheetState extends State<AlertSheet> {
           value: live,
           onChanged: (x) => setState(() => live = x),
         ),
-        TextButton(onPressed: () => _create(weekly: true), child: const Text('Κάθε καθημερινή τέτοια ώρα;')),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.repeat),
+          title: const Text('Κάθε καθημερινή τέτοια ώρα;', style: TextStyle(fontWeight: FontWeight.w600)),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => _create(weekly: true),
+        ),
         const SizedBox(height: 4),
         SizedBox(
           width: double.infinity,

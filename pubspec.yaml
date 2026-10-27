@@ -1,7 +1,7 @@
 name: athens_transit
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.1.5+5
 
 environment:
   sdk: ^3.13.7
@@ -17,6 +17,8 @@ dependencies:
   geolocator: ^14.1.2
   home_widget: ^0.10.0
   http: ^1.6.0
+  live_card:
+    path: packages/live_card
   maplibre_gl: ^0.27.1
   path_provider: ^2.1.6
   shared_preferences: ^2.5.6

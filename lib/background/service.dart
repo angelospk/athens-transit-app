@@ -9,23 +9,28 @@ import 'dart:io';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:live_card/live_card.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' hide NotificationVisibility;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/athens_time.dart';
 import '../core/eta.dart';
 import '../core/models.dart';
 import '../core/rules.dart';
 import '../data/api.dart';
 import '../data/store.dart';
+import '../ui/widgets.dart' show titleCase;
 
 const _watcherKey = 'watcher_v1';
 const _alarmId = 4242;
 const _pollMs = 30000;
+const _serviceId = 7; // also the id of the service's notification, which the live card replaces
+const _liveOffKey = 'live_off_v1'; // rule ids whose live card the user ended ("Τέλος" on the card)
 final _notes = FlutterLocalNotificationsPlugin();
 
 const _hitChannel = AndroidNotificationDetails('hits', 'Το λεωφορείο έρχεται',
     channelDescription: 'Μία ειδοποίηση όταν το λεωφορείο φτάνει όσο νωρίς ζήτησες',
-    importance: Importance.high, priority: Priority.high, category: AndroidNotificationCategory.reminder);
+    importance: Importance.high, priority: Priority.high, category: AndroidNotificationCategory.reminder, icon: 'ic_stat_bus');
 
 Future<void> _initNotes() => _notes.initialize(
       settings: const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')),
@@ -93,12 +98,20 @@ class AlertService {
       await _start();
     } else if (active.isEmpty && running) {
       await FlutterForegroundTask.stopService();
+      await _forgetEnded(await SharedPreferences.getInstance());
     }
     await _scheduleNext(store.rules, now);
   }
 
+  // The service stops when no rule is active: a card the user ended stays ended only for this run, so the
+  // next run of a weekly rule shows its card again.
+  static Future<void> _forgetEnded(SharedPreferences p) async {
+    await p.remove(_liveOffKey);
+    await LiveCard.takeEnded();
+  }
+
   static Future<ServiceRequestResult> _start() => FlutterForegroundTask.startService(
-        serviceId: 7,
+        serviceId: _serviceId,
         serviceTypes: [ForegroundServiceTypes.dataSync],
         notificationTitle: 'Athens Transit · live',
         notificationText: 'Παρακολουθώ τις γραμμές σου…',
@@ -157,6 +170,7 @@ class RuleTask extends TaskHandler {
   final _api = Api();
   final _statics = <String, LineStatic>{};
   RuleWatcher _watcher = RuleWatcher();
+  final _startLeft = <String, int>{}; // stops left when the live card first showed a bus: the bar's 0 %
   SharedPreferences? _prefs;
   bool _busy = false;
 
@@ -189,6 +203,7 @@ class RuleTask extends TaskHandler {
       final active = _rulesFrom(p).where((r) => r.activeAt(now)).toList();
       if (active.isEmpty) {
         await FlutterForegroundTask.stopService();
+        await AlertService._forgetEnded(p);
         return;
       }
       final lives = <String, LineLive>{};
@@ -213,15 +228,30 @@ class RuleTask extends TaskHandler {
         );
       }
       await p.setString(_watcherKey, jsonEncode(_watcher.toJson()));
-      await _updateLive(active.where((r) => r.live).toList(), lives, nowS, offline);
+      // A card the user ended stays off for this run only: the key is the rule and the Athens day, so the
+      // next run shows it again even when the service died before it could forget the key.
+      final w = athensWall(now);
+      String run(Rule r) => '${r.id}|${w.year}-${w.month}-${w.day}';
+      final runs = {for (final r in active) run(r)};
+      final ended = await LiveCard.takeEnded(); // "Τέλος" since the last tick: every rule active now
+      final off = {...(p.getStringList(_liveOffKey) ?? const <String>[]).where(runs.contains), if (ended) ...runs}.toList();
+      await p.setStringList(_liveOffKey, off);
+      await _updateLive(active.where((r) => r.live && !off.contains(run(r))).toList(), lives, nowS, offline);
     } finally {
       _busy = false;
     }
   }
 
-  // The ongoing notification: the nearest bus of the first live rule, as "2 στάσεις · 3′".
+  // The live card: the nearest bus of the first live rule — "040 · φτάνει στο Πανεπιστήμιο σε 3′",
+  // "2 στάσεις · στην ώρα του", and a bar from where it was when the card first showed it.
   Future<void> _updateLive(List<Rule> rules, Map<String, LineLive> lives, int nowS, bool offline) async {
-    String title = 'Athens Transit · live', text = 'Κανένα λεωφορείο με GPS ακόμη.';
+    if (rules.isEmpty) {
+      await FlutterForegroundTask.updateService(notificationTitle: 'Athens Transit', notificationText: 'Σε ειδοποιώ όταν έρθει το λεωφορείο.');
+      return;
+    }
+    String title = '${rules.first.line} · ${titleCase(rules.first.stopName)}', text = 'Κανένα λεωφορείο με GPS ακόμη.';
+    var progress = -1;
+    String? chip;
     for (final r in rules) {
       final st = _statics[r.line], live = lives[r.line];
       if (st == null || live == null) continue;
@@ -229,11 +259,17 @@ class RuleTask extends TaskHandler {
       if (arr.isEmpty) continue;
       final a = arr.first;
       final left = a.stopsLeft;
-      final late = (a.delayS ?? 0) >= 90 ? ' · +${(a.delayS! / 60).round()}′' : ' · στην ώρα του';
-      title = a.etaS < 45 ? '${r.line} · φτάνει τώρα στο ${r.stopName}' : '${r.line} · φτάνει στο ${r.stopName} σε ${offline ? '~' : ''}${(a.etaS / 60).round()}′';
-      text = [if (left != null) left == 1 ? 'επόμενη στάση' : '$left στάσεις', if (offline) 'χωρίς σήμα, εκτίμηση' else late.substring(3)].join(' · ');
+      final late = (a.delayS ?? 0) >= 90 ? '+${(a.delayS! / 60).round()}′' : 'στην ώρα του';
+      final stop = titleCase(r.stopName);
+      title = a.etaS < 45 ? '${r.line} · φτάνει τώρα στο $stop' : '${r.line} · φτάνει στο $stop σε ${offline ? '~' : ''}${(a.etaS / 60).round()}′';
+      text = [if (left != null) left == 1 ? 'επόμενη στάση' : '$left στάσεις', if (offline) 'χωρίς σήμα, εκτίμηση' else late].join(' · ');
+      chip = a.etaS < 45 ? 'τώρα' : '${(a.etaS / 60).round()}′';
+      if (left != null) {
+        final start = _startLeft[a.vehicleId] ??= left + 1;
+        progress = (100 * (start - left) / start).round();
+      }
       break;
     }
-    await FlutterForegroundTask.updateService(notificationTitle: title, notificationText: text);
+    await LiveCard.show(id: _serviceId, title: title, text: text, sub: offline ? 'χωρίς σήμα' : 'live', progress: progress, chip: chip);
   }
 }
