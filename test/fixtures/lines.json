@@ -1,0 +1,2269 @@
+{
+ "gtfs_version": "2026-07-08",
+ "lines": [
+  {
+   "id": "021",
+   "name": "ΠΛΑΤΕΙΑ ΚΑΝΙΓΓΟΣ - ΓΚΥΖH (ΚΥΚΛΙΚΗ)",
+   "name_en": "PLATEIA KANIGKOS - GKIZI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "022",
+   "name": "ΑΚΑΔΗΜΙΑ - Ν. ΚΥΨΕΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AKADIMIA - NEA KYPSELI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "024",
+   "name": "ΑΓ. ΑΝΑΡΓΥΡΟΙ - ΣΤ. ΚΑΤΩ ΠΑΤΗΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AG. ANARGYROI - ST. KATO PATHSIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "025",
+   "name": "ΙΠΠΟΚΡΑΤΟΥΣ - ΠΡΟΦΗΤΗ ΔΑΝΙΗΛ",
+   "name_en": "IPPOKRATOUS - PROFITI DANIIL",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "026",
+   "name": "ΙΠΠΟΚΡΑΤΟΥΣ - ΒΟΤΑΝΙΚΟΣ",
+   "name_en": "IPPOKRATOUS - VOTANIKOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "035",
+   "name": "ΑΝΩ ΚΥΨΕΛΗ - ΠΕΤΡΑΛΩΝΑ - ΤΑΥΡΟΣ",
+   "name_en": "ANO KYPSELI - PETRALONA - TAVROS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "036",
+   "name": "ΣΤ. ΚΑΤΕΧΑΚΗ-ΣΤ. ΠΑΝΟΡΜΟΥ-ΓΑΛΑΤΣΙ-ΚΥΨΕΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "KATECHAKI - KYPSELI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "040",
+   "name": "ΠΕΙΡΑΙΑΣ - ΣΥΝΤΑΓΜΑ",
+   "name_en": "PEIRAIAS - SINTAGMA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "046",
+   "name": "ΜΟΥΣΕΙΟ - ΕΛΛΗΝΟΡΩΣΩΝ",
+   "name_en": "MOUSEIO - ELLINOROSON",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "049",
+   "name": "ΠΕΙΡΑΙΑΣ - ΟΜΟΝΟΙΑ",
+   "name_en": "PEIRAIAS - OMONOIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "051",
+   "name": "ΣΤ. ΥΠΕΡ. ΛΕΩΦ. ΚΗΦΙΣΟΥ - ΟΜΟΝΟΙΑ (ΜΕΣΩ ΑΚΑΔ. ΠΛΑΤ.)(ΚΥΚΛΙΚΗ)",
+   "name_en": "ST.YPER.LEOF.KIFISOU - OMONOIA (VIA AKAD. PLAT.)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "052",
+   "name": "ΣΤ. ΕΛΑΙΩΝΑ - ΣΤ. ΥΠΕΡ. ΛΕΩΦ. ΚΗΦΙΣΟΥ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. ELAIONA - ST. YPER. LEOF. KIFISOU",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "054",
+   "name": "ΠΕΡΙΣΣΟΣ - ΛΑΜΠΡΙΝΗ - ΟΜΟΝΟΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PERISSOS - LAMPRINI - OMONOIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "057",
+   "name": "ΛΟΦΟΣ ΣΚΟΥΖΕ - ΟΜΟΝΟΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "LOFOS SKOUZE - OMONOIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "060",
+   "name": "ΑΚΑΔΗΜΙΑ - ΛΥΚΑΒΗΤΤΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AKADIMIA - LYKAVITTOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "1",
+   "name": "ΠΛ. ΑΤΤΙΚΗΣ - ΚΑΛΛΙΘΕΑ - ΜΟΣΧΑΤΟ (ΕΩΣ ΛΕΩΦ.ΕΛ.ΒΕΝΙΖΕΛΟΥ)",
+   "name_en": "PLATEIA ATTIKIS - TZITZIFIES - MOSCHATO",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "10",
+   "name": "ΤΖΙΤΖΙΦΙΕΣ - ΧΑΛΑΝΔΡΙ",
+   "name_en": "TZITZIFIES - XALANDRI",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "101",
+   "name": "ΑΛΙΜΟΣ - ΕΛΛΗΝΙΚΟ",
+   "name_en": "ALIMOS - ELLHNIKO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "106",
+   "name": "ΑΓ. ΒΑΡΒΑΡΑ - ΣΤ. ΣΥΓΓΡΟΥ ΦΙΞ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AG. BARBARA - ST. SYGGROY FIX",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "109",
+   "name": "ΣΤ. ΑΓ. ΔΗΜΗΤΡΙΟΣ - ΑΝΩ ΚΑΛΑΜΑΚΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. AG. DIMITRIOS - ANO KALAMAKI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "11",
+   "name": "ΑΝΩ ΠΑΤΗΣΙΑ - Ν. ΠΑΓΚΡΑΤΙ - Ν. ΕΛΒΕΤΙΑ",
+   "name_en": "ANO PATISIA - N. PAGKRATI - N. ELVETIA",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "112",
+   "name": "ΑΓ. ΔΗΜΗΤΡΙΟΣ - ΣΤ. ΔΑΦΝΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AG. DIMITRIOS - STATΗ. DAFNI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "115",
+   "name": "ΓΛΥΦΑΔΑ - ΒΟΥΛΙΑΓΜΕΝΗ - ΚΙΤΣΙ",
+   "name_en": "GLYFADA - VOULIAGMENI - KITSI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "116",
+   "name": "ΓΛΥΦΑΔΑ - ΒΑΡΗ - ΚΙΤΣΙ",
+   "name_en": "GLYFADA - VARI - KITSI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "117",
+   "name": "ΓΛΥΦΑΔΑ - ΒΟΥΛΙΑΓΜΕΝΗ - ΒΑΡΗ",
+   "name_en": "GLYFADA - VOULIAGMENI - VARI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "12",
+   "name": "ΖΑΠΠΕΙΟ - ΠΕΡΙΣΤΕΡΙ (ΑΓ. ΙΕΡΟΘΕΟΣ)",
+   "name_en": "ZAPPEIO - PERISTERI (AG. IEROTHEOS)",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "120",
+   "name": "ΓΛΥΦΑΔΑ - ΒΑΡΗ - ΠΡΟΑΣΤΙΑΚΟΣ ΣΤ. ΚΟΡΩΠΙΟΥ",
+   "name_en": "GLYFADA - VARI - PROAST. KOROPIOU",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "122",
+   "name": "ΣΤ. ΑΡΓΥΡΟΥΠΟΛΗ - ΣΑΡΩΝΙΔΑ",
+   "name_en": "ST. ARGYROUPOLI - SARONIDA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "122Θ",
+   "name": "ΒΑΡΚΙΖΑ - ΣΤ. ΑΡΓΥΡΟΥΠΟΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "VARKIZA - ST. ARGYROUPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "123",
+   "name": "ΣΑΡΩΝΙΔΑ-ΑΝΑΒΥΣΣΟΣ-ΠΑΛΑΙΑ ΦΩΚΑΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "SARONIDA-ANAVISSOS-P.FOKAIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "124",
+   "name": "ΓΛΥΦΑΔΑ - ΑΓΙΑ ΤΡΙΑΔΑ - ΣΤ. ΑΡΓΥΡΟΥΠΟΛΗΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "GLYFADA - AGIA TRIADA - ST. ARGYROUPOLIS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "126",
+   "name": "ΠΑΛ. ΦΑΛΗΡΟ - ΣΤ. ΣΥΓΓΡΟΥ ΦΙΞ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PAL. FALIRO - ST. SYNGROU FIX",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "128",
+   "name": "ΓΛΥΦΑΔΑ - ΤΕΡΨΙΘΕΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "GLYFADA - TERPSITHEA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "130",
+   "name": "ΠΕΙΡΑΙΑΣ - Ν. ΣΜΥΡΝΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PEIRAIAS - NEA SMIRNI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "131",
+   "name": "ΑΜΑΞ. ΑΓ. ΔΗΜΗΤΡΙΟΥ - ΣΤ. ΔΑΦΝΗΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AMAX. AG. DIMITRIOU - ST. DAFNI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "136",
+   "name": "ΑΝΩ Ν. ΣΜΥΡΝΗ Β - ΣΤ. ΣΥΓΓΡΟΥ ΦΙΞ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ANO N. SMYRNI V - ST. SYGGROY FIX",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "137",
+   "name": "ΑΝΩ Ν. ΣΜΥΡΝΗ Α - ΣΤ. ΣΥΓΓΡΟΥ ΦΙΞ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ANO N. SMYRNI A - ST. SYGGROY FIX",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "14",
+   "name": "ΛΑΜΠΡΙΝΗ - Λ. ΑΛΕΞΑΝΔΡΑΣ - ΓΗΡΟΚΟΜΕΙΟ",
+   "name_en": "",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "140",
+   "name": "ΠΟΛΥΓΩΝΟ - ΓΛΥΦΑΔΑ",
+   "name_en": "POLIGONO - GLIFADA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "141",
+   "name": "ΣΤ. ΔΑΦΝΗ - ΚΑΛΑΜΑΚΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. DAFNIS - KALAMAKI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "142",
+   "name": "ΣΤ. ΑΡΓΥΡΟΥΠΟΛΗ - ΚΑΛΑΜΑΚΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. ARGYROYPOLI - KALAMAKI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "15",
+   "name": "ΠΕΤΡΑΛΩΝΑ - ΔΙΚΑΣΤΗΡΙΑ - ΕΛ. ΒΕΝΙΖΕΛΟΥ",
+   "name_en": "PETRALONA - DIKASTIRIA - EL. VENIZELOY",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "154",
+   "name": "ΠΑΝ/ΜΑ ΒΟΥΛΑΣ - Α. ΓΛΥΦΑΔΑ - ΣΤ. ΑΡΓΥΡΟΥΠΟΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PAN/MA VOULAS - ANO GLYFADA - ST. ARGYROYPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "16",
+   "name": "ΑΓ. ΙΩΑΝΝΗΣ ΡΕΝΤΗΣ - ΠΕΙΡΑΙΑΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AG. IOANNIS RENTIS - PEIRAIAS",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "162",
+   "name": "ΒΟΥΛΑ - ΠΑΝΟΡΑΜΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "VOYLA - PANORAMA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "164",
+   "name": "ΣΤ. ΑΓ. ΔΗΜΗΤΡΙΟΣ - Κ. ΗΛ/ΠΟΛΗ - ΑΡΓ/ΠΟΛΗ - ΤΕΡΨΙΘΕΑ",
+   "name_en": "ST. AGIOS DIMITRIOS - K. IL/POLI - ARG/POLI - TERPSITHEA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "17",
+   "name": "ΠΕΙΡΑΙΑΣ - ΑΓ. ΓΕΩΡΓΙΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PEIRAIAS - AG. GEORGIOS",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "171",
+   "name": "ΒΑΡΚΙΖΑ - ΣΤ. ΑΡΓΥΡΟΥΠΟΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "VARKIZA - ST. ARGYROUPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "18",
+   "name": "ΜΟΥΣΕΙΟ - ΧΑΛΑΝΔΡΙ (ΜΕΣΩ ΕΘΝ. ΑΝΤΙΣΤΑΣΕΩΣ)",
+   "name_en": "MOYSEIO - CHALANDRI (VIA ETHN. ANTISTASEOS)",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "19",
+   "name": "ΜΟΥΣΕΙΟ - ΣΤ. ΧΑΛΑΝΔΡΙΟΥ (ΣΙΔΕΡΑ)",
+   "name_en": "MOYSEIO - ST. CHALANDRIOY (SIDERA)",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "19Β",
+   "name": "ΜΟΥΣΕΙΟ - ΧΑΛΑΝΔΡΙ (ΣΙΔΕΡΑ) (ΚΥΚΛΙΚΗ)",
+   "name_en": "MOYSEIO - CHALANDRI (SIDERA)",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "2",
+   "name": "ΑΝΩ ΚΥΨΕΛΗ - ΠΑΓΚΡΑΤΙ - ΚΑΙΣΑΡΙΑΝΗ",
+   "name_en": "ANO KIPSELI - PAGKRATI - KAISARIANH",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "20",
+   "name": "Ν. ΦΑΛΗΡΟ - ΚΑΣΤΕΛΛΑ - ΔΡΑΠΕΤΣΩΝΑ",
+   "name_en": "N. FALIRO - KASTELLA - DRAPETSONA",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "201",
+   "name": "ΣΤ. ΑΓ. ΔΗΜΗΤΡΙΟΣ - ΑΡΓΥΡΟΥΠΟΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. AG. DIMITRIOS - ARGYROYPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "203",
+   "name": "ΚΑΡΕΑΣ - ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "KAREAS - AKADIMIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "204",
+   "name": "ΣΤΡ. ΣΑΚΕΤΑ - ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "STR. SAKETA - AKADIMIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "204Β",
+   "name": "ΕΚΕΜΣ - ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "EKEMS -AKADIMIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "205",
+   "name": "ΓΛΥΦΑΔΑ - ΣΟΥΡΜΕΝΑ - ΤΕΡΨΙΘΕΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "GLYFADA - SOURMENA - TERPSITHEA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "206",
+   "name": "ΑΓ.ΜΑΡΙΝΑ - ΣΤ. ΔΑΦΝΗΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AGIA MARINA - ST. DAFNIS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "209",
+   "name": "ΥΜΗΤΤΟΣ - ΜΕΤΑΜΟΡΦΩΣΗ - ΣΥΝΤΑΓΜΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "YMITTOS-METAMORFOSI - PLATEIA SYNTAGMATOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "21",
+   "name": "ΝΙΚΑΙΑ - Π. ΡΑΛΛΗ - ΟΜΟΝΟΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "NIKAIA - P. RALLI - OMONOIA",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "211",
+   "name": "ΥΜΗΤΤΟΣ - ΜΕΤΑΜΟΡΦΩΣΗ - ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "YMITTOS-METAMORFOSI - AKADIMIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "212",
+   "name": "ΣΤ. ΔΑΦΝΗ - ΥΜΗΤΤΟΣ - ΒΥΡΩΝΑΣ - ΚΑΡΕΑΣ",
+   "name_en": "ST. METRO DAFNI - VYRONAS - KAREAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "214",
+   "name": "ΖΩΟΔΟΧΟΣ ΠΗΓΗ - ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ZOODOXOS PIGI - AKADIMIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "217",
+   "name": "ΠΕΙΡΑΙΑΣ - ΑΓ. ΔΗΜΗΤΡΙΟΣ - ΣΤ. ΔΑΦΝΗ",
+   "name_en": "PEIRAIAS - AG. DIMITRIOS - ST. DAFNI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "218",
+   "name": "ΠΕΙΡΑΙΑΣ - ΣΤ. ΔΑΦΝΗ",
+   "name_en": "PEIRAIAS - ST. DAFNI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "219",
+   "name": "ΣΤ. ΚΑΛΛΙΘΕΑ - ΑΓ. ΔΗΜΗΤΡΙΟΣ",
+   "name_en": "ST. KALLITHEA - AG. DIMITRIOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "220",
+   "name": "ΑΝΩ ΙΛΙΣΙΑ - ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ANO ILISIA - AKADIMIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "221",
+   "name": "ΠΑΝΕΠΙΣΤΗΜΙΟΥΠΟΛΗ - ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PANEPISTIMIOYPOLI - AKADIMIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "224",
+   "name": "ΚΑΙΣΑΡΙΑΝΗ - ΕΛ. ΒΕΝΙΖΕΛΟΥ",
+   "name_en": "KAISARIANI - EL. VENIZELOY",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "227",
+   "name": "ΑΝΩ ΠΕΤΡΑΛΩΝΑ - ΑΓ. ΑΡΤΕΜΙΟΣ",
+   "name_en": "ANO PETRALONA - AG. ARTEMIOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "229",
+   "name": "ΠΕΙΡΑΙΑΣ - ΑΓ. ΔΗΜΗΤΡΙΟΣ - ΣΤ. ΔΑΦΝΗ",
+   "name_en": "PEIRAIAS - AG. DIMITRIOS - ST. DAFNI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "230",
+   "name": "ΑΚΡΟΠΟΛΗ - ΖΩΓΡΑΦΟΥ",
+   "name_en": "AKROPOLI - ZOGRAFOY",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "235",
+   "name": "ΖΩΓΡΑΦΟΥ - ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ZOGRAFOY - AKADIMIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "237",
+   "name": "ΑΝΩ ΗΛΙΟΥΠΟΛΗ - ΣΤ. ΔΑΦΝΗΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ANO ILIOUPOLI - ST.DAFNIS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "24",
+   "name": "ΠΕΤΡΟΥΠΟΛΗ - ΙΛΙΟΝ - ΣΤ. ΑΓ. ΑΝΤΩΝΙΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PETROYPOLI - ILION - ST. AG. ANTONIOS",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "242",
+   "name": "ΣΤ. ΚΑΤΕΧΑΚΗ - ΠΟΛΥΤΕΧΝΕΙΟΥΠΟΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. KATECHAKI - POLITECHNIOUPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "25",
+   "name": "ΣΤ. ΑΓ. ΑΝΤΩΝΙΟΣ - ΙΛΙΟΝ - ΚΑΜΑΤΕΡΟ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST.AG.ANTONIOS - ILION - KAMATERO",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "250",
+   "name": "ΠΑΝΕΠΙΣΤΗΜΙΟΥΠΟΛΗ - ΣΤ. ΕΥΑΓΓΕΛΙΣΜΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PANEPISTIMIOUPOLI - ST. EVAGGELISMOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "3",
+   "name": "Ν. ΦΙΛΑΔΕΛΦΕΙΑ - ΑΝΩ ΠΑΤΗΣΙΑ - ΝΕΟ ΨΥΧΙΚΟ",
+   "name_en": "N. FILADELFEIA - ANO PATISIA - NEO PSYCHIKO",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "300",
+   "name": "ΠΛ. ΚΑΡΑΪΣΚΑΚΗ - ΤΖΑΝΕΙΟ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PL. KARAΪSKAKI - TZANEIO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "301",
+   "name": "ΣΤ. ΔΟΥΚ. ΠΛΑΚΕΝΤΙΑΣ - ΑΝΘΟΥΣΑ - ΠΕΝΤΕΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. DOUK. PLAKENTIAS - ANTHOUSA - PENTELI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "301Β",
+   "name": "ΣΤ. ΔΟΥΚ. ΠΛΑΚΕΝΤΙΑΣ-ΑΝΘΟΥΣΑ-ΠΕΝΤΕΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. DOUK. PLAKENTIAS - ANTHOUSA - PENTELI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "302",
+   "name": "ΣΤ. ΔΟΥΚ. ΠΛΑΚΕΝΤΙΑΣ - ΓΕΡΑΚΑΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. DOYK. PLAKENTIAS - GERAKAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "304",
+   "name": "ΣΤ. ΝΟΜΙΣΜΑΤΟΚΟΠΕΙΟ - ΑΡΤΕΜΙΣ (ΒΡΑΥΡΩΝΑ)",
+   "name_en": "ST. NOMISMATOKOPEIO - ARTEMIS (VRAYRONA)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "305",
+   "name": "ΣΤ. ΝΟΜΙΣΜΑΤΟΚΟΠΕΙΟ - ΑΡΤΕΜΙΣ (ΑΓ. ΝΙΚΟΛΑΟΣ)",
+   "name_en": "ST. NOMISMATOKOPEIO - ARTEMIS (AG. NIKOLAOS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "306",
+   "name": "ΣΤ.ΔΟΥΚ.ΠΛΑΚΕΝΤΙΑΣ-ΔΗΜ.ΓΕΡΑΚΑ-ΜΠΑΛΑΝΑ ΓΕΡΑΚΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST.DOYK.PLAKENTIAS-DIM.GERAKA-BALANA GERAKA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "307",
+   "name": "ΣΤ. Δ.ΠΛΑΚΕΝΤΙΑΣ - ΓΛ. ΝΕΡΑ - ΣΤ.ΠΡΟΑΣΤ. ΚΟΡΩΠΙ",
+   "name_en": "ST. DOYK. PLAKENTIAS - GL. NERA - PROAST. KOROPIOY",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "308",
+   "name": "ΣΤ. ΝΟΜΙΣΜΑΤΟΚΟΠΕΙΟ - ΠΑΙΑΝΙΑ - ΚΟΡΩΠΙ",
+   "name_en": "ST. NOMISMATOKOPEIO - PAIANIA - KOROPI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "309",
+   "name": "ΚΟΡΩΠΙ - ΣΤ. ΠΡΟΑΣΤΙΑΚΟΥ - ΚΟΡΩΠΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "KOROPI - ST. PROASTIAKOY - KOROPI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "309Β",
+   "name": "ΣΤ. ΚΟΡΩΠΙ - ΜΑΡΚΟΠΟΥΛΟ- ΠΟΡΤΟ ΡΑΦΤΗ - ΑΥΛΑΚΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. KOROPI - MARKOPOULO - PORTO RAFTI - AYLAKI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "310",
+   "name": "ΜΑΡΑΘΩΝΑΣ - ΝΕΑ ΜΑΚΡΗ - ΡΑΦΗΝΑ - ΜΑΤΙ - ΜΑΡΑΘΩΝΑΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "MARATHONAS - NEA MAKRI - RAFINA - MATI - MARATHONAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "311",
+   "name": "ΣΤ. ΚΟΡΩΠΙ - ΚΑΛΥΒΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. KOROPI - KALIVIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "314",
+   "name": "ΣΤ. ΔΟΥΚ. ΠΛΑΚΕΝΤΙΑΣ - ΠΑΛΛΗΝΗ - ΡΑΦΗΝΑ",
+   "name_en": "ST. DOUK. PLAKENTIAS - PALLINI - RAFINA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "316",
+   "name": "ΣΤ. ΝΟΜΙΣΜΑΤΟΚΟΠΕΙΟ - ΑΡΤΕΜΙΣ",
+   "name_en": "ST. NOMISMATOKOPEIO - ARTEMIS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "319",
+   "name": "ΣΤ. ΔΟΥΚ. ΠΛΑΚΕΝΤΙΑΣ - ΠΑΛΛΗΝΗ - ΕΚΠΤ. ΧΩΡΙΟ ΣΠΑΤΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. DOYK. PLAKENTIAS - PALLINI - EKPT. CHORIO SPATA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "323",
+   "name": "ΑΓ.ΝΙΚΟΛΑΟΣ -  ΑΓ.ΚΥΡΙΑΚΗ -  ΒΡΑΥΡΩΝΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AGIOS NIKOLAOS - AG.KYRIAKI - VRAVRONA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "324",
+   "name": "ΑΝΘΟΥΣΑ-ΠΑΛΛΗΝΗ-ΚΑΝΤΖΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ANTHOUSA-PALLINI-KANTZA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "326",
+   "name": "ΣΤ. ΚΑΝΤΖΑ - ΣΠΑΤΑ - ΑΡΤΕΜΙΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ARTEMIS - KANTZA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "330",
+   "name": "ΚΟΡΩΠΙ - ΑΓ. ΜΑΡΙΝΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "KOROPI - AGIA MARINA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "4",
+   "name": "ΑΝΩ ΚΥΨΕΛΗ - ΑΓ. ΑΡΤΕΜΙΟΣ - ΣΤ. ΑΓ. ΙΩΑΝΝΗΣ",
+   "name_en": "ANO KYPSELI - AG. ARTEMIOS - ST. AG. IOANNIS",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "400",
+   "name": "ΠΕΙΡΑΙΑΣ -  ΣΤ. ΔΟΥΚ. ΠΛΑΚΕΝΤΙΑΣ (ΝΥΧΤΕΡΙΝΗ)",
+   "name_en": "PEIRAIAS - ST.DOYK.PLAKENTIAS (NIGHT LINE)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "402",
+   "name": "ΣΤ. ΚΑΤΕΧΑΚΗ - ΠΟΛΥΔΡΟΣΟ",
+   "name_en": "ST. KATECHAKI - POLYDROSO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "405",
+   "name": "ΣΤ. ΧΑΛΑΝΔΡΙ - ΜΕΛΙΣΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. CHALANDRIOU - MELISSIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "406",
+   "name": "ΠΕΥΚΑΚΙΑ -ΣΤ.ΔΟΥΚ.ΠΛΑΚΕΝΤΙΑΣ- ΣΤ.ΝΟΜΙΣΜΑΤΟΚΟΠΕΙΟ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PEFKAKIA -ST.DOUK.PLAKENTIAS-ST.NOMISMATOKOPEIO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "407",
+   "name": "ΣΤ.ΔΟΥΚ.ΠΛΑΚΕΝΤΙΑΣ- Ν. ΖΩH-ΣΤ.ΝΟΜΙΣΜΑΤΟΚΟΠΕΙΟ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST.D.PLAKENTIAS-N.ZOI-ST.NOMISMATOKOPEIO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "409",
+   "name": "ΠΑΠΑΓΟΥ - ΣΤ. ΕΘΝ. ΑΜΥΝΑ  (ΚΥΚΛΙΚΗ)",
+   "name_en": "PAPAGOY - ST. ETHN. AMYNAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "410",
+   "name": "Ο.Α.Κ.Α. - ΑΝΩ ΜΕΛΙΣΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "O.A.K.A. - ANO MELISSIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "411",
+   "name": "ΣΤ. ΔΟΥΚ. ΠΛΑΚΕΝΤΙΑΣ - ΣΙΣΜΑΝΟΓΛΕΙΟ - ΧΑΛΑΝΔΡΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. DOUKISSIS PLAKENTIAS - SISMANOGLIO - CHALANDRI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "416",
+   "name": "ΣΤ.ΕΘΝ.ΑΜΥΝΑΣ - ΧΟΛΑΡΓΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. ETHN.AMYNAS - CHOLARGOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "418",
+   "name": "ΣΤ. ΕΘΝΙΚΗΣ ΑΜΥΝΑΣ-ΣΧΟΛ. ΧΟΛΑΡΓΟΥ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST.ETHNIKIS AMYNAS-SCHOL. CHOLARGOY",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "420",
+   "name": "ΠΕΙΡΑΙΑΣ - ΑΓ. ΑΝΑΡΓΥΡΟΙ  (ΜΕΣΩ ΚΗΦΙΣΟΥ)",
+   "name_en": "PEIRAIAS - AG. ANARGYROI (VIA KIFISOY)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "421",
+   "name": "ΑΓ. ΑΝΑΡΓΥΡΟΙ - ΑΓ. ΠΑΡΑΣΚΕΥΗ",
+   "name_en": "AGIOI ANARGYROI - AGIA PARASKEVI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "444",
+   "name": "ΣΤ. ΕΙΡΗΝΗ - ΓΑΛΑΤΣΙ - ΣΤ. ΑΝΩ ΠΑΤΗΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. EIRINI - GALATSI - ST. ANO PATISIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "446",
+   "name": "ΣΤ. ΑΜΑΡΟΥΣΙΟΥ - ΝΟΣΟΚ. ΠΕΝΤΕΛΗΣ (ΜΕΣΩ ΠΙΚΠΑ)",
+   "name_en": "ST. AMAROYSIOY - NOSOK. PENTELIS (VIA PIKPA)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "447",
+   "name": "ΧΑΛΑΝΔΡΙ - ΑΝΩ ΒΡΙΛΗΣΣΙΑ",
+   "name_en": "CHALANDRI - ANO BRILHSSIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "450",
+   "name": "ΣΤ. ΧΑΛΑΝΔΡΙ - ΧΑΛΑΝΔΡΙ - Ν. ΠΕΝΤΕΛΗ",
+   "name_en": "ST. CHALANDRI - CHALANDRI - N. PENTELI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "451",
+   "name": "ΣΤ. ΧΑΛΑΝΔΡΙ - Ν. ΠΕΝΤΕΛΗ - ΧΑΛΑΝΔΡΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. CHALANDRI - NEA PENTELI - CHALANDRI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "460",
+   "name": "ΣΤ. ΧΑΛΑΝΔΡΙ - ΧΑΛΑΝΔΡΙ - Π. ΠΕΝΤΕΛΗ",
+   "name_en": "ST. CHALANDRI - CHALANDRI - PALAIA PENTELI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "461",
+   "name": "ΣΤ. ΧΑΛΑΝΔΡΙ - Π. ΠΕΝΤΕΛΗ - ΧΑΛΑΝΔΡΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. CHALANDRI - P. PENTELI - CHALANDRI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "5",
+   "name": "ΛΑΜΠΡΙΝΗ - ΠΛ. ΣΥΝΤΑΓΜΑΤΟΣ - ΤΖΙΤΖΙΦΙΕΣ",
+   "name_en": "LAMPRINI - PL. SYNTAGMATOS - TZITZIFIES",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "500",
+   "name": "ΠΕΙΡΑΙΑΣ - ΚΗΦΙΣΙΑ(ΠΛ.ΠΛΑΤΑΝΟΥ) (ΝΥΧΤΕΡΙΝΗ)",
+   "name_en": "PEIRAIAS - KIFISIA - (PL.PLATANOU) (NIGHT LINE)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "501",
+   "name": "ΠΕΥΚΗ - ΜΑΡΟΥΣΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PEYKI - MAROYSI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "503",
+   "name": "ΖΗΡΙΝΕΙΟ - ΒΑΡΥΜΠΟΜΠΗ",
+   "name_en": "ZIRINEIO - VARYMPOMPI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "504",
+   "name": "ΘΡΑΚΟΜΑΚΕΔΟΝΕΣ - ΚΗΦΙΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "THRAKOMAKEDONES  - KIFISIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "507",
+   "name": "ΖΗΡΙΝΕΙΟ - ΡΟΔΟΠΟΛΗ - ΣΤΑΜΑΤΑ",
+   "name_en": "ZIRINEIO - RODOPOLI - STAMATA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "509",
+   "name": "ΖΗΡΙΝΕΙΟ - ΑΓ. ΣΤΕΦΑΝΟΣ - ΚΡΥΟΝΕΡΙ",
+   "name_en": "ZIRINEIO - AG. STEFANOS - KRYONERI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "509Β",
+   "name": "ΖΗΡΙΝΕΙΟ - ΑΦΙΔΝΕΣ - ΠΟΛΥΔΕΝΔΡΙ - ΚΑΠΑΝΔΡΙΤΙ - ΒΑΡΝΑΒΑ",
+   "name_en": "ZIRINEIO - AFIDNES - POLYDENDRI - KAPANDRITI - BARNABA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "510",
+   "name": "ΖΗΡΙΝΕΙΟ - ΜΑΡΚΟΠΟΥΛΟ - ΣΚΑΛΑ ΩΡΩΠΟΥ",
+   "name_en": "ZIRINEIO - MARKOPOULO - SKALA OROPOU",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "522",
+   "name": "ΣΤΑΘΜΟΣ ΚΗΦΙΣΙΑΣ - ΑΔΑΜΕΣ Α (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. KIFISIA - ADAMES A",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "523",
+   "name": "ΣΤΑΘΜΟΣ ΚΗΦΙΣΙΑΣ - ΑΔΑΜΕΣ Β (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. KIFISIA - ADAMES B",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "524",
+   "name": "ΣΤΑΘΜΟΣ ΚΗΦΙΣΙΑΣ - ΠΟΛΙΤΕΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. KIFISIA - POLITEIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "526",
+   "name": "ΣΤΑΘΜΟΣ ΚΗΦΙΣΙΑΣ - ΚΕΦΑΛΑΡΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. KIFISIA- KEFALARI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "527",
+   "name": "ΠΕΥΚΗ - ΝΕΡΑΤΖΙΩΤΙΣΣΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PEYKI - NERATZIOTISSA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "530",
+   "name": "ΣΤΑΘΜΟΣ ΚΗΦΙΣΙΑΣ - ΜΕΛΙΣΣΙΑ - Ν. ΠΕΝΤΕΛΗ",
+   "name_en": "ST. KIFISIA - MELISSIA - N. PENTELI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "535",
+   "name": "ΖΗΡΙΝΕΙΟ - ΕΥΞΕΙΝΟΣ ΠΟΝΤΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ZIRINEIO - EYXEINOS PONTOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "535Α",
+   "name": "ΖΗΡΙΝΕΙΟ - ΕΥΞΕΙΝΟΣ ΠΟΝΤΟΣ - ΦΡΑΓΜΑ - ΚΑΛΕΤΖΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ZIRINEIO - EYXEINOS PONTOS - KALETZI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "536",
+   "name": "ΖΗΡΙΝΕΙΟ - ΔΙΟΝΥΣΟΣ",
+   "name_en": "ZIRINEIO - DIONYSOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "537",
+   "name": "ΑΧΑΡΝΑΙ - ΒΑΡΥΜΠΟΜΠΗ",
+   "name_en": "ACHARNAI - VARYMPOMPI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "541",
+   "name": "ΜΕΤΑΜΟΡΦΩΣΗ - ΣΤ. ΑΜΑΡΟΥΣΙΟΥ (ΚΥΚΛΙΚΗ)",
+   "name_en": "METAMORFOSI - ST. AMAROUSIOU",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "543",
+   "name": "ΣΤΑΘΜΟΣ ΚΗΦΙΣΙΑΣ - ΝΟΣ. ΑΓ. ΑΝΑΡΓΥΡΟΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. KIFISIA - NOS. AG. ANARGYROI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "543Α",
+   "name": "ΣΤΑΘΜΟΣ ΚΗΦΙΣΙΑΣ - ΝΟΣ. ΑΓ. ΑΝΑΡΓΥΡΟΙ (ΜΕΣΩ ΚΑΛΥΦΤΑΚΗ) (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. KIFISIA - NOS. AG. ANARGYROI (VIA KALIFTAKI)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "550",
+   "name": "Π. ΦΑΛΗΡΟ - ΚΗΦΙΣΙΑ",
+   "name_en": "P. FALIRO - KIFISIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "560",
+   "name": "ΣΤ. ΚΗΦΙΣΙΑ - ΜΟΡΤΕΡΟ - Ν. ΕΡΥΘΡΑΙΑ",
+   "name_en": "ST. KIFISIA - MORTERO - N. ERYTHRAIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "6",
+   "name": "ΙΠΠΟΚΡΑΤΟΥΣ - ΚΟΣΜΑΣ ΑΙΤΩΛΟΣ - Ν. ΦΙΛΑΔΕΛΦΕΙΑ",
+   "name_en": "IPPOKRATOUS - KOSMAS AITOLOS - N. FILADELFEIA",
+   "color": "#f19a1e",
+   "text_color": "#000000",
+   "kind": "trolley"
+  },
+  {
+   "id": "602",
+   "name": "Ν. ΙΩΝΙΑ - ΚΑΛΟΓΡΕΖΑ - ΣΤ. ΠΑΝΟΡΜΟΥ (ΚΥΚΛΙΚΗ)",
+   "name_en": "N. IONIA - KALOGREZA - ST. PANORMOY",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "604",
+   "name": "ΝΟΣ. ΑΓ. ΑΝΑΡΓΥΡΟΙ - ΣΤ. ΜΕΤΑΜΟΡΦΩΣΗΣ - ΝΕΑ ΙΩΝΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "NOS. AG. ANARGYROI - ST. METAMORFOSIS - NEA IONIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "605",
+   "name": "ΠΕΡΙΣΣΟΣ - ΑΝΩ ΠΑΤΗΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PERISSOS - ANO PATISIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "608",
+   "name": "ΓΑΛΑΤΣΙ - ΑΚΑΔΗΜΙΑ - ΝΕΚΡ. ΖΩΓΡΑΦΟΥ",
+   "name_en": "GALATSI - AKADIMIA - NEKR. ZOGRAFOY",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "610",
+   "name": "ΦΙΛΟΘΕΗ - ΑΜΠΕΛΟΚΗΠΟΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "FILOTHEI - AMPELOKIPOI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "619",
+   "name": "ΜΕΤΑΜΟΡΦΩΣΗ - Ν. ΦΙΛΑΔΕΛΦΕΙΑ - ΣΤ. ΑΝΩ ΠΑΤΗΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "METAMORFOSI - N. FILADELFEIA - ST. ANO PATISIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "622",
+   "name": "ΓΟΥΔΗ - ΑΝΩ ΓΑΛΑΤΣΙ",
+   "name_en": "GOYDI - ANO GALATSI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "640",
+   "name": "ΤΟΠΙΚΗ ΗΡΑΚΛΕΙΟΥ (ΚΥΚΛΙΚΗ)",
+   "name_en": "TOPIKI IRAKLEIOY",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "642",
+   "name": "ΗΡΑΚΛΕΙΟ - ΑΓ. ΝΕΚΤΑΡΙΟΣ - ΠΕΥΚΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "IRAKLEIO - AG. NEKTARIOS - PEYKI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "651",
+   "name": "ΨΥΧΙΚΟ - ΠΑΝΟΡΜΟΥ Α (ΚΥΚΛΙΚΗ)",
+   "name_en": "PSYCHIKO - PANORMOY A",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "653",
+   "name": "ΨΥΧΙΚΟ - ΠΑΝΟΡΜΟΥ Β (ΚΥΚΛΙΚΗ)",
+   "name_en": "PSYCHIKO - PANORMOY Β",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "700",
+   "name": "ΠΕΤΡΟΥΠΟΛΗ (ΑΓ. ΤΡΙΑΔΑ)-ΣΤ. ΑΝΘΟΥΠΟΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PETROUPOLI (AG. TRIADA)-ST. ANTHOUPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "701",
+   "name": "ΚΑΜΑΤΕΡΟ - ΙΛΙΟΝ - ΣΤ. ΑΝΘΟΥΠΟΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "KAMATERO - ILION ST. ANTHOYPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "703",
+   "name": "ΠΕΙΡΑΙΑΣ - ΑΓ. ΑΝΑΡΓΥΡΟΙ - ΑΓ. ΕΛΕΥΘΕΡΙΟΣ (ΜΕΣΩ ΘΗΒΩΝ)",
+   "name_en": "PEIRAIAS - AG. ANARGYROI - AG. ELEYTHERIOS (VIA THIVON)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "704",
+   "name": "ΚΑΜΑΤΕΡΟ - ΠΛ. ΑΓ. ΑΝΑΡΓΥΡΩΝ (ΚΥΚΛΙΚΗ)",
+   "name_en": "KAMATERO - PL. AG. ANARGYRON",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "705",
+   "name": "ΚΑΜΑΤΕΡΟ - ΙΛΙΟΝ - ΠΛ. ΑΓ. ΑΝΑΡΓΥΡΩΝ - ΣΤ. ΑΝΘΟΥΠΟΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "KAMATERO - ILION - PL. AG. ANARGYRON - ST. ANTHOYPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "706",
+   "name": "ΣΤ. ΑΓ. ΑΝΤΩΝΙΟΣ-ΙΛΙΟΝ (ΜΕΣΩ Λ. ΑΝ. ΠΑΠΑΝΔΡΕΟΥ)",
+   "name_en": "ST. AG. ANTONIOS-ILION (VIA L. ANDREA PAPANDREOU)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "709",
+   "name": "ΤΟΠΙΚΟ ΔΡΟΣΟΥΠΟΛΗΣ",
+   "name_en": "DROSOYPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "711",
+   "name": "ΣΤ. ΑΤΤΙΚΗ - ΖΩΦΡΙΑ",
+   "name_en": "ST. ATTIKI - ZOFRIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "712",
+   "name": "ΑΧΑΡΝΑΙ - ΕΡΓ. ΠΟΛΥΚΑΤΟΙΚΙΕΣ - Α. ΛΙΟΣΙΑ",
+   "name_en": "ACHARNAI - ERG. POLYKATOIKIES - A. LIOSIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "719",
+   "name": "ΚΗΠΟΥΠΟΛΗ - ΠΑΛΑΤΙΑΝΗ - ΣΤ. ΛΑΡΙΣΗΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "KIPOYPOLI - PALATIANI - ST. LARISIS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "720",
+   "name": "ΑΝΑΚΑΣΑ - ΑΓ. ΑΝΑΡΓΥΡΟΙ - ΣΤ. ΑΤΤΙΚΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ANAKASA - AG. ANARGYROI - ST. ATTIKI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "721",
+   "name": "ΑΧΑΡΝΑΙ - ΚΗΦΙΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ACHARNAI - KIFISIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "723",
+   "name": "ΦΥΛΗ - ΑΝΩ ΛΙΟΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "FYLI - ANO LIOSIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "724",
+   "name": "ΑΧΑΡΝΑΙ (ΜΕΣΟΝΥΧΙ) - Ν. ΙΩΝΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ACHARNAI (MESONYCHI) - N. IONIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "725",
+   "name": "ΑΧΑΡΝΑΙ (ΜΕΣΟΝΥΧΙ) - ΘΡΑΚΟΜΑΚΕΔΟΝΕΣ (ΠΛ.ΑΡΙΣΤΟΤΕΛΟΥΣ)  (ΚΥΚΛΙΚΗ)",
+   "name_en": "ACHARNAI(MESONYCHI)-THRAKOMAKEDONES (PL.ARISTOTELOUS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "726",
+   "name": "ΑΧΑΡΝΑΙ (ΜΕΣΟΝΥΧΙ) - ΘΡΑΚΟΜΑΚΕΔΟΝΕΣ (BOYNO)   (ΚΥΚΛΙΚΗ)",
+   "name_en": "ACHARNAI(MESONYCHI)-THRAKOMAKEDONES (MOUNT PARNITHA)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "727",
+   "name": "ΜΕΣΟΝΥΧΙ - ΑΓ. ΚΩΝΣΤΑΝΤΙΝΟΣ - ΑΓ.ΠΑΡΑΣΚΕΥΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "MESONYXI - AG.KONSTANTINOS - AG.PARASKEYH",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "728",
+   "name": "ΑΧΑΡΝΑΙ- ΑΓ.ΠΕΤΡΟΣ- ΑΓ.ΙΩΑΝΝΗΣ-ΠΛΑΤΩΝΑΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ACHARNAI - PLATONAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "730",
+   "name": "ΛΟΦΟΣ ΑΞΙΩΜΑΤΙΚΩΝ - ΣΤ. ΑΓ. ΑΝΤΩΝΙΟΣ - ΖΩΟΔ. ΠΗΓΗ",
+   "name_en": "LOFOS AKSIOMATIKON - ST. AGIOS ANTONIOS - ZOODOCHOS PIGI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "731",
+   "name": "ΑΝΘΟΥΠΟΛΗ - ΣΤ. Μ. ΑΝΘΟΥΠΟΛΗ - ΑΤΤΙΚΟ ΝΟΣ. - ΔΑΣΟΣ",
+   "name_en": "ANTHOUPOLI - ST. M. ANTHOUPOLI - ATTIKO NOS. - DASOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "732",
+   "name": "ΙΛΙΟΝ - ΑΓ. ΦΑΝΟΥΡΙΟΣ - ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ILION - AG. FANOYRIOS - AKADHMIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "733",
+   "name": "ΑΧΑΡΝΑΙ - ΑΝΩ ΛΙΟΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ACHARNAI - ANO LIOSIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "734",
+   "name": "ΑΧΑΡΝΑΙ - ΝΟΣ. ΑΓ. ΑΝΑΡΓΥΡΟΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ACHARNAI - NOS. AG. ANARGYROI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "735",
+   "name": "ΑΧΑΡΝΑΙ - ΖΕΦΥΡΙ - ΣΤ. ΚΑΤΩ ΠΑΤΗΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ACHARNAI - ZEFYRI - ST. KATO PATISIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "740",
+   "name": "ΟΛΥΜΠ. ΧΩΡΙΟ - ΣΚΑ - ΑΧΑΡΝΑΙ - ΑΓ. ΑΝΝΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "OLYMP. CHORIO - SKA - ACHARNAI - AG. ANNA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "747",
+   "name": "ΠΕΤΡΟΥΠΟΛΗ - ΠΑΝΟΡΑΜΑ - ΣΤ. ΑΝΘΟΥΠΟΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PETROYPOLI - PANORAMA - ST. ANTHOYPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "748",
+   "name": "ΧΡΥΣΟΥΠΟΛΗ - ΑΝΘΟΥΠΟΛΗ - ΣΤ. ΠΕΡΙΣΤΕΡΙ (ΚΥΚΛΙΚΗ)",
+   "name_en": "CHRYSOYPOLI - ANTHOYPOLI - ST. PERISTERI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "749",
+   "name": "ΟΙΚΙΣΜΟΣ ΓΕΝΝΗΜΑΤΑ-ΣΤ. ΠΡΟΑΣΤΙΑΚΟΥ (ΚΥΚΛΙΚΗ)",
+   "name_en": "OIKISMOS GENNIMATA-ST. PROASTIAKOU",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "750",
+   "name": "ΑΤΤΙΚΟ ΝΟΣΟΚΟΜΕΙΟ - ΣΤ. ΜΕΤΡΟ ΑΙΓΑΛΕΩ - ΝΙΚΑΙΑ",
+   "name_en": "ATTIKO NOSOKOMEIO - ST. METRO AIGALEO - NIKAIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "752",
+   "name": "ΑΧΑΡΝΑΙ - ΑΓ. ΙΩΑΝΝΗΣ - ΑΓ. ΠΕΤΡΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ACHARNAI - AG. IOANNIS - AG. PETROS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "755",
+   "name": "ΑΧΑΡΝΑΙ-ΚΟΚΚΙΝΟΣ ΜΥΛΟΣ-ΣΤ. ΚΑΤΩ ΠΑΤΗΣΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AXARNAI-KOKKINOS MYLOS-ST.KATO PATHSIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "755Β",
+   "name": "ΑΧΑΡΝΑΙ-ΚΟΚΚΙΝΟΣ ΜΥΛΟΣ-ΣΤ. ΚΑΤΩ ΠΑΤΗΣΙΑ (ΚΥΚΛΙΚΗ ΜΕΣΩ ΧΑΡΑΥΓΗΣ)",
+   "name_en": "AXARNAI-KOKKINOS MYLOS-ST.KATO PATHSIA (VIA HARAVGI)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "790",
+   "name": "ΓΛΥΦΑΔΑ - ΠΕΡΙΣΤΕΡΙ (ΑΝΘΟΥΠΟΛΗ) ΝΥΧΤΕΡΙΝΗ",
+   "name_en": "GLYFADA - PERISTERI (ANTHOYPOLI) (NIGHT LINE)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "800",
+   "name": "ΝΙΚΑΙΑ - ΣΤ. ΝΙΚΑΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "NIKAIA ST.NIKAIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "803",
+   "name": "ΠΕΙΡΑΙΑΣ - ΔΑΣΟΣ ΧΑΪΔΑΡΙΟΥ",
+   "name_en": "PEIRAIAS - DASOS HAIDARIOU",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "805",
+   "name": "ΑΣΠΡΟΠΥΡΓΟΣ - ΝΕΟΚΤΙΣΤΑ",
+   "name_en": "ASPROPYRGOS - NEOKTISTA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "806",
+   "name": "ΣΧΙΣΤΟ - ΚΑΡΑΒΑΣ  - ΣΤ. ΚΟΡΥΔΑΛΛΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "SXISTO - KARABAS - ST. KORYDALLOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "807",
+   "name": "ΑΝΩ ΚΟΡΥΔΑΛΛΟΣ - ΣΤ. ΜΕΤΡΟ ΑΙΓΑΛΕΩ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ANO KORYDALLOS - ST. METRO AIGALEO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "809",
+   "name": "ΣΧΙΣΤO - ΣΤ.ΝΙΚΑΙΑ - ΣΤ.ΚΟΡΥΔΑΛΛΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "SXISTO - ST.METRO NIKAIA - ST.KORYDALLOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "810",
+   "name": "ΣΧΙΣΤΟ - ΣΤ. ΚΟΡΥΔΑΛΛΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "SCHISTO - ST. KORYDALLOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "811",
+   "name": "ΧΑΪΔΑΡΙ - ΣΤ. ΑΓΙΑ ΜΑΡΙΝΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "CHAIDARI - ST. AGIA MARINA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "813",
+   "name": "ΑΒΕΡΩΦ - ΠΡΟΥΣΣΗΣ",
+   "name_en": "AVEROF - PROYSSIS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "814",
+   "name": "ΣΧΙΣΤΟ ΚΑΡΑΒΑΣ - ΠΕΙΡΑΙΑΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "SCHISTO KARAVAS - PEIRAIAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "815",
+   "name": "ΓΟΥΔΗ - ΤΑΥΡΟΣ",
+   "name_en": "GOYDI - TAYROS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "816",
+   "name": "ΤΑΥΡΟΣ - ΑΓ. ΔΗΜΗΤΡΙΟΣ",
+   "name_en": "TAYROS - AG. DIMITRIOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "817",
+   "name": "ΕΛΕΥΣΙΝΑ - ΜΑΝΔΡΑ",
+   "name_en": "ELEYSINA - MANDRA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "818",
+   "name": "ΛΙΜ. ΠΕΡΑΜΑΤΟΣ - ΑΝΩ ΠΕΡΑΜΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "LIM. PERAMATOS - ANO PERAMA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "819",
+   "name": "ΠΕΡΑΜΑ - ΝΕΚΡ. ΣΧΙΣΤΟΥ",
+   "name_en": "PERAMA - NEKR. SCHISTOY",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "820",
+   "name": "ΚΕΡΑΤΣΙΝΙ - ΣΤ.ΝΙΚΑΙΑ - ΔΡΑΠΕΤΣΩΝΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "KERATSINI - ST.NIKAIA -  DRAPETSONA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "821",
+   "name": "ΑΓΙΑ ΑΝΑΣΤΑΣΙΑ - ΣΤ. ΑΓ. ΑΝΤΩΝΙΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AGIA ANASTASIA - ST. AG. ANTONIOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "822",
+   "name": "ΣΤ. ΑΓ. ΑΝΤΩΝΙΟΣ - ΝΕΑ ΖΩΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST.AG.ANTONIOS - NEA ZOI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "823",
+   "name": "ΣΤ. ΑΓ. ΑΝΤΩΝΙΟΣ - ΑΓ. ΒΑΣΙΛΕΙΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. AG. ANTONIOS - AG. VASILEIOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "824",
+   "name": "ΝΕΑΠΟΛΗ - ΑΓ. ΑΝΤΩΝΙΟΣ - ΠΕΙΡΑΙΑΣ Α (ΚΥΚΛΙΚΗ)",
+   "name_en": "NEAPOLI - AG. ANTONIOS - PEIRAIAS A",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "825",
+   "name": "ΝΕΑΠΟΛΗ - ΑΓ. ΑΝΤΩΝΙΟΣ - ΠΕΙΡΑΙΑΣ Β (ΚΥΚΛΙΚΗ)",
+   "name_en": "NEAPOLI - AG. ANTONIOS - PEIRAIAS B",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "826",
+   "name": "ΠΕΙΡΑΙΑΣ - ΑΓ. ΜΗΝΑΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PEIRAIAS - AG. MINAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "827",
+   "name": "ΠΕΙΡΑΙΑΣ - ΑΣΠΡΑ ΧΩΜΑΤΑ - ΣΤ. ΝΙΚΑΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PEIRAIAS - ASPRA CHOMATA - ST. NIKAIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "828",
+   "name": "ΠΕΙΡΑΙΑΣ - ΘΗΒΩΝ - ΣΤ. ΝΙΚΑΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PEIRAIAS - THIVON - ST.NIKAIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "829",
+   "name": "ΠΑΔΑ ΑΡΧΑΙΟΣ ΕΛΑΙΩΝΑΣ - ΣΤ.ΑΙΓΑΛΕΩ - ΠΑΔΑ ΑΛΣΟΣ ΑΙΓΑΛΕΩ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PADA ARCHAIOS ELEONAS -ST. AIGALEO - PADA ALSOS AIGALEO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "830",
+   "name": "ΑΓ. ΒΑΡΒΑΡΑ - ΣΤ. ΚΟΡΥΔΑΛΛΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AG. VARVARA -ST. KORYDALLOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "831",
+   "name": "ΠΕΙΡΑΙΑΣ - ΑΙΓΑΛΕΩ",
+   "name_en": "PEIRAIAS - AIGALEO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "832",
+   "name": "ΕΥΓΕΝΕΙΑ-ΧΑΡΑΥΓΗ-ΠΕΙΡΑΙΑΣ Α (ΚΥΚΛΙΚΗ)",
+   "name_en": "EYGENEIA-CHARAYGI-PEIRAIAS A",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "833",
+   "name": "ΕΥΓΕΝΕΙΑ-ΧΑΡΑΥΓΗ-ΠΕΙΡΑΙΑΣ Β (ΚΥΚΛΙΚΗ)",
+   "name_en": "EYGENEIA-CHARAYGI-PEIRAIAS B",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "837",
+   "name": "ΑΓΙΑ ΒΑΡΒΑΡΑ - ΣΤ.ΑΓ.ΒΑΡΒΑΡΑ - ΣΤ.ΑΓ.ΜΑΡΙΝΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AGIA VARVARA - ST. AG.VARVARA - ST.AG.MARINA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "838",
+   "name": "ΟΜΟΝΟΙΑ - ΡΕΝΤΗΣ - ΠΑΛ. ΚΟΚΚΙΝΙΑ - ΠΕΙΡΑΙΑΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "OMONOIA - RENTIS - PAL. KOKKINIA - PEIRAIAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "841",
+   "name": "ΠΕΡΑΜΑ - ΣΤ. ΝΙΚΑΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PERAMA - ST. NIKAIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "842",
+   "name": "ΠΕΡΑΜΑ - ΣΤ.ΚΟΡΥΔΑΛΛΟΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PERAMA - ST. KORYDALLOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "843",
+   "name": "ΠΕΙΡΑΙΑΣ - ΠΕΡΑΜΑ",
+   "name_en": "PEIRAIAS - PERAMA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "845",
+   "name": "ΠΕΙΡΑΙΑΣ - ΕΛΕΥΣΙΝΑ (ΜΕΣΩ ΘΗΒΩΝ)",
+   "name_en": "PEIRAIAS - ELEYSINA (VIA THIVON)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "846",
+   "name": "ΝΕΑΠΟΛΗ -  ΣΤ. ΝΙΚΑΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "NEAPOLI -  ST. NIKAIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "852",
+   "name": "ΝΕΑΠΟΛΗ - ΣΤ. ΜΕΤΡΟ ΑΙΓΑΛΕΩ (ΚΥΚΛΙΚΗ)",
+   "name_en": "NEAPOLI - ST. METRO AIGALEO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "855",
+   "name": "ΨΑΡΙ - ΑΣΠΡΟΠΥΡΓΟΣ - ΛΟΦΟΣ ΚΥΡΙΛΛΟΥ",
+   "name_en": "PSARI - ASPROPYRGOS - LOFOS KYRILLOY",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "856",
+   "name": "ΑΙΓΑΛΕΩ - ΥΜΗΤΤΟΣ - ΔΑΦΝΗ",
+   "name_en": "AIGALEO - YMITTOS - DAFNI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "859",
+   "name": "ΠΕΙΡΑΙΑΣ-ΔΕΞΑΜΕΝΕΣ-ΝΕΟΣ ΜΩΛΟΣ ΔΡΑΠΕΤΣΩΝΑΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PEIRAIAS - DEXAMENES - N.MOLOS DRAPETSONAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "860",
+   "name": "Π. ΦΑΛΗΡΟ - ΓΕΝ. ΚΡΑΤΙΚΟ ΝΙΚΑΙΑΣ - ΣΧΙΣΤΟ ΚΕΡΑΤΣΙΝΙΟΥ (ΑΠΟ ΧΡ.ΣΜΥΡΝΗΣ-ΣΧΟΛΕΙΑ)",
+   "name_en": "P. FALIRO - GEN. KRATIKO NIKAIAS - SCHISTO KERATSINIOY",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "861",
+   "name": "ΕΛΕΥΣΙΝΑ - ΜΑΝΔΡΑ (ΟΙΚΙΣΜΟΣ ΤΙΤΑΝ)",
+   "name_en": "ELEYSINA - MANDRA (OIKISMOS TITAN)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "861Β",
+   "name": "ΕΛΕΥΣΙΝΑ – ΜΑΝΔΡΑ - ΒΙΛΙΑ - ΕΡΥΘΡΕΣ",
+   "name_en": "ELEYSINA - MANDRA - VILIA - ERYTHRES",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "862",
+   "name": "ΠΑΡΑΛΙΑ - ΑΝΩ ΕΛΕΥΣΙΝΑ",
+   "name_en": "PARALIA - ANO ELEYSINA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "863",
+   "name": "ΕΛΕΥΣΙΝΑ - ΘΡΙΑΣΙΟ ΝΟΣ. - ΜΑΝΔΡΑ",
+   "name_en": "ELEYSINA - THRIASIO NOS. - MANDRA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "864",
+   "name": "ΕΛΕΥΣΙΝΑ - ΒΙΟΜΗΧΑΝΙΚΗ ΠΕΡΙΟΧΗ ΜΑΓΟΥΛΑΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ELEYSINA - VIOMICHANIKI ZONI MAGOYLAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "865",
+   "name": "ΑΜΑΞΟΣΤΑΣΙΟ ΒΟΤΑΝΙΚΟΥ - ΜΑΝΔΡΑ",
+   "name_en": "DEPOT VOTANIKOU  - MANDRA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "866",
+   "name": "ΑΣΠΡΟΠΥΡΓΟΣ - ΣΤ. ΑΓ. ΜΑΡΙΝΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ASPROPYRGOS - ST. AG. MARINA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "868",
+   "name": "ΘΡΙΑΣΙΟ ΝΟΣΟΚΟΜΕΙΟ - ΣΤ.ΑΓ.ΜΑΡΙΝΑ",
+   "name_en": "ST. AG. MARINA - THRIASIO - MANDRA (FRIDAYS DURING THE FARMERS MARKET)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "871",
+   "name": "ΠΕΙΡΑΙΑΣ - ΕΛΕΥΣΙΝΑ (ΜΕΣΩ Λ. ΕΘΝ. ΑΝΤΙΣΤΑΣΕΩΣ)",
+   "name_en": "PEIRAIAS - ELEYSINA (VIA L. ETHN. ANTISTASEOS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "871Τ",
+   "name": "ΠΕΙΡΑΙΑΣ - ΣΧΙΣΤΟ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PEIRAIAS - SCHISTO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "876",
+   "name": "ΕΛΕΥΣΙΝΑ - ΣΤ. ΑΓ. ΜΑΡΙΝΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ELEYSINA - ST. AG. MARINA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "878",
+   "name": "ΑΧΑΡΝΑΙ - ΕΛΕΥΣΙΝΑ",
+   "name_en": "ACHARNAI - ELEYSINA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "879",
+   "name": "ΑΧΑΡΝΑΙ - ΘΡΙΑΣΙΟ ΝΟΣΟΚΟΜΕΙΟ - ΕΛΕΥΣΙΝΑ",
+   "name_en": "ACHARNAI - THRIASIO NOSOKOMEIO - ELEYSINA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "881",
+   "name": "ΕΛΕΥΣΙΝΑ - ΑΣΠΡΟΠΥΡΓΟΣ - ΡΟΥΠΑΚΙ",
+   "name_en": "ELEYSINA - ASPROPYRGOS - ROYPAKI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "890",
+   "name": "ΣΤ. ΑΓ. ΜΑΡΙΝΑ - ΝΑΥΠΗΓΕΙΑ ΣΚΑΡΑΜΑΓΚΑ",
+   "name_en": "ST. AG. MARINA - NAFPIGIA SKARAMAGKA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "891",
+   "name": "ΑΓ. ΒΑΡΒΑΡΑ - ΑΙΓΑΛΕΩ - ΠΕΡΙΣΤΕΡΙ - ΣΤΑΘ. ΑΤΤΙΚΗΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "AG. BARBARA - AIGALEO - PERISTERI - STATH. ATTIKIS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "892",
+   "name": "ΑΓ. ΒΑΡΒΑΡΑ - ΧΑΪΔΑΡΙ - ΑΓ. ΑΝΑΡΓΥΡΟΙ-ΙΛΙΟΝ",
+   "name_en": "AG. VARVARA - CHAIDARI - AG. ANARGYROI-ILION",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "904",
+   "name": "ΠΛ. ΚΑΡΑΪΣΚΑΚΗ - ΣΤ. ΠΕΙΡΑΙΑ - ΦΡΕΑΤΤΥΔΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PL. KARAΪSKAKI - ST. PEIRAIA - FREATΤYDA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "906",
+   "name": "ΠΛ. ΚΑΡΑΪΣΚΑΚΗ - ΚΑΛΛΙΠΟΛΗ (ΚΥΚΛΙΚΗ)",
+   "name_en": "PL. KARAΪSKAKI - KALLIPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "909",
+   "name": "ΑΓ. ΒΑΣΙΛΕΙΟΣ - ΑΓ. ΣΟΦΙΑ - ΚΡΑΤ. ΝΙΚΑΙΑΣ",
+   "name_en": "AG. VASILEIOS - AG. SOFIA - KRAT. NIKAIAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "910",
+   "name": "ΣΤ. ΣΥΓΓΡΟΥ ΦΙΞ - ΤΖΙΤΖΙΦΙΕΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. SYGGROY FIX - TZITZIFIES",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "911",
+   "name": "ΣΤΑΘ. ΚΑΛΛΙΘΕΑΣ - ΙΔΡ. ΤΥΦΛΩΝ (ΚΥΚΛΙΚΗ)",
+   "name_en": "STATH. KALLITHEAS - IDR. TYFLON",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "911Α",
+   "name": "ΣΤΑΘ. ΚΑΛΛΙΘΕΑΣ - ΙΔΡ. ΤΥΦΛΩΝ -Π.Ε ΝΟΤΙΟΥ ΤΟΜΕΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "STATH. KALLITHEAS - IDR. TYFLON -P.E NOTIOY TOMEA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "912",
+   "name": "ΝΕΟ ΦΑΛΗΡΟ - ΚΕΠΑ",
+   "name_en": "NEO FALIRO - KEPA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "914",
+   "name": "ΟΜΟΝΟΙΑ - ΛΑΧΑΝΑΓΟΡΑ - ΠΑΛ. ΚΟΚΚΙΝΙΑ (ΚΥΚΛΙΚΗ)",
+   "name_en": "OMONOIA - LACHANAGORA - PAL. KOKKINIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "915",
+   "name": "ΛΟΦΟΣ ΒΩΚΟΥ - ΠΡ. ΗΛΙΑΣ (ΚΥΚΛΙΚΗ)",
+   "name_en": "LOFOS VOKOY - PR. ILIAS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Α1",
+   "name": "ΠΕΙΡΑΙΑΣ - ΒΟΥΛΑ",
+   "name_en": "PEIRAIAS - VOYLA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Α10",
+   "name": "ΣΤΑΘΜΟΣ ΛΑΡΙΣΗΣ - ΑΧΑΡΝΑΙ",
+   "name_en": "STATHMOS LARISIS - ACHARNAI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Α11",
+   "name": "ΠΛ. ΒΑΘΗ - ΙΛΙΟΝ - ΠΕΤΡΟΥΠΟΛΗ (ΜΕΣΩ ΠΑΝΟΡΑΜΑΤΟΣ)",
+   "name_en": "PL. VATHI - ILION - PETROYPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Α13",
+   "name": "ΟΜΟΝΟΙΑ - ΚΗΠΟΥΠΟΛΗ",
+   "name_en": "OMONOIA - KIPOYPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Α15",
+   "name": "ΣΤ. ΛΑΡΙΣΗΣ - ΔΑΣΟΣ",
+   "name_en": "ST. LARISIS - DASOS",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Α2",
+   "name": "ΑΚΑΔΗΜΙΑ - ΒΟΥΛΑ (ΜΕΣΩ Λ. ΑΜΦΙΘΕΑΣ)",
+   "name_en": "AKADIMIA - VOULA (VIA L. AMFITHEAS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Α3",
+   "name": "ΑΚΑΔΗΜΙΑ - ΓΛΥΦΑΔΑ (ΜΕΣΩ Λ. ΒΟΥΛΙΑΓΜΕΝΗΣ)",
+   "name_en": "AKADIMIA - GLYFADA (VIA L. VOULIAGMENIS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Α5",
+   "name": "ΑΚΑΔΗΜΙΑ - ΑΓ. ΠΑΡΑΣΚΕΥΗ - ΑΝΘΟΥΣΑ",
+   "name_en": "AKADIMIA - AG. PARASKEYI - ANTHOYSA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Α7",
+   "name": "ΣΤΟΥΡΝΑΡΗ - ΚΗΦΙΣΙΑ (ΠΛΑΤΕΙΑ ΠΛΑΤΑΝΟΥ)",
+   "name_en": "STOYRNARI - KIFISIA (PLATEIA PLATANOU)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Α8",
+   "name": "ΠΟΛΥΤΕΧΝΕΙΟ - Ν. ΙΩΝΙΑ - ΜΑΡΟΥΣΙ",
+   "name_en": "POLYTEXNEIO - N. IONIA - MAROUSI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Β1",
+   "name": "ΠΕΙΡΑΙΑΣ - ΑΝΩ ΓΛΥΦΑΔΑ",
+   "name_en": "PEIRAIAS - ANO GLYFADA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Β10",
+   "name": "ΣΤΑΘΜΟΣ ΛΑΡΙΣΗΣ - ΑΧΑΡΝΑΙ (ΜΕΣΩ ΑΡΙΣΤΟΤΕΛΟΥΣ)",
+   "name_en": "STATHMOS LARISIS - ACHARNAI (VIA ARISTOTELOYS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Β11",
+   "name": "ΠΛ. ΒΑΘΗ - ΙΛΙΟΝ - ΠΕΤΡΟΥΠΟΛΗ",
+   "name_en": "PL. VATHI - ILION - PETROYPOLI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Β12",
+   "name": "ΣΤ. ΑΤΤΙΚΗ - ΑΝΩ ΛΙΟΣΙΑ (ΠΑΝΟΡΑΜΑ)",
+   "name_en": "ST. ATTIKI -  ANO LIOSIA (PANORAMA)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Β15",
+   "name": "ΣΤ. ΛΑΡΙΣΗΣ - ΠΑΛΑΤΑΚΙ",
+   "name_en": "ST. LARISIS - PALATAKI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Β2",
+   "name": "ΣΤ. ΣΥΓΓΡΟΥ ΦΙΞ - ΑΓ.ΚΟΣΜΑΣ (ΜΕΣΩ ΠΑΡΑΛΙΑΚΗΣ) (ΚΥΚΛΙΚΗ)",
+   "name_en": "ST. SYGGROY FIX - AGIOS KOSMAS (VIA PARALIAKI)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Β5",
+   "name": "ΣΤ. ΛΑΡΙΣΗΣ - Λ. ΑΛΕΞΑΝΔΡΑΣ - ΑΓ. ΠΑΡΑΣΚΕΥΗ",
+   "name_en": "ST. LARISIS - L. ALEXANDRAS - AG. PARASKEYI",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Β9",
+   "name": "ΧΑΛΚΟΚΟΝΔΥΛΗ - ΜΕΤΑΜΟΡΦΩΣΗ - Ν. ΚΗΦΙΣΙΑ",
+   "name_en": "CHALKOKONDYLI - METAMORFOSI - N. KIFISIA",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Γ12",
+   "name": "ΚΑΜΑΤΕΡΟ - ΑΓ. ΝΙΚΟΛΑΟΣ - ΙΛΙΟΝ - ΠΟΛΥΤΕΧΝΕΙΟ (ΚΥΚΛΙΚΗ)",
+   "name_en": "KAMATERO - AG. NIKOLAOS - ILION - POLYTECHNEIO",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Ε14",
+   "name": "ΣΥΝΤΑΓΜΑ - Ο.Α.Κ.Α. - ΥΠ. ΠΑΙΔΕΙΑΣ (EXPRESS)",
+   "name_en": "SYNTAGMA - O.A.K.A. - YP. PAIDEIAS (EXPRESS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Ε90",
+   "name": "ΠΕΙΡΑΙΑΣ - ΠΑΝΕΠΙΣΤΗΜΙΟΥΠΟΛΗ (ΣΧΟΛΙΚΗ EXPRESS)",
+   "name_en": "PEIRAIAS - PANEPISTIMIOYPOLI (SCHOLIKI EXPRESS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Χ14",
+   "name": "ΣΥΝΤΑΓΜΑ - ΚΗΦΙΣΙΑ (EXPRESS-ΝΥΧΤΕΡΙΝΗ)",
+   "name_en": "SYNTAGMA - KIFISIA (EXPRESS-NIGHTLINE)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Χ21",
+   "name": "ΣΤ. ΜΕΤΡΟ ΕΥΑΓΓΕΛΙΣΜΟΣ - ΣΤ. ΜΕΤΡΟ ΕΘΝ. ΑΜΥΝΑ",
+   "name_en": "",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Χ93",
+   "name": "ΣΤ. ΥΠΕΡ. ΛΕΩΦ. ΚΗΦΙΣΟΥ - ΑΕΡΟΛΙΜΕΝΑΣ ΑΘΗΝΩΝ (EXPRESS)",
+   "name_en": "ST. YPER. LEOF. KIFISOU - AEROLIMENAS ATHINON (EXPRESS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Χ95",
+   "name": "ΣΥΝΤΑΓΜΑ - ΑΕΡΟΛ. ΑΘΗΝΩΝ (EXPRESS)",
+   "name_en": "SYNTAGMA - AEROL. ATHINON (EXPRESS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Χ96",
+   "name": "ΠΕΙΡΑΙΑΣ - ΑΕΡ/ΝΑΣ ΑΘΗΝΩΝ (EXPRESS)",
+   "name_en": "PEIRAIAS - AEROLIMENAS ATHINON (EXPRESS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  },
+  {
+   "id": "Χ97",
+   "name": "ΑΕΡΟΛΙΜΕΝΑΣ ΑΘΗΝΩΝ - ΣΤ. ΕΛΛΗΝΙΚΟ (EXPRESS) (ΚΥΚΛΙΚΗ)",
+   "name_en": "AEROL. ATHINON - ST. ELLINIKO (EXPRESS)",
+   "color": "#153ce0",
+   "text_color": "#ffffff",
+   "kind": "bus"
+  }
+ ]
+}

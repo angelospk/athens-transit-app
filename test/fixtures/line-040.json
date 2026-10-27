@@ -1,0 +1,61 @@
+{
+ "line": "040",
+ "updated_at": 1791187852,
+ "next_update_at": 1791187882,
+ "vehicles": [
+  {
+   "id": "44548",
+   "lat": 37.970621,
+   "lon": 23.732689,
+   "bearing": 3,
+   "position_at": 1791187847,
+   "route_code": "3922",
+   "variant": "5512",
+   "trip_id": "938_day_1_1305_1030",
+   "trip_label": "10:30 ΠΕΙΡΑΙΑΣ → ΣΥΝΤΑΓΜΑ",
+   "delay_s": 140,
+   "next_stop_id": "60810",
+   "speed": 6.4,
+   "path": [[37.97062, 23.73269], [37.97084, 23.73297], [37.9734, 23.73516], [37.97465, 23.73548]],
+   "path_beyond": null,
+   "path_stops": [520],
+   "path_speeds": [6.2, 4.1, null]
+  },
+  {
+   "id": "44537",
+   "lat": 37.956144,
+   "lon": 23.716094,
+   "bearing": 52,
+   "position_at": 1791187838,
+   "route_code": "3922",
+   "variant": "5512",
+   "trip_id": "938_day_1_1306_1052",
+   "trip_label": "10:52 ΠΕΙΡΑΙΑΣ → ΣΥΝΤΑΓΜΑ",
+   "delay_s": -35,
+   "next_stop_id": "380107",
+   "speed": 0,
+   "path": [[37.95614, 23.7161], [37.95804, 23.71853]],
+   "path_beyond": null,
+   "path_stops": [300],
+   "path_speeds": [6.2, 4.1, null]
+  },
+  {
+   "id": "44549",
+   "lat": 37.938502,
+   "lon": 23.631061,
+   "bearing": null,
+   "position_at": 1791187843,
+   "route_code": "3922",
+   "variant": "5512",
+   "trip_id": null,
+   "trip_label": null,
+   "delay_s": null,
+   "next_stop_id": null,
+   "speed": null,
+   "path": null,
+   "path_beyond": null,
+   "path_stops": null,
+   "path_speeds": null
+  }
+ ]
+}
