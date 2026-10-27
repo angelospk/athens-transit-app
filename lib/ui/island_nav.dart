@@ -35,9 +35,9 @@ class IslandNav extends StatelessWidget {
               boxShadow: const [BoxShadow(color: Color(0x26000000), blurRadius: 14, offset: Offset(0, 4))],
             ),
             padding: const EdgeInsets.all(6),
-            child: Row(children: [
-              for (var i = 0; i < items.length; i++)
-                Expanded(flex: i == index ? 3 : 2, child: _tab(context, items[i], i == index, () => onTap(i))),
+            // Each tab is as wide as it needs: the open one fits its whole name, the rest share the space.
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              for (var i = 0; i < items.length; i++) _tab(context, items[i], i == index, () => onTap(i)),
             ]),
           ),
         ),
@@ -60,15 +60,12 @@ class IslandNav extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(color: on ? t.indicator : Colors.transparent, borderRadius: BorderRadius.circular(24)),
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(it.icon, color: on ? t.ink : t.muted, size: 22),
             if (on) ...[
               const SizedBox(width: 6),
-              Flexible(
-                child: Text(it.label,
-                    maxLines: 1, overflow: TextOverflow.fade, softWrap: false, style: TextStyle(color: t.ink, fontSize: 14, fontWeight: FontWeight.w600)),
-              ),
+              Text(it.label, maxLines: 1, softWrap: false, style: TextStyle(color: t.ink, fontSize: 14, fontWeight: FontWeight.w600)),
             ],
           ]),
         ),
