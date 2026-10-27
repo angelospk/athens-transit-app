@@ -1,16 +1,102 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(const MainApp());
+import 'background/service.dart';
+import 'data/api.dart';
+import 'data/live.dart';
+import 'data/store.dart';
+import 'ui/favs_screen.dart';
+import 'ui/map_screen.dart';
+import 'ui/onboard_screen.dart';
+import 'ui/rules_screen.dart';
+import 'ui/settings_screen.dart';
+import 'ui/theme.dart';
+import 'ui/widgets.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final api = Api();
+  final store = AppStore(prefs);
+  final live = LiveHub(api)..watch(store.myLines);
+  await AlertService.init(store);
+  runApp(Deps(store: store, live: live, api: api, child: const TransitApp()));
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class TransitApp extends StatelessWidget {
+  const TransitApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
+    final store = Deps.of(context).store;
+    return ListenableBuilder(
+      listenable: store,
+      builder: (context, _) => MaterialApp(
+        title: 'Athens Transit',
+        debugShowCheckedModeBanner: false,
+        theme: buildTheme(Brightness.light),
+        darkTheme: buildTheme(Brightness.dark),
+        themeMode: store.theme,
+        locale: const Locale('el'),
+        supportedLocales: const [Locale('el'), Locale('en')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        home: store.onboarded ? const Shell() : const OnboardScreen(),
+      ),
+    );
+  }
+}
+
+class Shell extends StatefulWidget {
+  const Shell({super.key});
+  static final tab = ValueNotifier(0);
+
+  @override
+  State<Shell> createState() => _ShellState();
+}
+
+class _ShellState extends State<Shell> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState s) {
+    final d = Deps.of(context);
+    d.live.pause(s != AppLifecycleState.resumed);
+    if (s == AppLifecycleState.resumed) AlertService.sync(d.store);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = Deps.of(context).store;
+    final live = Deps.of(context).live;
+    return ListenableBuilder(
+      listenable: Listenable.merge([Shell.tab, store]),
+      builder: (context, _) {
+        live.watch(store.myLines);
+        return Scaffold(
+          body: IndexedStack(index: Shell.tab.value, children: const [MapScreen(), FavsScreen(), RulesScreen(), SettingsScreen()]),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: Shell.tab.value,
+            onDestinationSelected: (i) => Shell.tab.value = i,
+            destinations: const [
+              NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Χάρτης'),
+              NavigationDestination(icon: Icon(Icons.star_outline), selectedIcon: Icon(Icons.star), label: 'Στάσεις'),
+              NavigationDestination(icon: Icon(Icons.notifications_outlined), selectedIcon: Icon(Icons.notifications), label: 'Ειδοποιήσεις'),
+              NavigationDestination(icon: Icon(Icons.menu), label: 'Περισσότερα'),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -206,3 +206,20 @@ String hitText(RuleHit h, String stop) {
   if (left == null) return 'Το ${h.line} φτάνει στη $stop$late${e == null ? '' : ' σε ~${(e / 60).round()}′'}.';
   return 'Το ${h.line} είναι $left στάσεις πριν από $stop$late$inMin.';
 }
+
+/// When a weekly rule next starts (strictly after [nowUtc]), or null for one-off and disabled rules.
+DateTime? nextStartUtc(Rule r, DateTime nowUtc) {
+  if (!r.enabled || r.untilS != null || r.days == 0) return null;
+  final wall = athensWall(nowUtc);
+  for (var k = 0; k <= 7; k++) {
+    final day = DateTime.utc(wall.year, wall.month, wall.day + k);
+    if (r.days & (1 << (day.weekday - 1)) == 0) continue;
+    final wallStart = day.add(Duration(minutes: r.startMin));
+    // The offset at that moment: try EET first, then EEST.
+    var utc = wallStart.subtract(const Duration(hours: 2));
+    if (athensOffsetHours(utc) == 3) utc = wallStart.subtract(const Duration(hours: 3));
+    final paused = r.pausedUntilS;
+    if (utc.isAfter(nowUtc) && (paused == null || utc.millisecondsSinceEpoch ~/ 1000 >= paused)) return utc;
+  }
+  return null;
+}

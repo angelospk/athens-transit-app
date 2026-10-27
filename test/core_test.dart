@@ -169,6 +169,12 @@ void main() {
       expect(got.first.distM, lessThan(30));
     });
 
+    test('fold ignores case, accents and final sigma', () {
+      expect(fold('Πανεπιστήμιο'), fold('ΠΑΝΕΠΙΣΤΗΜΙΟ'));
+      expect(fold('Λεωφόρος Κηφισίας'), 'λεωφοροσ κηφισιασ');
+      expect(fold('Ϊ ΰ'), 'ι υ');
+    });
+
     test('lines serving a stop name are sorted naturally', () {
       expect(sortLines(['550', 'Α1', '040', '224', 'Χ96']), ['040', '224', '550', 'Α1', 'Χ96']);
     });
@@ -253,6 +259,18 @@ void main() {
         ])
       };
       expect(RuleWatcher().check([rule()], st, live, 1000 + 121), isEmpty);
+    });
+
+    test('next start of a weekly rule, in UTC', () {
+      final r = rule(); // Mon-Fri 08:00 Athens
+      // Tue 27 Oct 2026 08:10 Athens (inside): next is Wed 08:00 = 06:00 UTC (EET).
+      expect(nextStartUtc(r, DateTime.utc(2026, 10, 27, 6, 10)), DateTime.utc(2026, 10, 28, 6, 0));
+      // Fri 30 Oct 09:00 Athens: next is Mon 2 Nov 08:00.
+      expect(nextStartUtc(r, DateTime.utc(2026, 10, 30, 7, 0)), DateTime.utc(2026, 11, 2, 6, 0));
+      // Summer time: Mon 6 Jul 07:00 Athens -> same day 08:00 = 05:00 UTC.
+      expect(nextStartUtc(r, DateTime.utc(2026, 7, 6, 4, 0)), DateTime.utc(2026, 7, 6, 5, 0));
+      expect(nextStartUtc(rule(days: 0).copyWith(untilS: 5000), DateTime.utc(2026)), isNull, reason: 'one-off');
+      expect(nextStartUtc(r.copyWith(enabled: false), DateTime.utc(2026)), isNull);
     });
 
     test('hit text matches the web wording', () {

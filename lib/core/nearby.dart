@@ -103,3 +103,8 @@ List<NearbyStop> nearbyStops(TripIndex ix, Pt p, {double radiusM = 600, int max 
       ),
   ];
 }
+
+const _plain = {'ά': 'α', 'έ': 'ε', 'ή': 'η', 'ί': 'ι', 'ϊ': 'ι', 'ΐ': 'ι', 'ό': 'ο', 'ύ': 'υ', 'ϋ': 'υ', 'ΰ': 'υ', 'ώ': 'ω', 'ς': 'σ'};
+
+/// For search: lower case, no Greek accents, final sigma as σ.
+String fold(String s) => s.toLowerCase().split('').map((c) => _plain[c] ?? c).join();
