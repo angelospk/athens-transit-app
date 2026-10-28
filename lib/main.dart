@@ -13,6 +13,7 @@ import 'ui/island_nav.dart';
 import 'ui/map_screen.dart';
 import 'ui/map_sel.dart';
 import 'ui/onboard_screen.dart';
+import 'ui/planner_screen.dart';
 import 'ui/rules_screen.dart';
 import 'ui/settings_screen.dart';
 import 'ui/stop_screen.dart';
@@ -105,18 +106,26 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
       listenable: Listenable.merge([Shell.tab, store]),
       builder: (context, _) {
         live.watch(store.myLines);
-        return Scaffold(
-          body: IndexedStack(index: Shell.tab.value, children: const [MapScreen(), FavsScreen(), RulesScreen(), SettingsScreen()]),
+        // Back on another tab goes to the map first; on the map it walks back through the sheet.
+        return PopScope(
+          canPop: Shell.tab.value == 0,
+          onPopInvokedWithResult: (popped, _) {
+            if (!popped && Shell.tab.value != 0) Shell.tab.value = 0;
+          },
+          child: Scaffold(
+          body: IndexedStack(index: Shell.tab.value, children: const [MapScreen(), FavsScreen(), PlannerScreen(), RulesScreen(), SettingsScreen()]),
           bottomNavigationBar: IslandNav(
             index: Shell.tab.value,
             onTap: (i) => Shell.tab.value = i,
             items: const [
               IslandItem(Icons.map_outlined, 'Χάρτης'),
-              IslandItem(Icons.star_outline, 'Στάσεις'),
+              IslandItem(Icons.star_outline, 'Αγαπημένα'),
+              IslandItem(Icons.directions, 'Διαδρομή', raised: true),
               IslandItem(Icons.notifications_outlined, 'Ειδοποιήσεις'),
               IslandItem(Icons.menu, 'Περισσότερα'),
             ],
           ),
+        ),
         );
       },
     );

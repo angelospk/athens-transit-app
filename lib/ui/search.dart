@@ -1,5 +1,7 @@
-// The map's search: lines and stops by name, accents and case ignored, and places and addresses from
-// OpenStreetMap. What you pick opens in the map's sheet.
+// The map's search: lines and stops by name, accents and case ignored, metro, tram and suburban rail
+// stations, and places and addresses from OpenStreetMap. What you pick opens in the map's sheet.
+// Chips under the field pick the modes (Λεωφορεία, Μετρό, Τραμ, Προαστιακός): they filter the results
+// and show or hide that mode on the map. A query whose only hits are in a hidden mode says so.
 
 import 'dart:async';
 import 'dart:math';
@@ -7,6 +9,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../data/api.dart';
+import '../core/map_geo.dart' show isTram;
 import '../core/models.dart';
 import '../core/nearby.dart';
 import 'map_sel.dart';
@@ -30,19 +33,74 @@ class _SearchFieldState extends State<SearchField> {
   List<LineInfo> _lineHits = [];
   List<NearbyStop> _stopHits = [];
   List<Place> _placeHits = [];
+  List<_Station> _stations = [];
+  List<_Station> _stationHits = [];
+  int _hidden = 0; // hits left out because their mode is off
+  bool _buses = true; // bus lines and stops in the results (the map always shows buses)
   Timer? _wait; // places are asked once typing pauses
   int _asked = 0;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_lines.isEmpty) Deps.of(context).api.lines().then((l) => mounted ? setState(() => _lines = l) : null).ignore();
+    final api = Deps.of(context).api;
+    if (_lines.isEmpty) api.lines().then((l) => mounted ? setState(() => _lines = l) : null).ignore();
+    if (_stations.isEmpty) {
+      Future.wait([
+        api.metro().then((j) => [
+              for (final st in j['stations'] as List)
+                () {
+                  final ls = [for (final l in st['lines'] as List) l as String];
+                  return _Station(st['name'] as String, (st['lat'] as num).toDouble(), (st['lon'] as num).toDouble(), ls, ls.every(isTram) ? _Mode.tram : _Mode.metro);
+                }(),
+            ]),
+        api.suburban().then((sub) => [for (final st in sub.stations.values) _Station(st.name, st.lat, st.lon, st.corridors, _Mode.rail, railId: st.id)]),
+      ]).then((all) {
+        if (mounted) setState(() => _stations = [for (final l in all) ...l]);
+      }).catchError((_) {});
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(_onFocus);
+  }
+
+  void _onFocus() => setState(() {});
+
+  bool _on(_Mode m) {
+    final store = Deps.of(context).store;
+    return switch (m) { _Mode.bus => _buses, _Mode.metro => store.showMetro, _Mode.tram => store.showTram, _Mode.rail => store.showRail };
+  }
+
+  void _toggle(_Mode m) {
+    final store = Deps.of(context).store;
+    switch (m) {
+      case _Mode.bus:
+        _buses = !_buses;
+      case _Mode.metro:
+        store.setRail(metro: !store.showMetro);
+      case _Mode.tram:
+        store.setRail(tram: !store.showTram);
+      case _Mode.rail:
+        store.setRail(rail: !store.showRail);
+    }
+    _search(_c.text);
+  }
+
+  // Turn on every mode: a query found only hidden ones.
+  void _showAll() {
+    _buses = true;
+    Deps.of(context).store.setRail(metro: true, tram: true, rail: true);
+    _search(_c.text);
   }
 
   @override
   void dispose() {
     _wait?.cancel();
     _c.dispose();
+    _focus.removeListener(_onFocus);
     _focus.dispose();
     super.dispose();
   }
@@ -58,6 +116,8 @@ class _SearchFieldState extends State<SearchField> {
         _lineHits = [];
         _stopHits = [];
         _placeHits = [];
+        _stationHits = [];
+        _hidden = 0;
       });
       return;
     }
@@ -70,6 +130,7 @@ class _SearchFieldState extends State<SearchField> {
       });
     }
     final lines = _lines.where((l) => fold(l.id).startsWith(f) || (f.length > 2 && fold(l.name).contains(f))).take(5).toList();
+    final stations = f.length > 1 ? _stations.where((st) => fold(st.name).contains(f)).toList() : <_Station>[];
     final stops = <NearbyStop>[];
     if (ix != null && f.length > 2) {
       final seen = <String>{};
@@ -78,9 +139,12 @@ class _SearchFieldState extends State<SearchField> {
         if (fold(s.$1).contains(f) && seen.add(s.$1)) stops.addAll(nearbyStops(ix, (s.$2, s.$3), radiusM: 50, max: 1));
       }
     }
+    final shownStations = [for (final st in stations) if (_on(st.mode)) st];
     setState(() {
-      _lineHits = lines;
-      _stopHits = stops;
+      _lineHits = _buses ? lines : [];
+      _stopHits = _buses ? stops : [];
+      _stationHits = shownStations.take(5).toList();
+      _hidden = (_buses ? 0 : lines.length + stops.length) + stations.length - shownStations.length;
     });
   }
 
@@ -116,7 +180,36 @@ class _SearchFieldState extends State<SearchField> {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Row(children: [Expanded(child: field), if (widget.trailing != null) ...[const SizedBox(width: 8), widget.trailing!]]),
       const SizedBox(height: 6),
-      if (_lineHits.isNotEmpty || _stopHits.isNotEmpty || _placeHits.isNotEmpty)
+      if (_focus.hasFocus || _c.text.isNotEmpty)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(children: [
+            for (final m in _Mode.values)
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: FilterChip(
+                  avatar: Icon(m.icon, size: 18),
+                  label: Text(m.label),
+                  selected: _on(m),
+                  showCheckmark: false,
+                  backgroundColor: t.ground,
+                  onSelected: (_) => _toggle(m),
+                ),
+              ),
+          ]),
+        ),
+      if (_hidden > 0 && _lineHits.isEmpty && _stopHits.isEmpty && _stationHits.isEmpty)
+        Material(
+          color: t.ground,
+          elevation: 3,
+          borderRadius: BorderRadius.circular(20),
+          child: ListTile(
+            leading: const Icon(Icons.visibility_off_outlined),
+            title: Text('$_hidden ${_hidden == 1 ? 'αποτέλεσμα' : 'αποτελέσματα'} σε κρυμμένα μέσα'),
+            trailing: TextButton(onPressed: _showAll, child: const Text('Εμφάνιση')),
+          ),
+        ),
+      if (_lineHits.isNotEmpty || _stopHits.isNotEmpty || _placeHits.isNotEmpty || _stationHits.isNotEmpty)
         Material(
           color: t.ground,
           elevation: 3,
@@ -134,6 +227,16 @@ class _SearchFieldState extends State<SearchField> {
                   onTap: () {
                     _clear();
                     mapSel.value = LineSel(l.id);
+                  },
+                ),
+              for (final st in _stationHits)
+                ListTile(
+                  leading: Icon(st.mode.icon),
+                  title: Text(titleCase(st.name)),
+                  subtitle: Text('${st.mode.label} · ${st.lines.join(', ')}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                  onTap: () {
+                    _clear();
+                    mapSel.value = StationSel(st.name, (st.lat, st.lon), lines: st.lines, railId: st.railId);
                   },
                 ),
               for (final s in _stopHits)
@@ -161,4 +264,24 @@ class _SearchFieldState extends State<SearchField> {
         ),
     ]);
   }
+}
+
+enum _Mode {
+  bus('Λεωφορεία', Icons.directions_bus_outlined),
+  metro('Μετρό', Icons.subway_outlined),
+  tram('Τραμ', Icons.tram_outlined),
+  rail('Προαστιακός', Icons.train_outlined);
+
+  const _Mode(this.label, this.icon);
+  final String label;
+  final IconData icon;
+}
+
+class _Station {
+  const _Station(this.name, this.lat, this.lon, this.lines, this.mode, {this.railId});
+  final String name;
+  final double lat, lon;
+  final List<String> lines;
+  final _Mode mode;
+  final String? railId;
 }

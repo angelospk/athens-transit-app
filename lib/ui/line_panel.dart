@@ -1,11 +1,13 @@
 // A whole line in the map's sheet: its directions with the buses on the road now, and a star that
 // makes it one of "my lines". The map draws every direction with its arrows; a direction chip keeps
 // one direction on the map, with its buses and its stops (a stop opens in the sheet), as on the web.
+// «Δρομολόγια»: today's timetable by direction, the runs already gone marked as seen or missed.
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../core/athens_time.dart';
 import '../core/models.dart';
 import '../core/nearby.dart';
 import 'map_sel.dart';
@@ -28,6 +30,8 @@ class _LinePanelState extends State<LinePanel> {
   LineLive? live;
   String name = '';
   Timer? _timer;
+  bool _timetable = false;
+  Future<Map<String, dynamic>?>? _sched;
 
   @override
   void didChangeDependencies() {
@@ -43,6 +47,7 @@ class _LinePanelState extends State<LinePanel> {
       st = null;
       live = null;
       name = '';
+      _sched = _timetable ? Deps.of(context).api.lineSchedule(widget.line) : null;
       _load();
     }
   }
@@ -89,6 +94,7 @@ class _LinePanelState extends State<LinePanel> {
         return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
           const SheetHandle(),
           Row(children: [
+            const BackSel(),
             LineBadge(widget.line, big: true),
             const SizedBox(width: 12),
             Expanded(
@@ -109,8 +115,22 @@ class _LinePanelState extends State<LinePanel> {
             const CloseSel(),
           ]),
           const SizedBox(height: 8),
-          if (s == null) const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator())),
-          if (s != null) ..._directions(t, s, vs),
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(value: false, label: Text('Τώρα'), icon: Icon(Icons.directions_bus_outlined)),
+              ButtonSegment(value: true, label: Text('Δρομολόγια'), icon: Icon(Icons.schedule)),
+            ],
+            selected: {_timetable},
+            showSelectedIcon: false,
+            onSelectionChanged: (v) => setState(() {
+              _timetable = v.first;
+              if (_timetable) _sched ??= d.api.lineSchedule(widget.line);
+            }),
+          ),
+          const SizedBox(height: 8),
+          if (_timetable) _schedule(t),
+          if (!_timetable && s == null) const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator())),
+          if (!_timetable && s != null) ..._directions(t, s, vs),
           const SizedBox(height: 16),
           const LiveNote(),
         ]);
@@ -162,7 +182,7 @@ class _LinePanelState extends State<LinePanel> {
       ..._buses(t, s, mine),
       Padding(
         padding: const EdgeInsets.only(top: 14, bottom: 4),
-        child: Text('Στάσεις · πάτα μία για τις αφίξεις της', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+        child: Text('Στάσεις', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
       ),
       for (final id in s.variants[main]!.stops)
         if (s.stops[id] case final st?)
@@ -185,6 +205,75 @@ class _LinePanelState extends State<LinePanel> {
           ),
     ];
   }
+
+  // Today's runs by direction: the next ones bold, those gone muted, a missed one (no bus seen) struck.
+  Widget _schedule(Tones t) => FutureBuilder<Map<String, dynamic>?>(
+        future: _sched,
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) return const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()));
+          final j = snap.data;
+          if (snap.hasError || j == null) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(snap.hasError ? 'Δεν φόρτωσαν τα δρομολόγια.' : 'Τα δρομολόγια θέλουν τον server μας· δεν τα δίνει ακόμη.', style: TextStyle(color: t.muted)),
+            );
+          }
+          final wall = athensWall(DateTime.now().toUtc());
+          final nowMin = wall.hour * 60 + wall.minute;
+          int minOf(String hm) {
+            final p = hm.split(':');
+            return p.length < 2 ? 0 : (int.tryParse(p[0]) ?? 0) * 60 + (int.tryParse(p[1]) ?? 0);
+          }
+
+          final dirs = [for (final x in j['directions'] as List? ?? const []) x as Map<String, dynamic>];
+          if (dirs.isEmpty) return Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text('Κανένα δρομολόγιο σήμερα.', style: TextStyle(color: t.muted)));
+          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (j['expired'] == true)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text('Το πρόγραμμα του ΟΑΣΑ έχει λήξει: οι ώρες είναι της ίδιας μέρας της εβδομάδας από το παλιό.', style: TextStyle(fontSize: 13, color: t.late)),
+              ),
+            for (final dir in dirs) ...() {
+              final deps = [for (final x in dir['departures'] as List? ?? const []) x as Map<String, dynamic>];
+              final gone = deps.where((x) => minOf(x['t'] as String? ?? '') < nowMin).toList();
+              final seen = gone.where((x) => x['seen'] == true).length, known = gone.where((x) => x['seen'] != null).length;
+              return [
+                Padding(
+                  padding: const EdgeInsets.only(top: 12, bottom: 2),
+                  child: Text('→ ${titleCase(dir['headsign'] as String? ?? '')}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                ),
+                Text(
+                  [
+                    '${deps.length} δρομολόγια σήμερα',
+                    if (known > 0) 'έγιναν $seen από $known ως τώρα',
+                  ].join(' · '),
+                  style: TextStyle(fontSize: 13, color: known > 0 && seen < known ? t.late : t.muted),
+                ),
+                const SizedBox(height: 6),
+                Wrap(spacing: 10, runSpacing: 4, children: [
+                  for (final x in deps)
+                    () {
+                      final hm = x['t'] as String? ?? '';
+                      final past = minOf(hm) < nowMin;
+                      final missed = past && x['seen'] == false;
+                      final shown = minOf(hm) >= 24 * 60 ? '${(minOf(hm) ~/ 60 - 24).toString().padLeft(2, '0')}:${hm.split(':')[1]}' : hm.substring(0, hm.length >= 5 ? 5 : hm.length);
+                      return Text(shown,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                            fontWeight: past ? FontWeight.w400 : FontWeight.w600,
+                            color: missed ? t.late : (past ? t.muted : null),
+                            decoration: missed ? TextDecoration.lineThrough : null,
+                          ));
+                    }(),
+                ]),
+              ];
+            }(),
+            const SizedBox(height: 10),
+            Text('Πρόγραμμα ΟΑΣΑ (GTFS), ώρα αναχώρησης από την αφετηρία. Διαγραμμένη: δεν φάνηκε λεωφορείο.', style: TextStyle(fontSize: 12, color: t.muted)),
+          ]);
+        },
+      );
 
   List<Widget> _buses(Tones t, LineStatic s, List<Vehicle> vs) {
     if (vs.isEmpty) return [Text('Κανένα λεωφορείο με GPS τώρα.', style: TextStyle(fontSize: 13, color: t.muted))];

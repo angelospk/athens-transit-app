@@ -2,6 +2,7 @@
 // GeoJSON wants [lon, lat].
 
 import 'models.dart';
+import 'rail.dart';
 
 typedef Geo = Map<String, dynamic>;
 typedef DrawnLine = ({String line, String color, LineStatic st, Set<String>? only});
@@ -68,3 +69,21 @@ Geo metroGeo(Map<String, dynamic> j, {required String Function(String) name}) {
       }(),
   ]);
 }
+
+// Suburban rail: each line once (dashed on the map) and each station once, in the colour of its first
+// line; a station's feature id ("r|<railway.gov.gr id>") is what a tap finds it by.
+Geo railGeo(Suburban sub, {required String Function(String) name}) => _fc([
+      for (final c in sub.corridors.values)
+        {
+          'type': 'Feature',
+          'properties': {'color': c.color},
+          'geometry': {'type': 'LineString', 'coordinates': [for (final p in c.path) [p.$2, p.$1]]},
+        },
+      for (final s in sub.stations.values)
+        {
+          'type': 'Feature',
+          'id': 'r|${s.id}',
+          'properties': {'name': name(s.name), 'color': sub.corridors[s.corridors.first]?.color ?? '#43474E'},
+          'geometry': {'type': 'Point', 'coordinates': [s.lon, s.lat]},
+        },
+    ]);

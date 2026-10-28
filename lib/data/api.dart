@@ -4,10 +4,12 @@
 
 import 'dart:convert';
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 
 import '../core/geo.dart';
 import '../core/models.dart';
+import '../core/rail.dart';
 import '../core/stats.dart';
 import 'cache.dart';
 
@@ -15,12 +17,16 @@ const apiBase = 'https://transit.haroldpoi.dev';
 const staticBase = 'https://angelospk.github.io/athens-transit-rt/static/v1';
 const tripsUrl = 'https://bus.haroldpoi.dev/trips.json';
 const metroUrl = 'https://bus.haroldpoi.dev/metro.json'; // metro, ISAP, tram: STASY GTFS + OSM tracks
-const statsUrl = 'https://raw.githubusercontent.com/angelospk/athens-transit-rt/stats/v1/latest.json'; // newest day, once a day
+const statsBase = 'https://raw.githubusercontent.com/angelospk/athens-transit-rt/stats/v1';
+const statsUrl = '$statsBase/latest.json'; // newest day, once a day
 const pushBase = 'https://push.haroldpoi.dev';
+const railUrl = 'https://railway.gov.gr/api/public'; // suburban rail boards (docs/research/rail-data.md)
 const placesUrl = 'https://photon.komoot.io/api/'; // OSM geocoder: addresses, areas, shops, landmarks
 
 // Photon answers 403 to the default "Dart/x (dart:io)" agent.
 const _ua = {'user-agent': 'athens-transit (github.com/angelospk/athens-transit-app)'};
+
+final _dateRe = RegExp(r'^\d{4}-\d{2}-\d{2}$'); // a day file name
 
 typedef Place = ({String name, String detail, double lat, double lon});
 
@@ -87,6 +93,38 @@ class Api {
     return DayStats.fromJson(j);
   }
 
+  // The newest complete stored days, oldest first. A day file never changes, so a saved copy is not
+  // fetched again; a missing, broken or partial file is left out.
+  Future<List<DayStats>> storedDays({int max = longDays}) async {
+    final index = await _get('$statsBase/index.json');
+    final listed = index is Map<String, dynamic> ? index['days'] : null;
+    if (listed is! List) throw const FormatException('stats: unknown index format');
+    final dates = [for (final d in listed) if (d is String && _dateRe.hasMatch(d)) d]..sort();
+    final newest = dates.length > max ? dates.sublist(dates.length - max) : dates;
+    final days = await Future.wait(newest.map(_storedDay));
+    return [for (final d in days) ?d];
+  }
+
+  // A day file as docs/API.md describes it: null when it is missing, broken or partial.
+  Future<DayStats?> _storedDay(String date) async {
+    final key = 'stats_day_$date';
+    Object? j = await _cache.read(key);
+    if (j == null) {
+      try {
+        j = await _get('$statsBase/days/$date.json');
+        await _cache.write(key, j).catchError((_) {}); // a failed save must not fail the fetch
+      } on ApiError catch (e) {
+        if (e.status == 404) return null;
+        rethrow;
+      } on FormatException {
+        return null; // a malformed day file is skipped, not fatal
+      }
+    }
+    if (j is! Map<String, dynamic> || !validDay(j, date)) return null;
+    final d = DayStats.fromJson(j);
+    return complete(d) ? d : null;
+  }
+
   Future<TripIndex> trips() => _once('trips', () => _static('trips', tripsUrl).then((j) => TripIndex.fromJson(j)));
 
   Future<LineStatic> lineStatic(String line) => _once('line_$line',
@@ -134,6 +172,34 @@ class Api {
       out.add((name: name, detail: detail, lat: at.$1, lon: at.$2));
     }
     return out;
+  }
+
+  // Suburban stations and lines, shipped with the app (assets/suburban.json).
+  Future<Suburban> suburban() =>
+      _once('suburban', () async => Suburban.fromJson(jsonDecode(await rootBundle.loadString('assets/suburban.json')) as Map<String, dynamic>));
+
+  // The next trains at a suburban station, live from railway.gov.gr (scheduled time, expected time, delay).
+  Future<List<RailDeparture>> railDepartures(String stationId, {int limit = 12}) async =>
+      parseRailDepartures(await _get('$railUrl/stations/${Uri.encodeComponent(stationId)}/departures?limit=$limit'));
+
+  // A line's timetable for today, by direction (backend, OASA GTFS): null until the backend serves it.
+  Future<Map<String, dynamic>?> lineSchedule(String line) async {
+    try {
+      return (await _get('$apiBase/v1/lines/${Uri.encodeComponent(line)}/schedule')) as Map<String, dynamic>;
+    } on ApiError catch (e) {
+      if (e.status == 404 || e.status == 503) return null;
+      rethrow;
+    }
+  }
+
+  // Metro and tram timetable at a station (backend, STASY GTFS): null until the backend serves it.
+  Future<Map<String, dynamic>?> stasyDepartures(String stop) async {
+    try {
+      return (await _get('$apiBase/v1/rail/stasy/departures?stop=${Uri.encodeQueryComponent(stop)}&n=4')) as Map<String, dynamic>;
+    } on ApiError catch (e) {
+      if (e.status == 404 || e.status == 503) return null;
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> status() async => (await _get('$apiBase/v1/status')) as Map<String, dynamic>;

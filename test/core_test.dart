@@ -289,6 +289,18 @@ void main() {
       expect(w3.check([byMin], st, live, 1010), isEmpty);
     });
 
+    test('watcher: a rule for one bus fires only for it', () {
+      final st = {'T1': straightLine()};
+      final live = {
+        'T1': LineLive(line: 'T1', updatedAt: 1000, nextUpdateAt: 1030, vehicles: [
+          vehicleAt(1200, next: 's2', speeds: List.filled(8, 5.0)),
+          vehicleAt(0, next: 's1', speeds: List.filled(8, 5.0)),
+        ])
+      };
+      final one = rule(mode: AlertMode.stops, n: 2).copyWith(vehicle: 'bus0.0');
+      expect(RuleWatcher().check([one], st, live, 1000).map((h) => h.vehicleId), ['bus0.0']);
+    });
+
     test('watcher: one bus is one alert, whether or not its trip id shows up later', () {
       final st = {'T1': straightLine()};
       LineLive feed(Vehicle v) => LineLive(line: 'T1', updatedAt: 1000, nextUpdateAt: 1030, vehicles: [v]);

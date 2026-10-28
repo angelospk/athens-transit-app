@@ -10,6 +10,8 @@ import '../core/models.dart';
 import '../core/nearby.dart';
 import '../data/live.dart';
 import 'alert_sheet.dart';
+import 'line_speed.dart';
+import 'ride.dart';
 import 'map_sel.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
@@ -90,7 +92,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
         if (s == null || v == null) {
           return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
             const SheetHandle(),
-            Row(children: [_back(), LineBadge(widget.line), const Spacer(), const CloseSel()]),
+            Row(children: [const BackSel(), LineBadge(widget.line), const Spacer(), const CloseSel()]),
             if (error == null && (l == null || s == null))
               const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: CircularProgressIndicator()))
             else ...[
@@ -119,23 +121,18 @@ class _VehiclePanelState extends State<VehiclePanel> {
     final usual = v.pathSpeeds?.firstWhere((x) => x != null, orElse: () => null);
     final age = now - v.positionAt;
     final delay = v.delayS;
-    Widget cell(String a, String b, String c, Color cc) => Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(14)),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(a, style: TextStyle(fontSize: 12, color: t.muted)),
-              Text(b, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-              Text(c, style: TextStyle(fontSize: 12, color: cc, fontWeight: FontWeight.w600)),
-            ]),
-          ),
-        );
     int kmh(double ms) => (ms * 3.6).round();
+    final slow = v.speed != null && usual != null && v.speed! < usual * .6;
+    final muted = TextStyle(fontSize: 13.5, color: t.muted);
+    // The next stops: the ones the bus has passed since its fix (they read "τώρα") are left out.
+    final etas = nextK < 0 ? const <int?>[] : [for (var k = nextK; k < stops.length; k++) etaSeconds(s, v, k, now)];
+    final from = nextK < 0 ? 0 : nextK + firstUpcoming(etas);
+    final variants = v.variant == null ? null : {v.variant!};
     return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
       const SheetHandle(),
       Row(children: [
-        _back(),
-        LineBadge(widget.line),
+        const BackSel(),
+        LineButton(widget.line, variants: variants),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -151,62 +148,71 @@ class _VehiclePanelState extends State<VehiclePanel> {
           ]),
         const CloseSel(),
       ]),
-      const SizedBox(height: 14),
-      Row(children: [
-        cell('Τώρα', v.speed == null ? '—' : '${kmh(v.speed!)} χλμ/ώ', usual == null ? '' : 'συνήθως ${kmh(usual)}',
-            v.speed != null && usual != null && v.speed! < usual * .6 ? t.late : t.muted),
-        const SizedBox(width: 8),
-        cell('GPS', 'πριν ${age < 60 ? '$age″' : '${age ~/ 60}′'}', age <= 90 ? 'φρέσκο' : 'παλιό', age <= 90 ? t.onTime : t.late),
-        const SizedBox(width: 8),
-        cell('Όχημα', '#${v.id}', '', t.muted),
-      ]),
-      if (widget.stop != null) ...[
-        const SizedBox(height: 14),
-        SizedBox(
-          height: 48,
-          width: double.infinity,
-          child: FilledButton.icon(
-            icon: const Icon(Icons.notifications_outlined),
-            label: Text('Ειδοποίησέ με πριν φτάσει στο ${titleCase(widget.stop!.name)}', overflow: TextOverflow.ellipsis),
-            onPressed: () {
-              final arr = arrivalsAt(myIds.isEmpty ? '' : myIds.first, {widget.line: s}, {widget.line: LineLive(line: widget.line, updatedAt: now, nextUpdateAt: now, vehicles: [v])}, now);
-              if (arr.isNotEmpty) showAlertSheet(context, stop: widget.stop!, arrival: arr.first);
-            },
+      const SizedBox(height: 8),
+      // Speed, GPS age and the vehicle in one line; the usual speed opens the line's speeds.
+      Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 6, runSpacing: 2, children: [
+        Text(v.speed == null ? '— χλμ/ώ' : '${kmh(v.speed!)} χλμ/ώ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: slow ? t.late : t.ink)),
+        InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => showLineSpeed(context, line: widget.line, vehicle: v),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text(usual == null ? 'ταχύτητες γραμμής' : 'συνήθως ${kmh(usual)}',
+                  style: TextStyle(fontSize: 13.5, color: t.ink, decoration: TextDecoration.underline, decorationColor: t.muted)),
+              Icon(Icons.chevron_right, size: 16, color: t.muted),
+            ]),
           ),
         ),
-      ],
-      const SizedBox(height: 4),
+        Text('·', style: muted),
+        Text('GPS πριν ${ago(age)}', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: age <= 90 ? t.onTime : t.late)),
+        Text('·', style: muted),
+        Text('#${v.id}', style: muted),
+      ]),
+      const SizedBox(height: 10),
+      Row(children: [
+        Expanded(
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(46)),
+            icon: const Icon(Icons.notifications_outlined),
+            label: const Text('Ειδοποίησέ με'),
+            onPressed: nextK < 0 ? null : () => _pickAlert(s, v, stops, from, myIds),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
+            icon: const Icon(Icons.airline_seat_recline_normal),
+            label: const Text('Είμαι μέσα'),
+            onPressed: nextK < 0 ? null : () => showRide(context, line: widget.line, st: s, vehicle: v),
+          ),
+        ),
+      ]),
       // The map keeps this bus in the middle while the sheet shows it.
       ValueListenableBuilder(
         valueListenable: followBus,
         builder: (context, on, _) => SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          secondary: const Icon(Icons.my_location),
-          title: const Text('Ο χάρτης ακολουθεί το λεωφορείο'),
+          dense: true,
+          secondary: const Icon(Icons.lock_outline),
+          title: const Text('Κλείδωσε στο λεωφορείο', maxLines: 1, style: TextStyle(fontSize: 15)),
           value: on,
           onChanged: (x) => followBus.value = x,
         ),
       ),
-      Row(children: [
-        Expanded(child: Text('Επόμενες στάσεις · πάτα μία για τις αφίξεις της', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted))),
-        TextButton(onPressed: () => mapSel.value = LineSel(widget.line, variants: v.variant == null ? null : {v.variant!}), child: const Text('Η γραμμή')),
-      ]),
+      Text('Επόμενες στάσεις', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+      const SizedBox(height: 4),
       if (nextK >= 0)
-        for (var k = nextK; k < stops.length && (allStops || k < nextK + 8); k++)
-          _stopRow(t, s, v, stops, k, now, myIds.contains(stops[k])),
-      if (nextK >= 0 && !allStops && stops.length > nextK + 8)
-        TextButton(onPressed: () => setState(() => allStops = true), child: Text('Όλες οι επόμενες (${stops.length - nextK})')),
+        for (var k = from; k < stops.length && (allStops || k < from + 8); k++)
+          _stopRow(t, s, stops, k, etas[k - nextK], myIds.contains(stops[k])),
+      if (nextK >= 0 && !allStops && stops.length > from + 8)
+        TextButton(onPressed: () => setState(() => allStops = true), child: Text('Όλες οι επόμενες (${stops.length - from})')),
       if (nextK < 0) Text('Το λεωφορείο δεν έχει αντιστοιχιστεί σε δρομολόγιο.', style: TextStyle(color: t.muted)),
     ]);
   }
 
-  // Back to the stop the bus was opened from.
-  Widget _back() => widget.stop == null
-      ? const SizedBox.shrink()
-      : IconButton(tooltip: 'Πίσω στη στάση', icon: const Icon(Icons.arrow_back), onPressed: () => mapSel.value = StopSel(widget.stop!));
-
-  Widget _stopRow(Tones t, LineStatic s, Vehicle v, List<String> stops, int k, int now, bool mine) {
-    final eta = etaSeconds(s, v, k, now);
+  Widget _stopRow(Tones t, LineStatic s, List<String> stops, int k, int? eta, bool mine) {
     final info = s.stops[stops[k]];
     final name = titleCase(info?.name ?? stops[k]);
     return InkWell(
@@ -217,22 +223,53 @@ class _VehiclePanelState extends State<VehiclePanel> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         decoration: mine ? BoxDecoration(color: t.indicator, borderRadius: BorderRadius.circular(12)) : null,
         child: Row(children: [
-        Icon(Icons.circle_outlined, size: mine ? 16 : 12, color: mine ? t.ink : palette[0].bg),
-        const SizedBox(width: 12),
-        Expanded(child: Text(mine ? '$name · η στάση σου' : name, style: TextStyle(fontSize: 15, fontWeight: mine ? FontWeight.w700 : FontWeight.w400))),
-        Text(eta == null ? '' : mins(eta), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-        if (eta != null) ...[
-          const SizedBox(width: 4),
-          IconButton(
-            tooltip: 'Ειδοποίησέ με πριν φτάσει στο $name',
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.notifications_outlined, size: 20),
-            onPressed: () => _alertAt(s, v, stops[k], now),
-          ),
-        ],
-      ]),
+          Icon(Icons.circle_outlined, size: mine ? 16 : 12, color: mine ? t.ink : palette[0].bg),
+          const SizedBox(width: 12),
+          Expanded(child: Text(mine ? '$name · η στάση σου' : name, style: TextStyle(fontSize: 15, fontWeight: mine ? FontWeight.w700 : FontWeight.w400))),
+          if (eta != null) ...[
+            Text(mins(eta), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()])),
+            SizedBox(
+              width: 52,
+              child: Text(clockIn(eta), textAlign: TextAlign.right, style: TextStyle(fontSize: 13, color: t.muted, fontFeatures: const [FontFeature.tabularFigures()])),
+            ),
+          ],
+        ]),
       ),
     );
+  }
+
+  // "Ειδοποίησέ με": first where (the bus's next stops; the stop it was opened from on top), then when
+  // (the alert sheet).
+  Future<void> _pickAlert(LineStatic s, Vehicle v, List<String> stops, int from, Set<String> myIds) async {
+    final now = Deps.of(context).live.nowS;
+    final t = context.tones;
+    final ks = [for (var k = from; k < stops.length; k++) k];
+    final mine = ks.where((k) => myIds.contains(stops[k])).toList();
+    final order = [...mine, ...ks.where((k) => !mine.contains(k))];
+    final k = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (c) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: .6,
+        maxChildSize: .9,
+        builder: (c, scroll) => ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), children: [
+          const Text('Σε ποια στάση;', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+          Text('Σε ειδοποιώ πριν φτάσει εκεί το λεωφορείο.', style: TextStyle(fontSize: 13, color: t.muted)),
+          const SizedBox(height: 8),
+          for (final k in order)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(myIds.contains(stops[k]) ? Icons.star : Icons.circle_outlined, size: 18),
+              title: Text(titleCase(s.stops[stops[k]]?.name ?? stops[k]), style: TextStyle(fontWeight: myIds.contains(stops[k]) ? FontWeight.w700 : FontWeight.w400)),
+              trailing: Text(switch (etaSeconds(s, v, k, now)) { final e? => '${mins(e)} · ${clockIn(e)}', null => '' }),
+              onTap: () => Navigator.pop(c, k),
+            ),
+        ]),
+      ),
+    );
+    if (k != null && mounted) _alertAt(s, v, stops[k], now);
   }
 
   // A stop of the bus's way opens in the sheet with every line that stops there.

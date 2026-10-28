@@ -305,10 +305,13 @@ class RuleTask extends TaskHandler {
       final offline = lines.any(_offline.contains);
       for (final h in _watcher.check(active, _statics, lives, nowS)) {
         final r = active.firstWhere((x) => x.id == h.ruleId);
+        // "Είμαι μέσα" is one ride: done once it fired, or the bus's next run would fire it again.
+        if (r.kind == RuleKind.ride) await p.setInt('$_stoppedPrefix${r.id}', r.untilS ?? nowS + 3 * 3600);
+        final (title, body) = ruleHitText(r, h, r.stopName);
         await _notes.show(
           id: h.vehicleId.hashCode & 0x7fffffff,
-          title: '${h.line} → ${r.stopName}',
-          body: hitText(h, r.stopName),
+          title: title,
+          body: body,
           notificationDetails: const NotificationDetails(android: _hitChannel),
           payload: _openPayload(r, h.vehicleId, _statics[r.line]?.stops[r.stopId], lives[r.line]),
         );
@@ -335,7 +338,9 @@ class RuleTask extends TaskHandler {
     for (final r in rules) {
       final st = _statics[r.line], live = lives[r.line];
       if (st == null || live == null) continue;
-      final arr = arrivalsAt(r.stopId, {r.line: st}, {r.line: live}, nowS).where((a) => a.variant == r.variant).toList();
+      final arr = arrivalsAt(r.stopId, {r.line: st}, {r.line: live}, nowS)
+          .where((a) => a.variant == r.variant && (r.vehicle == null || a.vehicleId == r.vehicle))
+          .toList();
       if (arr.isEmpty) continue;
       final a = arr.first;
       final left = a.stopsLeft;

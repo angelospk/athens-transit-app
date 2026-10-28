@@ -4,6 +4,10 @@ import 'models.dart';
 
 enum AlertMode { minutes, stops }
 
+/// What the alert is for: the bus reaching the stop, time to leave for it (screen 16), or getting off
+/// there (screen 17). It changes only the words; when it fires is set by mode and n.
+enum RuleKind { arrive, leave, ride }
+
 class Rule {
   final String id, line, variant, stopId, stopName;
   final int stopIndex, n;
@@ -16,6 +20,8 @@ class Rule {
   final int? untilS;
   final bool live, enabled;
   final int? pausedUntilS;
+  final RuleKind kind;
+  final String? vehicle; // only this bus ("Είμαι μέσα"); null: any bus of the line
 
   const Rule({
     required this.id,
@@ -33,6 +39,8 @@ class Rule {
     this.live = true,
     this.enabled = true,
     this.pausedUntilS,
+    this.kind = RuleKind.arrive,
+    this.vehicle,
   });
 
   Rule copyWith({
@@ -51,6 +59,8 @@ class Rule {
     bool? live,
     bool? enabled,
     int? pausedUntilS,
+    RuleKind? kind,
+    String? vehicle,
   }) =>
       Rule(
         id: id ?? this.id,
@@ -68,6 +78,8 @@ class Rule {
         live: live ?? this.live,
         enabled: enabled ?? this.enabled,
         pausedUntilS: pausedUntilS ?? this.pausedUntilS,
+        kind: kind ?? this.kind,
+        vehicle: vehicle ?? this.vehicle,
       );
 
   bool activeAt(DateTime utc) {
@@ -97,6 +109,8 @@ class Rule {
         'live': live,
         'enabled': enabled,
         'pausedUntilS': pausedUntilS,
+        if (kind != RuleKind.arrive) 'kind': kind.name,
+        'vehicle': ?vehicle,
       };
 
   factory Rule.fromJson(Map<String, dynamic> j) => Rule(
@@ -115,6 +129,8 @@ class Rule {
         live: j['live'] as bool? ?? true,
         enabled: j['enabled'] as bool? ?? true,
         pausedUntilS: (j['pausedUntilS'] as num?)?.toInt(),
+        kind: RuleKind.values.firstWhere((k) => k.name == j['kind'], orElse: () => RuleKind.arrive),
+        vehicle: j['vehicle'] as String?,
       );
 
   @override
@@ -134,11 +150,13 @@ class Rule {
       other.untilS == untilS &&
       other.live == live &&
       other.enabled == enabled &&
-      other.pausedUntilS == pausedUntilS;
+      other.pausedUntilS == pausedUntilS &&
+      other.kind == kind &&
+      other.vehicle == vehicle;
 
   @override
   int get hashCode => Object.hashAll([
-        id, line, variant, stopIndex, stopId, stopName, mode, n, days, startMin, endMin, untilS, live, enabled, pausedUntilS,
+        id, line, variant, stopIndex, stopId, stopName, mode, n, days, startMin, endMin, untilS, live, enabled, pausedUntilS, kind, vehicle,
       ]);
 }
 
@@ -180,6 +198,7 @@ class RuleWatcher {
       if (st == null || stops == null) continue;
       for (final v in lives[r.line]?.vehicles ?? const <Vehicle>[]) {
         if (nowS - v.positionAt > maxFixAgeS) continue;
+        if (r.vehicle != null && v.id != r.vehicle) continue;
         final key = '${r.id}|${v.id}';
         if (v.variant == null) continue; // unknown: neither a hit nor the end of the run
         if (v.variant != r.variant || _pastStop(st, stops, r.stopIndex, v)) {
@@ -222,6 +241,14 @@ String hitText(RuleHit h, String stop) {
   if (left == null) return 'Το ${h.line} φτάνει στη $stop$late${e == null ? '' : ' σε ~${(e / 60).round()}′'}.';
   return 'Το ${h.line} είναι $left στάσεις πριν από $stop$late$inMin.';
 }
+
+/// The notification's title and text for a hit of [r]: the arrival wording, or "leave now", or "get
+/// off at the next stop".
+(String, String) ruleHitText(Rule r, RuleHit h, String stop) => switch (r.kind) {
+      RuleKind.arrive => ('${h.line} → $stop', hitText(h, stop)),
+      RuleKind.leave => ('Φύγε τώρα για το ${h.line}', 'Για να είσαι στη στάση $stop πριν έρθει${h.etaS == null ? '' : ' (σε ~${(h.etaS! / 60).round()}′)'}.'),
+      RuleKind.ride => ('Κατέβα στην επόμενη', 'Η επόμενη στάση του ${h.line} είναι η $stop.'),
+    };
 
 /// When a weekly rule next starts (strictly after [nowUtc]), or null for one-off and disabled rules.
 DateTime? nextStartUtc(Rule r, DateTime nowUtc) {

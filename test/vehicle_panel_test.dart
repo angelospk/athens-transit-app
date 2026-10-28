@@ -50,6 +50,6 @@ void main() {
     await t.pump(const Duration(seconds: 15)); // the retry timer, in fake time
     await settle(t);
     expect(find.textContaining('χωρίς σύνδεση'), findsNothing);
-    expect(find.text('#44548'), findsOneWidget);
+    expect(find.text('#44548'), findsOneWidget); // the vehicle, in the info line
   });
 }

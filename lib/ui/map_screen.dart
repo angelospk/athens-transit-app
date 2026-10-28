@@ -16,14 +16,18 @@ import '../core/geo.dart';
 import '../core/map_geo.dart';
 import '../core/marker.dart';
 import '../core/models.dart';
+import '../core/motion.dart';
 import '../core/nearby.dart';
+import '../data/basemap.dart';
 import '../data/locate.dart';
 import '../data/store.dart';
 import 'help.dart';
+import 'island_nav.dart';
 import 'line_panel.dart';
 import 'map_sel.dart';
 import 'rules_screen.dart';
 import 'search.dart';
+import 'station_panel.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'vehicle_screen.dart';
@@ -32,7 +36,7 @@ import 'widgets.dart';
 const _style = 'https://tiles.openfreemap.org/styles/';
 const _box = (s: 37.5, w: 22.9, n: 38.5, e: 24.5); // tiles exist only here
 const _lanePx = 3.0; // each direction drawn to the right of its travel direction (two lanes), as on the web
-const _peek = .14, _half = .45, _full = .92;
+const _peek = .14, _rest = .18, _half = .45, _full = .92; // _rest: nothing open, one compact row shows
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -47,27 +51,35 @@ class _MapScreenState extends State<MapScreen> {
   Set<String> _want = {};
   int _z = 13;
   Timer? _refresh, _glide;
+  final _motion = Motion();
   Pt? _me;
   TripIndex? _ix;
   String? _styleFor;
   final _sheet = DraggableScrollableController();
-  double _extent = .3;
+  double _extent = _rest;
   String _routesKey = ''; // what the route layers show now: redrawn only when it changes
   int _routesGen = 0; // the newest route draw; an older one stops before writing
   String? _routesPending; // the key being drawn: the same draw is not started twice
   Pt? _followedAt; // where "follow" last centred the bus
   final _menu = MenuController(); // the filter's menu: back closes it before anything else
   bool _menuOpen = false;
-  (bool, bool)? _rail; // metro and tram visibility applied to the map
+  (bool, bool, bool)? _rail; // metro, tram and suburban rail visibility applied to the map
+  Map<String, dynamic>? _metroJson; // metro.json: a tapped station is found by its index
   double _h = 700; // the map's height: the sheet's sizes are fractions of it
   LineStatic? _routeSt; // the line whose stops are drawn on its route: a tap on one opens it
+  String? _dark; // the lightened dark style (JSON); the plain URL until it loads
+  Timer? _calm; // the island grows back a moment after the map stops
 
   @override
   void initState() {
     super.initState();
-    _glide = Timer.periodic(const Duration(seconds: 2), (_) => _draw());
+    _glide = Timer.periodic(const Duration(seconds: 1), (_) => _draw()); // the buses move between fixes
     _refresh = Timer.periodic(const Duration(seconds: 30), (_) => _loadTiles(force: true));
+    darkStyle().then((j) {
+      if (mounted && j != null) setState(() => _dark = j);
+    });
     mapSel.addListener(_onSel);
+    appTab.addListener(_onTab);
     myPosition().then((p) {
       if (!mounted || p == null) return;
       setState(() => _me = p);
@@ -78,10 +90,28 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void dispose() {
     mapSel.removeListener(_onSel);
+    appTab.removeListener(_onTab);
     _refresh?.cancel();
     _glide?.cancel();
+    _calm?.cancel();
     _sheet.dispose();
     super.dispose();
+  }
+
+  void _onTab() {
+    if (mounted) setState(() {}); // back on the map tab walks the sheet back
+    navCompact.value = false;
+  }
+
+  // The island shrinks while the map moves or its sheet is up, and grows back a moment after.
+  void _busy(bool moving) {
+    if (appTab.value != 0) return;
+    _calm?.cancel();
+    if (moving || _extent > .5) {
+      navCompact.value = true;
+      if (!moving) return;
+    }
+    _calm = Timer(const Duration(milliseconds: 1500), () => navCompact.value = _extent > .5);
   }
 
   // A new selection: the sheet opens to half and the map moves to it.
@@ -91,7 +121,7 @@ class _MapScreenState extends State<MapScreen> {
     final s = mapSel.value;
     followBus.value = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_sheet.isAttached) _sheet.animateTo(s == null ? .3 : _half, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+      if (_sheet.isAttached) _sheet.animateTo(s == null ? _rest : _half, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
     });
     _routesKey = '';
     _routesPending = null;
@@ -102,10 +132,12 @@ class _MapScreenState extends State<MapScreen> {
         _reveal(stop.lat, stop.lon);
       case BusSel(:final line, :final vehicleId, :final at):
         final v = _vehicles(Deps.of(context).store).where((x) => x.id == vehicleId && x.line == line).firstOrNull;
-        final p = v == null ? at : _glidePos(v, DateTime.now().millisecondsSinceEpoch ~/ 1000); // where it is drawn
+        final p = v == null ? at : _glidePos(v, DateTime.now().millisecondsSinceEpoch / 1000); // where it is drawn
         if (p != null) _focus(p.$1, p.$2, max(_map?.cameraPosition?.zoom ?? 15, 15));
       case PlaceSel(:final at):
         _focus(at.$1, at.$2, 16);
+      case StationSel(:final at):
+        _reveal(at.$1, at.$2);
       case LineSel(:final line):
         Deps.of(context).api.lineStatic(line).then((st) {
           if (identical(mapSel.value, s)) _fit(st); // not after another selection
@@ -161,6 +193,8 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _onStyle() async {
     final m = _map!;
     final api = Deps.of(context).api;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final halo = dark ? '#1B1D21' : '#FFFFFF';
     _styled = false;
     _routesKey = '';
     _routesPending = null;
@@ -173,12 +207,17 @@ class _MapScreenState extends State<MapScreen> {
           const LineLayerProperties(lineColor: ['get', 'color'], lineWidth: ['interpolate', ['linear'], ['zoom'], 10, 2, 14, 4, 17, 6], lineOpacity: .85, lineJoin: 'round', lineCap: 'round'),
           filter: ['all', ['==', ['geometry-type'], 'LineString'], ['==', ['get', 'tram'], tram]], enableInteraction: false);
     }
+    // Suburban rail (Προαστιακός): its lines dashed, under the buses; stations tappable.
+    await m.addGeoJsonSource('rail', _empty);
+    await m.addLineLayer('rail', 'rail-track',
+        const LineLayerProperties(lineColor: ['get', 'color'], lineWidth: ['interpolate', ['linear'], ['zoom'], 9, 1.5, 14, 3.5], lineDasharray: [2, 1.2], lineOpacity: .9),
+        filter: ['==', ['geometry-type'], 'LineString'], enableInteraction: false);
     await m.addGeoJsonSource('stops', _empty);
     await m.addCircleLayer('stops', 'stop-dot',
-        const CircleLayerProperties(
+        CircleLayerProperties(
           circleRadius: ['interpolate', ['linear'], ['zoom'], 14, 2.5, 16, 5, 18, 7],
-          circleColor: '#FFFFFF',
-          circleStrokeColor: '#5B5F66',
+          circleColor: dark ? '#2A2D33' : '#FFFFFF',
+          circleStrokeColor: dark ? '#A8ADB5' : '#5B5F66',
           circleStrokeWidth: ['interpolate', ['linear'], ['zoom'], 14, 1, 16, 2],
         ),
         minzoom: 14,
@@ -222,14 +261,20 @@ class _MapScreenState extends State<MapScreen> {
     await m.addCircleLayer('picked', 'picked-stop',
         const CircleLayerProperties(circleRadius: 7, circleColor: '#FFFFFF', circleStrokeColor: '#1A1C1E', circleStrokeWidth: 3),
         enableInteraction: false);
+    await m.addCircleLayer('rail', 'rail-station',
+        const CircleLayerProperties(circleRadius: ['interpolate', ['linear'], ['zoom'], 9, 2.5, 15, 7], circleColor: '#FFFFFF', circleStrokeColor: ['get', 'color'], circleStrokeWidth: 3),
+        filter: ['==', ['geometry-type'], 'Point']);
+    await m.addSymbolLayer('rail', 'rail-name',
+        SymbolLayerProperties(textField: ['get', 'name'], textFont: ['Noto Sans Regular'], textSize: 11, textOffset: [0, 1.2], textColor: dark ? '#C9CCD1' : '#43474E', textHaloColor: halo, textHaloWidth: 1.5),
+        filter: ['==', ['geometry-type'], 'Point'], minzoom: 12, enableInteraction: false);
     for (final tram in [false, true]) {
       final k = tram ? 'tram' : 'metro';
       final pt = ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'tram'], tram]];
       await m.addCircleLayer('metro', '$k-station',
           const CircleLayerProperties(circleRadius: ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 7], circleColor: '#FFFFFF', circleStrokeColor: ['get', 'color'], circleStrokeWidth: 3),
-          filter: pt, enableInteraction: false);
+          filter: pt);
       await m.addSymbolLayer('metro', '$k-name',
-          const SymbolLayerProperties(textField: ['get', 'name'], textFont: ['Noto Sans Regular'], textSize: 11, textOffset: [0, 1.2], textColor: '#43474E', textHaloColor: '#FFFFFF', textHaloWidth: 1.5),
+          SymbolLayerProperties(textField: ['get', 'name'], textFont: ['Noto Sans Regular'], textSize: 11, textOffset: [0, 1.2], textColor: dark ? '#C9CCD1' : '#43474E', textHaloColor: halo, textHaloWidth: 1.5),
           filter: pt, minzoom: 13, enableInteraction: false);
     }
     // Buses as on the web: filled by delay (my lines by their colour, with the delay as the ring), a
@@ -275,14 +320,14 @@ class _MapScreenState extends State<MapScreen> {
         minzoom: 13,
         enableInteraction: false);
     await m.addSymbolLayer('vehicles', 'veh-age',
-        const SymbolLayerProperties(
+        SymbolLayerProperties(
           textField: ['get', 'age'],
           textFont: ['Noto Sans Bold'],
           textSize: 10.5,
           textAnchor: 'left',
           textOffset: [1.3, 0],
           textColor: ['get', 'agec'],
-          textHaloColor: '#FFFFFF',
+          textHaloColor: halo,
           textHaloWidth: 1.5,
           textAllowOverlap: true,
           textIgnorePlacement: true,
@@ -291,7 +336,11 @@ class _MapScreenState extends State<MapScreen> {
         minzoom: 13,
         enableInteraction: false);
     _styled = true;
-    api.metro().then((j) => m.setGeoJsonSource('metro', metroGeo(j, name: titleCase))).catchError((_) {});
+    api.metro().then((j) {
+      _metroJson = j;
+      return m.setGeoJsonSource('metro', metroGeo(j, name: titleCase));
+    }).catchError((_) {});
+    api.suburban().then((sub) => m.setGeoJsonSource('rail', railGeo(sub, name: titleCase))).catchError((_) {});
     _ix ??= await api.trips();
     if (mounted) setState(() {}); // the search can look up stops now
     await m.setGeoJsonSource('stops', {
@@ -355,13 +404,13 @@ class _MapScreenState extends State<MapScreen> {
     return (((lon + 180) / 360 * n).floor(), ((1 - log(tan(r) + 1 / cos(r)) / pi) / 2 * n).floor());
   }
 
-  // Where a vehicle is now: along `path` at its speed since the fix, stopping at the path's end.
-  Pt _glidePos(Vehicle v, int now) {
-    final path = v.path;
-    final sp = v.speed;
-    if (path == null || path.length < 2 || sp == null || sp <= 0) return (v.lat, v.lon);
-    final s = min(sp * max(0, now - v.positionAt), shapeLength(path));
-    return pointAt(path, s);
+  // Where a vehicle is shown now: it drives along its path from the fix (typical speeds, stops), and a
+  // new fix is joined smoothly instead of a jump (core/motion.dart, as on the web).
+  Pt _glidePos(Vehicle v, double nowS) {
+    final id = '${v.line}|${v.id}';
+    _motion.update(id,
+        path: v.path, speed: v.speed, positionAt: v.positionAt, pathSpeeds: v.pathSpeeds, fix: (v.lat, v.lon), nowS: nowS);
+    return _motion.step(id, nowS);
   }
 
   List<Vehicle> _vehicles(AppStore store) {
@@ -386,6 +435,7 @@ class _MapScreenState extends State<MapScreen> {
         'id': v.id, 'line': line, 'lat': v.lat, 'lon': v.lon, 'position_at': v.positionAt, 'variant': v.variant,
         'delay_s': v.delayS, 'speed': v.speed, 'next_stop_id': v.nextStopId, 'trip_id': v.tripId,
         'path': [for (final p in v.path ?? const <Pt>[]) [p.$1, p.$2]],
+        'path_speeds': v.pathSpeeds,
       });
 
   // A line shown on the map in its own colour: one of mine keeps its slot, any other line is blue.
@@ -396,8 +446,10 @@ class _MapScreenState extends State<MapScreen> {
     if (m == null || !_styled || !mounted) return;
     final store = Deps.of(context).store;
     final sel = mapSel.value;
-    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final nowS = DateTime.now().millisecondsSinceEpoch / 1000;
+    final now = nowS ~/ 1;
     final features = <Object>[];
+    final shown = <String>{};
     final focus = sel is BusSel || sel is LineSel;
     for (final v in _vehicles(store)) {
       final line = v.line ?? '';
@@ -412,10 +464,11 @@ class _MapScreenState extends State<MapScreen> {
       final mine = store.myLines.contains(line);
       final age = now - v.positionAt;
       final stale = age > staleS;
-      final op = focus && !on && store.others == Others.dim ? .22 : (stale ? (mine ? .45 : .3) : 1.0);
+      final op = focus && !on && store.others == Others.dim ? .22 : (stale ? (mine ? .7 : .55) : 1.0); // old fixes fade, but late buses stay readable
       final delay = delayHex(v.delayS);
       final c = lineColor(store, line);
-      final p = _glidePos(v, now);
+      final p = _glidePos(v, nowS);
+      shown.add('$line|${v.id}');
       final hd = headingOf(v, p);
       features.add({
         'type': 'Feature',
@@ -434,11 +487,12 @@ class _MapScreenState extends State<MapScreen> {
         'geometry': {'type': 'Point', 'coordinates': [p.$2, p.$1]},
       });
     }
+    _motion.retain(shown);
     await m.setGeoJsonSource('vehicles', {'type': 'FeatureCollection', 'features': features});
     if (followBus.value && sel is BusSel) {
       final v = _vehicles(store).where((x) => x.id == sel.vehicleId && x.line == sel.line).firstOrNull;
       if (v != null) {
-        final p = _glidePos(v, now);
+        final p = _motion.shown('${v.line}|${v.id}') ?? _glidePos(v, nowS);
         // Only after it moved: each focus ends in a camera-idle draw, which must not move the map again.
         if (_followedAt == null || distM(_followedAt!, p) > 40) {
           _followedAt = p;
@@ -449,9 +503,12 @@ class _MapScreenState extends State<MapScreen> {
       _followedAt = null;
     }
     await _drawRoutes(m, store, sel);
-    final rail = (store.showMetro, store.showTram);
+    final rail = (store.showMetro, store.showTram, store.showRail);
     if (rail != _rail) {
       _rail = rail;
+      for (final id in ['rail-track', 'rail-station', 'rail-name']) {
+        await m.setLayerVisibility(id, rail.$3);
+      }
       for (final id in ['metro-track', 'metro-station', 'metro-name']) {
         await m.setLayerVisibility(id, rail.$1);
       }
@@ -475,7 +532,7 @@ class _MapScreenState extends State<MapScreen> {
         want[line] = vv == null ? null : {vv};
       case LineSel(:final line, :final variants):
         want[line] = variants;
-      case StopSel() || PlaceSel():
+      case StopSel() || PlaceSel() || StationSel():
         break;
       case null:
         if (store.onlyMine) {
@@ -487,6 +544,7 @@ class _MapScreenState extends State<MapScreen> {
     final picked = switch (sel) {
       StopSel(:final stop) => (name: stop.name, lat: stop.lat, lon: stop.lon),
       PlaceSel(:final name, :final at) => (name: name, lat: at.$1, lon: at.$2),
+      StationSel(:final name, :final at) => (name: name, lat: at.$1, lon: at.$2),
       _ => null,
     };
     final key = '${want.entries.map((e) => '${e.key}:${e.value}').join(',')}|${picked?.name}|${store.myLines}';
@@ -526,7 +584,19 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _tap(Point<double> point, LatLng at, String id, String layer, Annotation? annotation) {
-    if (id.startsWith('v|')) {
+    if (id.startsWith('r|')) {
+      Deps.of(context).api.suburban().then((sub) {
+        final st = sub.stations[id.substring(2)];
+        if (st != null) mapSel.value = StationSel(st.name, (st.lat, st.lon), lines: st.corridors, railId: st.id);
+      });
+    } else if (RegExp(r'^m\d+$').hasMatch(id) && _metroJson != null) {
+      final list = _metroJson!['stations'] as List;
+      final i = int.parse(id.substring(1));
+      if (i >= list.length) return;
+      final st = list[i] as Map<String, dynamic>;
+      mapSel.value = StationSel(st['name'] as String, ((st['lat'] as num).toDouble(), (st['lon'] as num).toDouble()),
+          lines: [for (final l in st['lines'] as List) l as String]);
+    } else if (id.startsWith('v|')) {
       final p = id.split('|');
       final stop = switch (mapSel.value) { StopSel(:final stop) => stop, BusSel(:final stop) => stop, _ => null };
       mapSel.value = BusSel(p[1], p[2], stop: stop);
@@ -555,19 +625,21 @@ class _MapScreenState extends State<MapScreen> {
     final d = Deps.of(context);
     final t = context.tones;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final style = '$_style${dark ? 'dark' : 'positron'}';
+    final style = dark ? _dark ?? '${_style}dark' : '${_style}positron';
     if (_styleFor != null && _styleFor != style) _styled = false;
     _styleFor = style;
     final start = _me ?? athensCentre;
     final sel = mapSel.value;
+    // The tab at build time: the shell's own back handler may switch to the map first on this press.
+    final onMap = appTab.value == 0;
     return PopScope(
-      canPop: sel == null && !_menuOpen,
+      canPop: !onMap || (sel == null && !_menuOpen),
       onPopInvokedWithResult: (popped, _) {
-        if (popped) return;
+        if (popped || !onMap) return;
         if (_menuOpen) {
           _menu.close();
         } else {
-          mapSel.value = null;
+          mapBack();
         }
       },
       child: ListenableBuilder(
@@ -589,6 +661,11 @@ class _MapScreenState extends State<MapScreen> {
               onMapCreated: (c) {
                 _map = c;
                 c.onFeatureTapped.add(_tap);
+                var was = false;
+                c.addListener(() {
+                  if (c.isCameraMoving && !was) _busy(true);
+                  was = c.isCameraMoving;
+                });
               },
               // An empty spot closes what is open, as on the web.
               onMapClick: (_, _) {
@@ -599,7 +676,10 @@ class _MapScreenState extends State<MapScreen> {
                 }
               },
               onStyleLoadedCallback: _onStyle,
-              onCameraIdle: _loadTiles,
+              onCameraIdle: () {
+                _busy(false);
+                _loadTiles();
+              },
             ),
             // Map buttons ride on the sheet's edge and hide when it is nearly full.
             if (_extent < .7)
@@ -633,16 +713,19 @@ class _MapScreenState extends State<MapScreen> {
               ),
             NotificationListener<DraggableScrollableNotification>(
               onNotification: (n) {
-                if ((n.extent - _extent).abs() > .01) setState(() => _extent = n.extent);
+                if ((n.extent - _extent).abs() > .01) {
+                  setState(() => _extent = n.extent);
+                  _busy(false);
+                }
                 return false;
               },
               child: DraggableScrollableSheet(
                 controller: _sheet,
-                initialChildSize: .3,
+                initialChildSize: _rest,
                 minChildSize: _peek,
                 maxChildSize: _full,
                 snap: true,
-                snapSizes: const [.3, _half],
+                snapSizes: const [_rest, _half],
                 builder: (context, scroll) => Material(
                   color: t.ground,
                   elevation: 8,
@@ -655,6 +738,7 @@ class _MapScreenState extends State<MapScreen> {
                       VehiclePanel(key: ValueKey('$line|$vehicleId'), line: line, vehicleId: vehicleId, stop: stop, scroll: scroll),
                     LineSel(:final line, :final variants) => LinePanel(key: ValueKey(line), line: line, variants: variants, scroll: scroll),
                     PlaceSel(:final name, :final at) => _PlacePanel(name: name, at: at, ix: _ix, scroll: scroll),
+                    StationSel() => StationPanel(key: ObjectKey(sel), sel: sel, ix: _ix, scroll: scroll),
                     null => d.store.onlyMine ? _MyLinesSheet(scroll: scroll) : _NearSheet(me: _me, ix: _ix, scroll: scroll),
                   },
                 ),
@@ -748,6 +832,13 @@ class _MapScreenState extends State<MapScreen> {
                 value: store.showTram,
                 onChanged: (v) => store.setRail(tram: v),
               ),
+              SwitchListTile(
+                secondary: const Icon(Icons.train_outlined),
+                title: const Text('Προαστιακός'),
+                subtitle: const Text('γραμμές και σταθμοί, αναχωρήσεις live'),
+                value: store.showRail,
+                onChanged: (v) => store.setRail(rail: v),
+              ),
               const Padding(padding: EdgeInsets.fromLTRB(24, 8, 24, 0), child: DelayLegend()),
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
@@ -805,7 +896,7 @@ class _MapScreenState extends State<MapScreen> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 13, 8, 13),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.filter_list, size: 20),
+              const Icon(Icons.directions_bus_outlined, size: 20),
               const SizedBox(width: 6),
               Text(store.onlyMine ? 'Οι γραμμές μου' : 'Όλα', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               const Icon(Icons.arrow_drop_down),
@@ -870,25 +961,34 @@ class _NearSheet extends StatelessWidget {
     final dist = here == null || lat == null ? null : distM(here, (lat, lon!));
     return ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), children: [
       const SheetHandle(),
-      Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Expanded(
-          child: InkWell(
-            onTap: name == null
-                ? null
-                : () async {
-                    final ixx = ix ?? await d.api.trips();
-                    final all = linesAt(ixx, name, lat!, lon!);
-                    mapSel.value = StopSel(StopRef(name: name, lat: lat, lon: lon, lines: all.isEmpty ? lines : all));
-                  },
+      // One compact row while the sheet rests low: the stop and its next two buses; drag up for more.
+      InkWell(
+        onTap: name == null
+            ? null
+            : () async {
+                final ixx = ix ?? await d.api.trips();
+                final all = linesAt(ixx, name, lat!, lon!);
+                mapSel.value = StopSel(StopRef(name: name, lat: lat, lon: lon, lines: all.isEmpty ? lines : all));
+              },
+        child: Row(children: [
+          Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(dist == null ? (fav?.place == Place.work ? 'Δουλειά' : 'Η στάση σου') : 'Κοντά σου · ${dist.round()} μ.',
-                  style: TextStyle(fontSize: 13, color: t.muted, fontWeight: FontWeight.w500)),
-              Text(name == null ? 'Πάτα μια στάση στον χάρτη' : titleCase(name), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                  style: TextStyle(fontSize: 12, color: t.muted, fontWeight: FontWeight.w500)),
+              Text(name == null ? 'Πάτα μια στάση στον χάρτη' : titleCase(name),
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
             ]),
           ),
-        ),
-        const LiveNote(),
-      ]),
+          for (final (first, _) in groups.take(2)) ...[
+            const SizedBox(width: 8),
+            LineBadge(first.line),
+            const SizedBox(width: 4),
+            Text('${d.live.isOffline ? '~' : ''}${mins(first.etaS)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          ],
+        ]),
+      ),
+      const SizedBox(height: 8),
+      const LiveNote(),
       for (final (first, then) in groups)
         ArrivalRow(first: first, then: then, estimate: d.live.isOffline, onTap: () => mapSel.value = BusSel(first.line, first.vehicleId)),
       if (name != null && groups.isEmpty && lines.isNotEmpty)
@@ -912,6 +1012,7 @@ class _PlacePanel extends StatelessWidget {
     return ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
       const SheetHandle(),
       Row(children: [
+        const BackSel(),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Στάσεις κοντά', style: TextStyle(fontSize: 13, color: t.muted, fontWeight: FontWeight.w500)),

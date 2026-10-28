@@ -1,14 +1,19 @@
 // Screen 7 · Ειδοποίησέ με: minutes or stops before the bus reaches the user's stop, with what that
-// means right now. Creates a one-off rule (or a weekly one) that the background service watches.
+// means right now; or (screen 16) "Πες μου πότε να φύγω": the walk from where the user is, and a few
+// minutes at the stop before the bus. Creates a one-off rule (or a weekly one) that the background
+// service watches.
 
 import 'package:flutter/material.dart';
 
 import '../background/service.dart';
 import '../core/athens_time.dart';
 import '../core/eta.dart';
+import '../core/geo.dart';
+import '../core/leave.dart';
 import '../core/models.dart';
 import '../core/rules.dart';
 import '../data/live.dart';
+import '../data/locate.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -27,16 +32,17 @@ Future<void> showAlertSheet(BuildContext context, {required StopRef stop, requir
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
-    builder: (_) => AlertSheet(stop: stop, line: arrival.line, variantId: arrival.variant, st: st, stopIndex: i),
+    builder: (_) => AlertSheet(stop: stop, line: arrival.line, variantId: arrival.variant, st: st, stopIndex: i, etaS: arrival.etaS),
   );
 }
 
 class AlertSheet extends StatefulWidget {
-  const AlertSheet({super.key, required this.stop, required this.line, required this.variantId, required this.st, required this.stopIndex});
+  const AlertSheet({super.key, required this.stop, required this.line, required this.variantId, required this.st, required this.stopIndex, this.etaS});
   final StopRef stop;
   final String line, variantId;
   final LineStatic st;
   final int stopIndex;
+  final int? etaS; // the bus it was opened from: for "when to leave" now
 
   @override
   State<AlertSheet> createState() => _AlertSheetState();
@@ -45,6 +51,25 @@ class AlertSheet extends StatefulWidget {
 class _AlertSheetState extends State<AlertSheet> {
   AlertMode mode = AlertMode.minutes;
   int n = 5;
+  bool leave = false; // "Πες μου πότε να φύγω"
+  int margin = 3; // minutes at the stop before the bus
+  int? walk; // minutes on foot from the user's position; null until asked
+  bool locating = false;
+
+  // The user's position, asked only when "when to leave" is picked; the sheet says why first.
+  Future<void> _locate() async {
+    setState(() => locating = true);
+    final p = await myPosition();
+    if (!mounted) return;
+    setState(() {
+      locating = false;
+      walk = p == null ? null : walkMinutes(distM(p, (widget.stop.lat, widget.stop.lon)));
+    });
+    if (p == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρέθηκε η θέση σου (άδεια ή GPS). Βάλε τον χρόνο περπατήματος με το χέρι.')));
+      setState(() => walk = Deps.of(context).store.walkMin.clamp(1, 60));
+    }
+  }
   late bool live = Deps.of(context).store.liveDefault;
 
   Variant get v => widget.st.variants[widget.variantId]!;
@@ -77,8 +102,9 @@ class _AlertSheetState extends State<AlertSheet> {
       stopIndex: widget.stopIndex,
       stopId: v.stops[widget.stopIndex],
       stopName: widget.stop.name,
-      mode: mode,
-      n: n,
+      mode: leave ? AlertMode.minutes : mode,
+      n: leave ? (walk ?? 0) + margin : n,
+      kind: leave ? RuleKind.leave : RuleKind.arrive,
       days: weekly ? 0x1F : 0,
       startMin: start,
       endMin: (start + 45).clamp(0, 1440),
@@ -98,10 +124,96 @@ class _AlertSheetState extends State<AlertSheet> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(ok
-          ? (weekly ? 'Κανόνας: Δε–Πα τέτοια ώρα.${exact ? '' : ' Χωρίς άδεια για ακριβή ξυπνητήρια μπορεί να ξεκινά λίγα λεπτά αργότερα.'}' : 'Θα σε ειδοποιήσω για το ${widget.line}.')
+          ? (weekly
+              ? 'Κανόνας: Δε–Πα τέτοια ώρα.${exact ? '' : ' Χωρίς άδεια για ακριβή ξυπνητήρια μπορεί να ξεκινά λίγα λεπτά αργότερα.'}'
+              : leave
+                  ? 'Θα σου πω πότε να φύγεις για το ${widget.line}.'
+                  : 'Θα σε ειδοποιήσω για το ${widget.line}.')
           : 'Χωρίς άδεια ειδοποιήσεων δεν μπορώ να σε ειδοποιήσω.'),
     ));
   }
+
+  // Screen 16: "Φύγε σε N′", the bar now / walk / wait, and how early to be at the stop.
+  List<Widget> _leave(Tones t) {
+    final w = walk;
+    if (w == null) {
+      return [
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(14)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Χρειάζομαι τη θέση σου', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text('Για να υπολογίσω πόσο περπατάς ως τη στάση και να σου πω πότε να ξεκινήσεις, ώστε να είσαι εκεί έγκαιρα. Η θέση μένει στο κινητό.',
+                style: TextStyle(fontSize: 13.5, height: 1.35, color: t.muted)),
+            const SizedBox(height: 10),
+            FilledButton.tonalIcon(
+              onPressed: locating ? null : _locate,
+              icon: const Icon(Icons.my_location),
+              label: Text(locating ? 'Ψάχνω…' : 'Χρήση της θέσης μου'),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 8),
+      ];
+    }
+    final eta = widget.etaS;
+    final inMin = eta == null ? null : leaveInMinutes(eta, w, margin);
+    final wait = eta == null ? null : (eta / 60).floor() - w - (inMin ?? 0).clamp(0, 999);
+    return [
+      const SizedBox(height: 16),
+      if (inMin != null)
+        Text(inMin <= 0 ? 'Φύγε τώρα' : 'Φύγε σε $inMin′', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, height: 1.05)),
+      Text(
+        [
+          if (inMin != null && inMin > 0) 'στις ${clockIn(inMin * 60)}',
+          'περπάτημα $w′ ως ${titleCase(widget.stop.name)}',
+          if (inMin != null && inMin < 0) 'μάλλον δεν προλαβαίνεις αυτό',
+        ].join(' · '),
+        style: TextStyle(fontSize: 14, color: inMin != null && inMin < 0 ? t.late : t.muted),
+      ),
+      if (inMin != null) ...[
+        const SizedBox(height: 10),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            height: 36,
+            child: Row(children: [
+              if (inMin > 0) Expanded(flex: inMin, child: _bar(t.surface, t.ink, 'τώρα · $inMin′')),
+              Expanded(flex: w, child: _bar(t.indicator, t.ink, 'περπάτημα $w′')),
+              if ((wait ?? 0) > 0) Expanded(flex: wait!, child: _bar(lineColor(Deps.of(context).store, widget.line).bg, lineColor(Deps.of(context).store, widget.line).fg, 'περιμένεις $wait′')),
+            ]),
+          ),
+        ),
+      ],
+      const SizedBox(height: 14),
+      Text('Θέλω να είμαι στη στάση', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+      const SizedBox(height: 6),
+      Row(children: [
+        for (final m in const [1, 3, 5, 10])
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 3),
+              child: ChoiceChip(label: Center(child: Text('$m′ πριν')), selected: margin == m, onSelected: (_) => setState(() => margin = m)),
+            ),
+          ),
+      ]),
+      Row(children: [
+        Text('Περπάτημα', style: TextStyle(fontSize: 13, color: t.muted)),
+        IconButton(tooltip: 'Λιγότερο', onPressed: w > 1 ? () => setState(() => walk = w - 1) : null, icon: const Icon(Icons.remove)),
+        Text('$w′', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        IconButton(tooltip: 'Περισσότερο', onPressed: w < 60 ? () => setState(() => walk = w + 1) : null, icon: const Icon(Icons.add)),
+      ]),
+      Text('Αν το λεωφορείο αργήσει, σου λέω να φύγεις αργότερα: ο χρόνος διορθώνεται με κάθε στίγμα GPS.', style: TextStyle(fontSize: 13, color: t.muted)),
+    ];
+  }
+
+  Widget _bar(Color bg, Color fg, String s) => Container(
+        color: bg,
+        alignment: Alignment.center,
+        child: Text(s, maxLines: 1, overflow: TextOverflow.clip, softWrap: false, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: fg)),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -125,18 +237,23 @@ class _AlertSheetState extends State<AlertSheet> {
         const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
-          child: SegmentedButton<AlertMode>(
+          child: SegmentedButton<int>(
+            showSelectedIcon: false,
             segments: const [
-              ButtonSegment(value: AlertMode.minutes, label: Text('Λεπτά πριν')),
-              ButtonSegment(value: AlertMode.stops, label: Text('Στάσεις πριν')),
+              ButtonSegment(value: 0, label: Text('Λεπτά πριν')),
+              ButtonSegment(value: 1, label: Text('Στάσεις πριν')),
+              ButtonSegment(value: 2, label: Text('Πότε να φύγω')),
             ],
-            selected: {mode},
+            selected: {leave ? 2 : mode.index},
             onSelectionChanged: (s) => setState(() {
-              mode = s.first;
+              leave = s.first == 2;
+              if (leave) return;
+              mode = AlertMode.values[s.first];
               n = mode == AlertMode.minutes ? 5 : 3;
             }),
           ),
         ),
+        if (leave) ..._leave(t) else ...[
         const SizedBox(height: 16),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           IconButton.filledTonal(tooltip: 'Λιγότερο', onPressed: n > 1 ? () => setState(() => n--) : null, icon: const Icon(Icons.remove)),
@@ -177,6 +294,7 @@ class _AlertSheetState extends State<AlertSheet> {
                   Text('Ο χρόνος διορθώνεται με κάθε στίγμα GPS.', style: TextStyle(fontSize: 13, color: t.muted)),
                 ]),
         ),
+        ],
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Live στην οθόνη κλειδώματος'),
@@ -189,15 +307,15 @@ class _AlertSheetState extends State<AlertSheet> {
           leading: const Icon(Icons.repeat),
           title: const Text('Κάθε καθημερινή τέτοια ώρα;', style: TextStyle(fontWeight: FontWeight.w600)),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => _create(weekly: true),
+          onTap: leave && walk == null ? null : () => _create(weekly: true),
         ),
         const SizedBox(height: 4),
         SizedBox(
           width: double.infinity,
           height: 52,
           child: FilledButton(
-            onPressed: () => _create(weekly: false),
-            child: Text(mode == AlertMode.minutes ? 'Ειδοποίησέ με $n′ πριν' : 'Ειδοποίησέ με $n ${n == 1 ? 'στάση' : 'στάσεις'} πριν',
+            onPressed: leave && walk == null ? null : () => _create(weekly: false),
+            child: Text(leave ? 'Πες μου πότε να φύγω' : mode == AlertMode.minutes ? 'Ειδοποίησέ με $n′ πριν' : 'Ειδοποίησέ με $n ${n == 1 ? 'στάση' : 'στάσεις'} πριν',
                 style: const TextStyle(fontSize: 16)),
           ),
         ),

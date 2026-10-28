@@ -105,6 +105,7 @@ class _StopPanelState extends State<StopPanel> {
         return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
             const SheetHandle(),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const BackSel(),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(titleCase(s.name), style: Theme.of(context).textTheme.headlineSmall),

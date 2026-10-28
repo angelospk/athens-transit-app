@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/athens_time.dart';
 import '../core/eta.dart';
 import '../data/api.dart';
 import '../data/live.dart';
@@ -209,4 +210,53 @@ class CloseSel extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       IconButton(tooltip: 'Κλείσιμο', icon: const Icon(Icons.close), onPressed: () => mapSel.value = null);
+}
+
+// The sheet's back arrow, top left: to what was open before (map_sel.dart). Nothing when there is
+// nothing to go back to.
+class BackSel extends StatelessWidget {
+  const BackSel({super.key});
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+        valueListenable: mapSel,
+        builder: (context, _, _) => canMapBack()
+            ? IconButton(tooltip: 'Πίσω', icon: const Icon(Icons.arrow_back), onPressed: mapBack)
+            : const SizedBox.shrink(),
+      );
+}
+
+// A line's badge that opens the line: the badge with a small arrow, so it reads as a button.
+class LineButton extends StatelessWidget {
+  const LineButton(this.line, {super.key, this.variants});
+  final String line;
+  final Set<String>? variants;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = lineColor(Deps.of(context).store, line);
+    return Tooltip(
+      message: 'Η γραμμή $line',
+      child: Material(
+        color: c.bg,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => mapSel.value = LineSel(line, variants: variants),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 6, 2, 6),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text(line, style: TextStyle(color: c.fg, fontSize: 17, fontWeight: FontWeight.w700)),
+              Icon(Icons.chevron_right, size: 18, color: c.fg),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// "08:12": the Athens clock time in s seconds from now.
+String clockIn(int s) {
+  final w = athensWall(DateTime.now().toUtc().add(Duration(seconds: s)));
+  return '${w.hour.toString().padLeft(2, '0')}:${w.minute.toString().padLeft(2, '0')}';
 }

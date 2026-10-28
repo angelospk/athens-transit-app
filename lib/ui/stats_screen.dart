@@ -1,4 +1,6 @@
-// Network statistics: the newest full day (vehicles, speed, trips that ran, hours, slowest and fastest lines).
+// Network statistics. «Χθες»: the newest full day (vehicles, speed, trips that ran, hours, slowest and
+// fastest lines). «Τάσεις»: the stored days together (speed by hour with its range, weekdays against
+// weekends, the lines that changed most against their usual speed), as on the web page.
 
 import 'package:flutter/material.dart';
 
@@ -25,39 +27,162 @@ class StatsScreen extends StatefulWidget {
 
 class _StatsScreenState extends State<StatsScreen> {
   Future<DayStats>? _day;
+  Future<List<DayStats>>? _long;
 
   void _load() => setState(() => _day = Deps.of(context).api.stats());
+  void _loadLong() => setState(() => _long = Deps.of(context).api.storedDays());
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _day ??= Deps.of(context).api.stats();
+    _long ??= Deps.of(context).api.storedDays();
   }
 
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Στατιστικά δικτύου')),
-      body: FutureBuilder<DayStats>(
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Στατιστικά δικτύου'),
+          bottom: const TabBar(tabs: [Tab(text: 'Χθες'), Tab(text: 'Τάσεις')]),
+        ),
+        body: TabBarView(children: [_dayTab(t), _longTab(t)]),
+      ),
+    );
+  }
+
+  Widget _retry(Tones t, String msg, VoidCallback again) => Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(msg, style: TextStyle(color: t.muted)),
+          const SizedBox(height: 8),
+          OutlinedButton(onPressed: again, child: const Text('Δοκίμασε ξανά')),
+        ]),
+      );
+
+  Widget _longTab(Tones t) => FutureBuilder<List<DayStats>>(
+        future: _long,
+        builder: (context, snap) {
+          if (snap.hasError) return _retry(t, 'Δεν φόρτωσαν οι προηγούμενες μέρες.', _loadLong);
+          final all = snap.data;
+          if (all == null) return const Center(child: CircularProgressIndicator());
+          final days = [for (final d in all) if (complete(d)) d];
+          if (days.length < 2) return Center(child: Text('Χρειάζονται τουλάχιστον 2 πλήρεις μέρες.', style: TextStyle(color: t.muted)));
+          return _long$(t, days);
+        },
+      );
+
+  // Speed by hour (pooled line, the range of the days around it), weekday/weekend, and the trends.
+  Widget _long$(Tones t, List<DayStats> days) {
+    final band = hourBand(days);
+    final types = byDayType(days);
+    final trends = lineTrends(days, 5);
+    final top = band.fold(10.0, (m, b) => (b.max ?? 0) > m ? b.max! : m);
+    final vTop = [...types.weekday.hours, ...types.weekend.hours].fold(1.0, (m, h) => (h.vehicles ?? 0) > m ? h.vehicles! : m);
+    const h = 120.0;
+    return ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 24), children: [
+      Text('Οι τελευταίες ${days.length} πλήρεις μέρες', style: Theme.of(context).textTheme.titleLarge),
+      Text('${_date(days.first.date)} – ${_date(days.last.date)}', style: TextStyle(color: t.muted)),
+      _title('Μέση ταχύτητα ανά ώρα'),
+      Text('Η μπάρα: από την πιο αργή ως την πιο γρήγορη μέρα. Η τελεία: όλες μαζί.', style: TextStyle(fontSize: 13, color: t.muted)),
+      const SizedBox(height: 8),
+      SizedBox(
+        height: h,
+        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          for (final b in band)
+            Expanded(
+              child: b.kmh == null
+                  ? const SizedBox()
+                  : Stack(alignment: Alignment.bottomCenter, children: [
+                      Positioned(
+                        bottom: h * (b.min ?? 0) / top,
+                        height: (h * ((b.max ?? 0) - (b.min ?? 0)) / top).clamp(2, h),
+                        width: 6,
+                        child: DecoratedBox(decoration: BoxDecoration(color: t.indicator, borderRadius: BorderRadius.circular(3))),
+                      ),
+                      Positioned(
+                        bottom: h * b.kmh! / top - 3,
+                        child: Container(width: 6, height: 6, decoration: BoxDecoration(color: t.ink, shape: BoxShape.circle)),
+                      ),
+                    ]),
+            ),
+        ]),
+      ),
+      _hours(t),
+      _title('Καθημερινές και Σαββατοκύριακα'),
+      Row(children: [
+        _tile(t, types.weekday.kmh == null ? '–' : _kmh(types.weekday.kmh!), 'χλμ/ώ καθημερινές (${types.weekday.days})'),
+        const SizedBox(width: 8),
+        _tile(t, types.weekend.kmh == null ? '–' : _kmh(types.weekend.kmh!), 'χλμ/ώ Σαβ/κο (${types.weekend.days})'),
+      ]),
+      const SizedBox(height: 10),
+      Text('Λεωφορεία ανά ώρα', style: TextStyle(fontSize: 13, color: t.muted)),
+      const SizedBox(height: 6),
+      SizedBox(
+        height: 90,
+        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          for (var i = 0; i < 24; i++)
+            Expanded(
+              child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Expanded(child: Container(height: 1 + 88 * (types.weekday.hours[i].vehicles ?? 0) / vTop, color: t.onTime)),
+                Expanded(child: Container(height: 1 + 88 * (types.weekend.hours[i].vehicles ?? 0) / vTop, color: t.late)),
+              ]),
+            ),
+        ]),
+      ),
+      _hours(t),
+      const SizedBox(height: 6),
+      Row(children: [
+        Dot(t.onTime),
+        const SizedBox(width: 4),
+        Text('καθημερινή', style: TextStyle(fontSize: 12, color: t.muted)),
+        const SizedBox(width: 12),
+        Dot(t.late),
+        const SizedBox(width: 4),
+        Text('Σαββατοκύριακο', style: TextStyle(fontSize: 12, color: t.muted)),
+      ]),
+      if (trends != null) ...[
+        _title('Γραμμές που άλλαξαν (${_date(trends.date)})'),
+        Text('Σε σχέση με ${trends.baseDays} προηγούμενες ${trends.weekend ? 'μέρες Σαββατοκύριακου' : 'καθημερινές'}.', style: TextStyle(fontSize: 13, color: t.muted)),
+        for (final x in trends.slower) _trend(t, x),
+        for (final x in trends.faster) _trend(t, x),
+      ],
+      const SizedBox(height: 20),
+      Text('Μόνο πλήρεις μέρες (χωρίς κενά στις καταγραφές). Πηγή: καταγραφές θέσεων του ΟΑΣΑ από τον server μας.',
+          style: TextStyle(fontSize: 12, color: t.muted)),
+    ]);
+  }
+
+  Widget _hours(Tones t) => Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Row(children: [
+          for (var i = 0; i < 24; i++)
+            Expanded(child: Text(i % 3 == 0 ? '$i' : '', textAlign: TextAlign.center, softWrap: false, overflow: TextOverflow.visible, style: TextStyle(fontSize: 11, color: t.muted))),
+        ]),
+      );
+
+  Widget _trend(Tones t, Trend x) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Row(children: [
+          LineBadge(x.line),
+          const SizedBox(width: 12),
+          Expanded(child: Text('${_kmh(x.kmh)} χλμ/ώ (συνήθως ${_kmh(x.base)})')),
+          Text('${x.change > 0 ? '+' : '−'}${(x.change.abs() * 100).round()}%',
+              style: TextStyle(fontWeight: FontWeight.w700, color: x.change < 0 ? t.late : t.onTime)),
+        ]),
+      );
+
+  Widget _dayTab(Tones t) => FutureBuilder<DayStats>(
         future: _day,
         builder: (context, snap) {
-          if (snap.hasError) {
-            return Center(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Text('Δεν φόρτωσαν τα στατιστικά.', style: TextStyle(color: t.muted)),
-                const SizedBox(height: 8),
-                OutlinedButton(onPressed: _load, child: const Text('Δοκίμασε ξανά')),
-              ]),
-            );
-          }
+          if (snap.hasError) return _retry(t, 'Δεν φόρτωσαν τα στατιστικά.', _load);
           final d = snap.data;
           if (d == null) return const Center(child: CircularProgressIndicator());
           return _body(d, t);
         },
-      ),
-    );
-  }
+      );
 
   Widget _body(DayStats d, Tones t) {
     final speed = d.kmh;

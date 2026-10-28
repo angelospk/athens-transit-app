@@ -130,3 +130,21 @@ List<Arrival> arrivalsAt(String stopId, Map<String, LineStatic> statics, Map<Str
   out.sort((a, b) => a.etaS.compareTo(b.etaS));
   return out;
 }
+
+/// Of the ETAs of a bus's next stops (in order), the first to show. An old fix makes the stops the bus
+/// has passed since read 0 ("τώρα") or null: of those at the front only the last 0 stays, the stop the
+/// bus is at.
+int firstUpcoming(List<int?> etas) {
+  var k = 0;
+  while (k < etas.length && (etas[k] ?? 0) == 0) {
+    k++;
+  }
+  // etas[0..k) are all 0 or null: keep the last of them if it is a 0.
+  return k > 0 && etas[k - 1] == 0 ? k - 1 : k;
+}
+
+/// Of the same ETAs, the first stop a rider can still get off at: the stop the bus is at is too late.
+int firstAlight(List<int?> etas) {
+  final k = firstUpcoming(etas);
+  return k < etas.length && etas[k] == 0 ? k + 1 : k;
+}

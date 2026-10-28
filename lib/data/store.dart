@@ -60,7 +60,7 @@ class AppStore extends ChangeNotifier {
   ThemeMode theme = ThemeMode.system;
   List<Rule> rules = [];
   int walkMin = 4; // to the home stop, for "when to leave"
-  bool showMetro = true, showTram = true; // tracks and stations on the map
+  bool showMetro = true, showTram = true, showRail = true; // tracks and stations on the map (rail: Προαστιακός)
   Others others = Others.hide; // the other buses while one is open, as on the web
   bool onlyFresh = false, onlyOnTime = false, showAges = false; // the map's filters and age labels
   bool liveDefault = true; // a new alert starts with its live card on
@@ -76,6 +76,7 @@ class AppStore extends ChangeNotifier {
     walkMin = j['walkMin'] as int? ?? 4;
     showMetro = j['showMetro'] != false;
     showTram = j['showTram'] != false;
+    showRail = j['showRail'] != false;
     others = Others.values.where((o) => o.name == j['others']).firstOrNull ?? Others.hide;
     onlyFresh = j['onlyFresh'] == true;
     onlyOnTime = j['onlyOnTime'] == true;
@@ -94,6 +95,7 @@ class AppStore extends ChangeNotifier {
         'walkMin': walkMin,
         'showMetro': showMetro,
         'showTram': showTram,
+        'showRail': showRail,
         'others': others.name,
         'onlyFresh': onlyFresh,
         'onlyOnTime': onlyOnTime,
@@ -166,9 +168,10 @@ class AppStore extends ChangeNotifier {
     _save();
   }
 
-  void setRail({bool? metro, bool? tram}) {
+  void setRail({bool? metro, bool? tram, bool? rail}) {
     showMetro = metro ?? showMetro;
     showTram = tram ?? showTram;
+    showRail = rail ?? showRail;
     _save();
   }
 
