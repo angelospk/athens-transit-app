@@ -51,8 +51,13 @@ class _StopPanelState extends State<StopPanel> {
   Future<void> _loadSchedules() async {
     final api = Deps.of(context).api;
     final stop = s;
-    final lines = stop.lines.take(12).toList();
-    final all = await Future.wait(lines.map(api.cachedSchedule));
+    final lines = stop.lines.toList();
+    final all = <Map<String, dynamic>?>[];
+    for (var k = 0; k < lines.length; k += 6) {
+      // A few at a time: the server queues at most 16 OASA calls, and a refused one falls back to the old GTFS.
+      all.addAll(await Future.wait(lines.skip(k).take(6).map(api.cachedSchedule)));
+      if (!mounted || stop != s) return;
+    }
     final got = <String, Map<String, dynamic>>{
       for (var k = 0; k < lines.length; k++)
         if (all[k] case final j? when j['expired'] != true) lines[k]: j, // an expired timetable is not today's
