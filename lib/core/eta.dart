@@ -217,6 +217,7 @@ List<String>? departuresFor(Map<String, dynamic> schedule, Variant v) {
 /// after midnight) and when it passes stop [i] of [variantId], in seconds since today's Athens
 /// midnight (past 24 h after it). Same run time as [plannedEtas].
 ({String t, int atStopS})? lastRun(Map<String, dynamic> schedule, LineStatic st, String variantId, int i, {double speedMps = 4.2}) {
+  if (schedule['expired'] == true) return null; // not today's timetable
   final v = st.variants[variantId];
   final deps = v == null ? null : departuresFor(schedule, v);
   final offs = st.offsetsFor(variantId);

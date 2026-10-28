@@ -35,6 +35,8 @@ void main() {
     expect(r.t, '24:40');
     expect(r.atStopS, 24 * 3600 + 40 * 60 + (3600 / 4.2).round());
     expect(lastRun(const {'directions': []}, st, 'out', 1), isNull);
+    expect(lastRun({...sched, 'expired': true}, st, 'out', 1), isNull); // an old feed: not today's last
+
   });
 
   test('home: the direction that comes from the far end (most of the line before the stop)', () {

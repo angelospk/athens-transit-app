@@ -43,7 +43,11 @@ class _StopPanelState extends State<StopPanel> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _timer ??= Timer.periodic(const Duration(seconds: 30), (_) => _loadOthers());
+    // The timetable too, now and then: a run that did not start is known only some minutes after it.
+    _timer ??= Timer.periodic(const Duration(seconds: 30), (t) {
+      _loadOthers();
+      if (t.tick % 10 == 0) _loadSchedules();
+    });
     if (others.isEmpty) _loadOthers();
     if (_schedules.isEmpty) _loadSchedules();
   }

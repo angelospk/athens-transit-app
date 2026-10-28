@@ -80,6 +80,7 @@ class RouteScreen extends StatelessWidget {
         live: live,
         reachMin: before, // at the stop: the wait for this bus starts there
         first: k == firstBus,
+        toStation: k + 1 < steps.length && steps[k + 1].kind == StepKind.metro,
         onMap: () => _show(context, s),
       ));
       before += s.min + s.wait;
@@ -98,7 +99,11 @@ class RouteScreen extends StatelessWidget {
               Text('φτάνεις ~${arrive.hour}:${arrive.minute.toString().padLeft(2, '0')}', style: TextStyle(fontSize: 15, color: t.muted)),
           ]),
           Text(
-            live ? 'Εκτίμηση χωρίς την αναμονή του πρώτου λεωφορείου· η αναμονή φαίνεται live στο βήμα του.' : 'Για αργότερα: εκτίμηση χωρίς αναμονή.',
+            bus == null
+                ? 'Εκτίμηση με αναμονή ~$metroWaitMin′ για το τρένο.'
+                : live
+                    ? 'Εκτίμηση χωρίς την αναμονή του πρώτου λεωφορείου· η αναμονή φαίνεται live στο βήμα του.'
+                    : 'Για αργότερα: εκτίμηση χωρίς αναμονή.',
             style: TextStyle(fontSize: 12, color: t.muted),
           ),
           const SizedBox(height: 12),
@@ -121,11 +126,13 @@ class _StepTile extends StatelessWidget {
     required this.live,
     required this.reachMin,
     required this.first,
+    required this.toStation,
     required this.onMap,
   });
   final TripIndex ix;
   final RouteStep step;
   final bool last, live, first;
+  final bool toStation; // the walk ends at a metro or tram station
   final int reachMin;
   final VoidCallback onMap;
 
@@ -142,7 +149,7 @@ class _StepTile extends StatelessWidget {
     final List<String> lines;
     switch (s.kind) {
       case StepKind.walk:
-        title = s.to.isEmpty ? 'Περπάτα ως τον προορισμό' : (s.from.isEmpty ? 'Περπάτα ως τη στάση ${titleCase(s.to)}' : 'Περπάτα ως ${titleCase(s.to)}');
+        title = s.to.isEmpty ? 'Περπάτα ως τον προορισμό' : (s.from.isEmpty ? 'Περπάτα ως ${toStation ? 'τον σταθμό' : 'τη στάση'} ${titleCase(s.to)}' : 'Περπάτα ως ${titleCase(s.to)}');
         lines = [];
       case StepKind.bus:
         title = 'Ανέβα στο ${s.line}${s.toward == null ? '' : ' προς ${titleCase(s.toward!)}'}';

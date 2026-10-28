@@ -35,6 +35,7 @@ const _alarmId = 4242;
 const _nudgeAlarmId = 4343; // Friday and Saturday evening: «το τελευταίο προς το σπίτι»
 const _noteAlarmBase = 5000; // notifications at a time (not a bus): alarm ids from here
 const _notePrefix = 'timenote_v1.'; // + alarm id → {"title", "body", "payload"}
+const _noteNextKey = 'timenote_next_v1'; // the next alarm id after _noteAlarmBase
 const _favsPayload = 'tab:favs'; // a tap opens Αγαπημένα
 const _tickMs = 10000; // the card is recounted this often; each line is polled when its data is due
 const _serviceId = 7; // also the id of the service's notification, which the live card replaces
@@ -226,7 +227,9 @@ class AlertService {
   static Future<void> noteAt(DateTime utc, String title, String body, {String? payload}) async {
     if (!Platform.isAndroid) return;
     final p = await SharedPreferences.getInstance();
-    final id = _noteAlarmBase + (utc.millisecondsSinceEpoch ~/ 60000) % 100000; // one per minute
+    final n = p.getInt(_noteNextKey) ?? 0; // two notes for one minute are two alarms
+    await p.setInt(_noteNextKey, (n + 1) % 100000);
+    final id = _noteAlarmBase + n;
     await p.setString('$_notePrefix$id', jsonEncode({'title': title, 'body': body, 'payload': payload}));
     await AndroidAlarmManager.oneShotAt(utc.toLocal(), id, noteFired,
         exact: await exactAllowed(), wakeup: true, allowWhileIdle: true, rescheduleOnReboot: true);
