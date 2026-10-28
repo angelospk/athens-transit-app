@@ -90,6 +90,15 @@ void mapBack() {
 final followBus = ValueNotifier(false); // the map keeps the open bus in view
 final appTab = ValueNotifier(0); // the bottom bar's tab
 
+/// A trip for the planner tab to plan: its ends (label and points); a null start keeps the planner's.
+typedef PlanEnd = ({String label, List<Pt> pts});
+final planRequest = ValueNotifier<({PlanEnd? from, PlanEnd to})?>(null);
+
+void showPlanner({PlanEnd? from, required PlanEnd to}) {
+  planRequest.value = (from: from, to: to);
+  appTab.value = 2;
+}
+
 void showOnMap(MapSel s) {
   followBus.value = false;
   mapSel.value = s;

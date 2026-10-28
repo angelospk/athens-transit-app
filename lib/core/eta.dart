@@ -213,6 +213,51 @@ List<String>? departuresFor(Map<String, dynamic> schedule, Variant v) {
   return d == null ? null : [for (final x in d['departures'] as List? ?? const []) '${(x as Map)['t'] ?? ''}'];
 }
 
+/// The last run of the day of the variant's timetable direction: its departure ("HH:MM", "24:40"
+/// after midnight) and when it passes stop [i] of [variantId], in seconds since today's Athens
+/// midnight (past 24 h after it). Same run time as [plannedEtas].
+({String t, int atStopS})? lastRun(Map<String, dynamic> schedule, LineStatic st, String variantId, int i, {double speedMps = 4.2}) {
+  final v = st.variants[variantId];
+  final deps = v == null ? null : departuresFor(schedule, v);
+  final offs = st.offsetsFor(variantId);
+  if (deps == null || i < 0 || i >= offs.length) return null;
+  ({String t, int s})? last;
+  for (final t in deps) {
+    final p = t.split(':');
+    final h = p.length >= 2 ? int.tryParse(p[0]) : null, m = p.length >= 2 ? int.tryParse(p[1]) : null;
+    if (h == null || m == null) continue;
+    final s = h * 3600 + m * 60;
+    if (last == null || s > last.s) last = (t: t, s: s);
+  }
+  if (last == null) return null;
+  return (t: last.t, atStopS: (last.s + (offs[i] - offs.first) / speedMps).round());
+}
+
+/// Runs of the variant's timetable direction that did not start (the server saw no bus leave for
+/// them: seen false) and would reach stop [i] of [variantId] from [pastS] ago to [horizonS] ahead of
+/// [nowWallS] (seconds since Athens midnight): their departure ("HH:MM") and the seconds until they
+/// would have been at the stop (negative: already). Same run time as [plannedEtas].
+List<({String t, int etaS})> missedRuns(Map<String, dynamic> schedule, LineStatic st, String variantId, int i, int nowWallS,
+    {double speedMps = 4.2, int pastS = 900, int horizonS = 1800}) {
+  final v = st.variants[variantId];
+  final dir = v == null ? null : directionFor(schedule, v);
+  final offs = st.offsetsFor(variantId);
+  if (dir == null || i < 0 || i >= offs.length) return const [];
+  final run = (offs[i] - offs.first) / speedMps;
+  final out = <({String t, int etaS})>[];
+  for (final x in dir['departures'] as List? ?? const []) {
+    final m = x as Map;
+    if (m['seen'] != false) continue;
+    final t = '${m['t'] ?? ''}';
+    final p = t.split(':');
+    final h = p.length >= 2 ? int.tryParse(p[0]) : null, mm = p.length >= 2 ? int.tryParse(p[1]) : null;
+    if (h == null || mm == null) continue;
+    final eta = (h * 3600 + mm * 60 + run - nowWallS).round();
+    if (eta >= -pastS && eta <= horizonS) out.add((t: t, etaS: eta));
+  }
+  return out;
+}
+
 /// Seconds until runs that have not started yet reach stop [i] of [variantId]: each departure from the
 /// start ("HH:MM", GTFS style, "24:15" after midnight) not yet gone at [nowWallS] (seconds since Athens
 /// midnight), plus the distance to the stop at [speedMps]. Within [horizonS]; with [afterS], only runs

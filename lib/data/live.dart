@@ -181,6 +181,19 @@ class LiveHub extends ChangeNotifier {
 
 // Stop ids of a line at a named place: same name within 200 m (both sides of the street), else the
 // nearest stop within 60 m (the trip index and the static file may spell a name differently).
+/// The buses of one variant of [line] coming to a stop (name, lat, lon), soonest first, from the
+/// citywide tiles around it. Empty without data.
+Future<List<Arrival>> nextArrivalsAt(LiveHub live, String line, String variant, (String, double, double) stop) async {
+  final (name, lat, lon) = stop;
+  final lives = await live.nearbyLives(lat, lon, [line]);
+  final st = live.statics[line];
+  if (st == null || lives[line] == null) return <Arrival>[];
+  return [
+    for (final id in stopIdsNear(st, name, lat, lon)) ...arrivalsAt(id, {line: st}, {line: lives[line]!}, live.nowS),
+  ].where((a) => a.variant == variant).toList()
+    ..sort((a, b) => a.etaS.compareTo(b.etaS));
+}
+
 List<String> stopIdsNear(LineStatic st, String name, double lat, double lon) {
   final n = name.trim();
   final same = <String>[];

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../background/service.dart';
 import '../background/widget.dart';
 import 'help.dart';
 import 'stats_screen.dart';
@@ -70,6 +71,17 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('Η πορεία του λεωφορείου στην οθόνη κλειδώματος. Αλλάζει και σε κάθε ειδοποίηση.'),
             value: store.liveDefault,
             onChanged: store.setLiveDefault,
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.nightlight_outlined),
+            title: const Text('Παρασκευή και Σάββατο βράδυ: το τελευταίο για το σπίτι'),
+            subtitle: const Text('Στις 21:00 μια ειδοποίηση με το τελευταίο λεωφορείο της στάσης «Σπίτι»'),
+            value: store.lastBusNudge,
+            onChanged: (x) async {
+              store.setLastBusNudge(x);
+              await AlertService.syncNudge(store);
+            },
           ),
           Divider(color: t.rule),
           ListTile(

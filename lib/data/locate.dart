@@ -14,14 +14,21 @@ Future<Pt?> myPosition({bool fresh = false}) async {
     if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
     if (p == LocationPermission.denied || p == LocationPermission.deniedForever) return null;
     final last = fresh ? null : await Geolocator.getLastKnownPosition();
-    final pos = last ?? await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(timeLimit: Duration(seconds: 10)));
+    // An old last fix (yesterday, elsewhere) is not where the user is: then ask for a new one.
+    final pos = last != null && DateTime.now().difference(last.timestamp) < lastFixMaxAge && _inAttica(last)
+        ? last
+        : await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(timeLimit: Duration(seconds: 10)));
     // Outside Attica (an emulator's default, abroad) says nothing useful for this map.
-    if (pos.latitude < 37.5 || pos.latitude > 38.5 || pos.longitude < 22.9 || pos.longitude > 24.5) return null;
+    if (!_inAttica(pos)) return null;
     return (pos.latitude, pos.longitude);
   } catch (_) {
     return null;
   }
 }
+
+const lastFixMaxAge = Duration(minutes: 2);
+
+bool _inAttica(Position p) => p.latitude >= 37.5 && p.latitude <= 38.5 && p.longitude >= 22.9 && p.longitude <= 24.5;
 
 // A fresh fix only when the user already allowed location: never asks, for checks that run by
 // themselves (is the user on a bus?).

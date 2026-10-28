@@ -68,8 +68,9 @@ class _StopPanelState extends State<StopPanel> {
   }
 
   // Runs not started yet, from today's timetable: one direction per headsign, after the last live bus
-  // of that direction. (line, headsign, eta s), soonest first.
-  List<(String, String, int)> _planned(List<String> lines, List<Arrival> live) {
+  // of that direction. (line, headsign, eta s), soonest first. Into [missed]: the runs that did not
+  // start and would be here about now (line, headsign, departure, the line's end).
+  List<(String, String, int)> _planned(List<String> lines, List<Arrival> live, [List<_Missed>? missed]) {
     final d = Deps.of(context);
     final w = athensWall(DateTime.now().toUtc());
     final nowWall = w.hour * 3600 + w.minute * 60 + w.second;
@@ -91,6 +92,12 @@ class _StopPanelState extends State<StopPanel> {
         final dir = directionFor(j, st.variants[vid]!);
         if (dir == null || !used.add(dir)) continue;
         final deps = departuresFor(j, st.variants[vid]!)!;
+        if (missed != null) {
+          final end = st.stops[st.variants[vid]!.stops.last];
+          for (final m in missedRuns(j, st, vid, i, nowWall)) {
+            if (end != null) missed.add((line: l, headsign: h, t: m.t, end: (label: end.name, pts: [(end.lat, end.lon)])));
+          }
+        }
         final after = live.where((a) => a.line == l && a.headsign == h).fold<int?>(null, (m, a) => m == null || a.etaS > m ? a.etaS : m);
         for (final eta in plannedEtas(deps, st, vid, i, nowWall, afterS: after).take(2)) {
           out.add((l, h, eta));
@@ -159,7 +166,8 @@ class _StopPanelState extends State<StopPanel> {
         final quiet = s.lines.where((l) => !groups.any((g) => g.$1.line == l)).toList();
         // With "my lines", the other lines come below in short rows: "Περνούν επίσης".
         final also = showAll ? const <(Arrival, List<Arrival>)>[] : groupArrivals(_arrivals(true)).where((g) => !mine.contains(g.$1.line)).take(4).toList();
-        final planned = _planned(showAll ? s.lines : mine, _arrivals(true)).take(6).toList();
+        final missed = <_Missed>[];
+        final planned = _planned(showAll ? s.lines : mine, _arrivals(true), missed).take(6).toList();
         return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
             const SheetHandle(),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -248,6 +256,24 @@ class _StopPanelState extends State<StopPanel> {
                   ),
                 ),
             ],
+            if (missed.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 16, bottom: 4),
+                child: Text('Δεν ξεκίνησαν · δεν είδα λεωφορείο να φεύγει από την αφετηρία', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.late)),
+              ),
+              for (final m in missed)
+                Row(children: [
+                  LineBadge(m.line),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('→ ${titleCase(m.headsign)} · των ${m.t}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: t.muted)),
+                  ),
+                  TextButton(
+                    onPressed: () => showPlanner(from: (label: s.name, pts: [(s.lat, s.lon)]), to: m.end),
+                    child: const Text('Άλλη επιλογή'),
+                  ),
+                ]),
+            ],
             if (planned.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 16, bottom: 4),
@@ -289,3 +315,5 @@ class _StopPanelState extends State<StopPanel> {
     d.store.addFav(FavStop(name: s.name, lat: s.lat, lon: s.lon, lines: picked.toList()));
   }
 }
+
+typedef _Missed = ({String line, String headsign, String t, PlanEnd end});

@@ -11,8 +11,10 @@ import '../core/models.dart';
 import '../data/live.dart';
 
 import '../core/athens_time.dart';
+import '../core/last_bus.dart';
 import '../core/nearby.dart';
 import '../data/store.dart';
+import 'alert_sheet.dart' show dayClock, remindLast;
 import 'map_sel.dart';
 import 'onboard_screen.dart';
 import 'stop_screen.dart';
@@ -32,6 +34,9 @@ class FavsScreen extends StatelessWidget {
         final now = DateTime.now().toUtc();
         final favs = d.store.favsByTime(now);
         final morning = athensWall(now).hour < 15;
+        final home = d.store.lastBusNudge && lastBusEvening(now)
+            ? d.store.favs.where((f) => f.place == Place.home && f.lines.isNotEmpty).firstOrNull
+            : null;
         return Scaffold(
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OnboardScreen(adding: true))),
@@ -52,6 +57,7 @@ class FavsScreen extends StatelessWidget {
                   Text(morning ? 'Πρωί: πρώτα η στάση του σπιτιού' : 'Απόγευμα: πρώτα η στάση της δουλειάς', style: TextStyle(fontSize: 13, color: t.muted)),
                 ]),
               ),
+              if (home != null) _LastHome(key: ValueKey('last-${home.key}'), fav: home),
               if (favs.isEmpty)
                 Padding(
                   padding: const EdgeInsets.all(24),
@@ -77,6 +83,79 @@ class FavsScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
         child: Text(s, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: t.muted, letterSpacing: .3)),
       );
+}
+
+// Friday or Saturday evening (screen 24): the last bus of the day for the home stop, with an alert
+// 30′ before it passes.
+class _LastHome extends StatefulWidget {
+  const _LastHome({super.key, required this.fav});
+  final FavStop fav;
+
+  @override
+  State<_LastHome> createState() => _LastHomeState();
+}
+
+class _LastHomeState extends State<_LastHome> {
+  late final Future<(LineStatic, ({String variant, int i, String t, int atStopS, String from}))?> _last = _load();
+  bool _set = false;
+
+  Future<(LineStatic, ({String variant, int i, String t, int atStopS, String from}))?> _load() async {
+    final d = Deps.of(context);
+    final f = widget.fav, line = f.lines.first;
+    final st = d.live.statics[line] ?? await d.api.lineStatic(line);
+    final sched = await d.api.lineSchedule(line);
+    final h = sched == null ? null : homeLast(sched, st, stopIdsNear(st, f.name, f.lat, f.lon));
+    return h == null ? null : (st, h);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    final f = widget.fav;
+    return FutureBuilder(
+      future: _last,
+      builder: (context, snap) {
+        final got = snap.data;
+        if (got == null) return const SizedBox.shrink();
+        final (st, h) = got;
+        final line = f.lines.first;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.fromLTRB(14, 12, 8, 8),
+          decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(18)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const Icon(Icons.nightlight_outlined),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('Το τελευταίο $line για το σπίτι', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
+            ]),
+            const SizedBox(height: 4),
+            Text(
+              'Φεύγει ${gtfsClock(h.t)} από ${titleCase(h.from)} και περνά ~${dayClock(h.atStopS)} από ${titleCase(f.name)}. Πρόγραμμα, όχι live.',
+              style: TextStyle(fontSize: 14, color: t.muted),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                icon: Icon(_set ? Icons.check : Icons.notifications_active_outlined, size: 18),
+                label: Text(_set ? 'Θα σε ειδοποιήσω' : 'Ειδοποίησέ με 30′ πριν'),
+                onPressed: _set
+                    ? null
+                    : () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final msg = await remindLast(context, line: line, st: st, variantId: h.variant, i: h.i, stopName: f.name, beforeMin: 30);
+                        if (mounted) setState(() => _set = msg.startsWith('Θα σε'));
+                        messenger.showSnackBar(SnackBar(content: Text(msg)));
+                      },
+              ),
+            ),
+          ]),
+        );
+      },
+    );
+  }
 }
 
 // A saved line: buses on the road and how many are late; a tap opens it on the map.

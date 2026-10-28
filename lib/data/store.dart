@@ -64,6 +64,7 @@ class AppStore extends ChangeNotifier {
   Others others = Others.hide; // the other buses while one is open, as on the web
   bool onlyFresh = false, onlyOnTime = false, showAges = false; // the map's filters and age labels
   bool liveDefault = true; // a new alert starts with its live card on
+  bool lastBusNudge = true; // Friday and Saturday evening: «το τελευταίο προς το σπίτι»
 
   void _load(Map<String, dynamic> j) {
     onboarded = j['onboarded'] == true;
@@ -82,6 +83,7 @@ class AppStore extends ChangeNotifier {
     onlyOnTime = j['onlyOnTime'] == true;
     showAges = j['showAges'] == true;
     liveDefault = j['liveDefault'] != false;
+    lastBusNudge = j['lastBusNudge'] != false;
   }
 
   Map<String, dynamic> toJson() => {
@@ -93,6 +95,7 @@ class AppStore extends ChangeNotifier {
         'theme': theme.name,
         'rules': [for (final r in rules) r.toJson()],
         'walkMin': walkMin,
+        'lastBusNudge': lastBusNudge,
         'showMetro': showMetro,
         'showTram': showTram,
         'showRail': showRail,
@@ -190,6 +193,11 @@ class AppStore extends ChangeNotifier {
 
   void setTheme(ThemeMode t) {
     theme = t;
+    _save();
+  }
+
+  void setLastBusNudge(bool on) {
+    lastBusNudge = on;
     _save();
   }
 

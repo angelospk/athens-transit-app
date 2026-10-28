@@ -4,9 +4,11 @@ import 'models.dart';
 
 enum AlertMode { minutes, stops }
 
-/// What the alert is for: the bus reaching the stop, time to leave for it (screen 16), or getting off
-/// there (screen 17). It changes only the words; when it fires is set by mode and n.
-enum RuleKind { arrive, leave, ride }
+/// What the alert is for: the bus reaching the stop, time to leave for it (screen 16), getting off
+/// there (screen 17), or a followed trip («Ακολούθησέ με»): the service looks for the bus the phone
+/// rides, then alerts as [ride] for that bus. It changes only the words; when it fires is set by mode
+/// and n.
+enum RuleKind { arrive, leave, ride, board }
 
 class Rule {
   final String id, line, variant, stopId, stopName;
@@ -169,6 +171,20 @@ class Rule {
       ]);
 }
 
+/// The rules the watcher checks: a followed trip once its bus is known ([boarded]: rule id to
+/// vehicle id) as the ride alert of that bus; before that it alerts nothing.
+List<Rule> watchedRules(List<Rule> active, Map<String, String> boarded) => [
+      for (final r in active)
+        if (r.kind != RuleKind.board)
+          r
+        else if (boarded[r.id] case final v?)
+          r.copyWith(kind: RuleKind.ride, vehicle: v),
+    ];
+
+/// The followed trips still looking for their bus.
+List<Rule> lookingRules(List<Rule> active, Map<String, String> boarded) =>
+    [for (final r in active) if (r.kind == RuleKind.board && !boarded.containsKey(r.id)) r];
+
 class RuleHit {
   final String ruleId, line, vehicleId;
   final int? stopsLeft, etaS, delayS;
@@ -270,7 +286,7 @@ String hitText(RuleHit h, String stop) {
     : switch (r.kind) {
       RuleKind.arrive => ('${h.line} → $stop', hitText(h, stop)),
       RuleKind.leave => ('Φύγε τώρα για το ${h.line}', 'Για να είσαι στη στάση $stop πριν έρθει${h.etaS == null ? '' : ' (σε ~${(h.etaS! / 60).round()}′)'}.'),
-      RuleKind.ride => ('Κατέβα στην επόμενη', 'Η επόμενη στάση του ${h.line} είναι η $stop.'),
+      RuleKind.ride || RuleKind.board => ('Κατέβα στην επόμενη', 'Η επόμενη στάση του ${h.line} είναι η $stop.'),
     };
 
 /// When a weekly rule next starts (strictly after [nowUtc]), or null for one-off and disabled rules.

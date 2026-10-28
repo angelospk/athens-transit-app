@@ -14,20 +14,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:live_card/live_card.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' hide NotificationVisibility;
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/athens_time.dart';
+import '../core/board.dart';
+import '../core/geo.dart';
+import '../core/last_bus.dart';
 import '../core/eta.dart';
 import '../core/models.dart';
 import '../core/rules.dart';
-import '../data/api.dart';
+import '../data/api.dart' hide Place;
+import '../data/live.dart' show stopIdsNear;
 import '../data/store.dart';
+import '../ui/map_sel.dart' show appTab;
 import '../ui/widgets.dart' show mins, titleCase;
 
 const _watcherKey = 'watcher_v1';
 const _alarmId = 4242;
+const _nudgeAlarmId = 4343; // Friday and Saturday evening: «το τελευταίο προς το σπίτι»
+const _noteAlarmBase = 5000; // notifications at a time (not a bus): alarm ids from here
+const _notePrefix = 'timenote_v1.'; // + alarm id → {"title", "body", "payload"}
+const _favsPayload = 'tab:favs'; // a tap opens Αγαπημένα
 const _tickMs = 10000; // the card is recounted this often; each line is polled when its data is due
 const _serviceId = 7; // also the id of the service's notification, which the live card replaces
+const _boardedPrefix = 'boarded_v1.'; // + rule id → the vehicle a followed trip («Ακολούθησέ με») rides
+const _locationKey = 'service_location_v1'; // the running service may read the location
 const _stoppedPrefix = 'stopped_v1.'; // + rule id → until (Unix s): stopped from the card ("Σταμάτα"). One key
 // per rule, so the app (resume) and the service (stop) never overwrite each other's entries.
 final _notes = FlutterLocalNotificationsPlugin();
@@ -105,6 +117,7 @@ class AlertService {
       foregroundTaskOptions: ForegroundTaskOptions(eventAction: ForegroundTaskEventAction.repeat(_tickMs), allowWakeLock: true),
     );
     void open(String? payload) {
+      if (payload == _favsPayload) appTab.value = 1;
       if (parseOpen(payload) case final o?) onOpen(o);
     }
 
@@ -115,7 +128,17 @@ class AlertService {
     if (launch?.didNotificationLaunchApp ?? false) open(launch!.notificationResponse?.payload);
     await takeOpen(onOpen);
     await sync(store);
+    await syncNudge(store);
+    // A home stop added or removed later moves the evening alarm too.
+    var home = _hasHome(store);
+    store.addListener(() {
+      if (_hasHome(store) == home) return;
+      home = !home;
+      syncNudge(store);
+    });
   }
+
+  static bool _hasHome(AppStore store) => store.favs.any((f) => f.place == Place.home && f.lines.isNotEmpty);
 
   /// The live card's bus, when a tap on the card opened the app.
   static Future<void> takeOpen(void Function(OpenBus) onOpen) async {
@@ -152,9 +175,16 @@ class AlertService {
     await p.reload(); // the service may have stopped a rule
     final stopped = _stopped(p, now.millisecondsSinceEpoch ~/ 1000);
     final active = store.rules.where((r) => r.activeAt(now) && !stopped.contains(r.id)).toList();
-    final running = await FlutterForegroundTask.isRunningService;
+    var running = await FlutterForegroundTask.isRunningService;
+    // A followed trip reads the location in the service: Android lets a service of the location type
+    // start only from the app in front, with the permission granted.
+    final where = active.any((r) => r.kind == RuleKind.board) && await _canLocate();
+    if (running && where && !(p.getBool(_locationKey) ?? false)) {
+      await FlutterForegroundTask.stopService();
+      running = false;
+    }
     if (active.isNotEmpty && !running) {
-      await _start();
+      await _start(location: where);
     } else if (active.isEmpty && running) {
       await FlutterForegroundTask.stopService();
     }
@@ -175,13 +205,42 @@ class AlertService {
     await sync(store);
   }
 
-  static Future<ServiceRequestResult> _start() => FlutterForegroundTask.startService(
-        serviceId: _serviceId,
-        serviceTypes: [ForegroundServiceTypes.dataSync],
-        notificationTitle: 'Athens Transit · live',
-        notificationText: 'Παρακολουθώ τις γραμμές σου…',
-        callback: startCallback,
-      );
+  static Future<bool> _canLocate() async {
+    final p = await Geolocator.checkPermission();
+    return p == LocationPermission.whileInUse || p == LocationPermission.always;
+  }
+
+  static Future<ServiceRequestResult> _start({bool location = false}) async {
+    (await SharedPreferences.getInstance()).setBool(_locationKey, location);
+    return FlutterForegroundTask.startService(
+      serviceId: _serviceId,
+      serviceTypes: [ForegroundServiceTypes.dataSync, if (location) ForegroundServiceTypes.location],
+      notificationTitle: 'Athens Transit · live',
+      notificationText: 'Παρακολουθώ τις γραμμές σου…',
+      callback: startCallback,
+    );
+  }
+
+  /// A notification at [utc] (a time, not a bus): «σε 30′ φεύγει το τελευταίο». Kept by the alarm
+  /// across a reboot; the text waits in the preferences.
+  static Future<void> noteAt(DateTime utc, String title, String body, {String? payload}) async {
+    if (!Platform.isAndroid) return;
+    final p = await SharedPreferences.getInstance();
+    final id = _noteAlarmBase + (utc.millisecondsSinceEpoch ~/ 60000) % 100000; // one per minute
+    await p.setString('$_notePrefix$id', jsonEncode({'title': title, 'body': body, 'payload': payload}));
+    await AndroidAlarmManager.oneShotAt(utc.toLocal(), id, noteFired,
+        exact: await exactAllowed(), wakeup: true, allowWhileIdle: true, rescheduleOnReboot: true);
+  }
+
+  /// The evening suggestion: an alarm at the next Friday or Saturday 21:00 while there is a home stop
+  /// and the setting is on.
+  static Future<void> syncNudge(AppStore store) async {
+    if (!Platform.isAndroid) return;
+    await AndroidAlarmManager.cancel(_nudgeAlarmId);
+    if (!store.lastBusNudge || !_hasHome(store)) return;
+    await AndroidAlarmManager.oneShotAt(nextNudgeUtc(DateTime.now().toUtc()).toLocal(), _nudgeAlarmId, nudgeFired,
+        exact: false, wakeup: false, allowWhileIdle: true, rescheduleOnReboot: true);
+  }
 
   static Future<void> _scheduleNext(List<Rule> rules, DateTime now) async {
     if (!Platform.isAndroid) return;
@@ -229,6 +288,56 @@ Future<void> alarmFired() async {
 }
 
 @pragma('vm:entry-point')
+Future<void> noteFired(int id) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final p = await SharedPreferences.getInstance();
+  await p.reload(); // the alarm isolate may live on with an old copy
+  final raw = p.getString('$_notePrefix$id');
+  if (raw == null) return;
+  await p.remove('$_notePrefix$id');
+  final j = jsonDecode(raw) as Map<String, dynamic>;
+  await _initNotes();
+  await _notes.show(
+    id: id,
+    title: j['title'] as String?,
+    body: j['body'] as String?,
+    notificationDetails: const NotificationDetails(android: _hitChannel),
+    payload: j['payload'] as String?,
+  );
+}
+
+// Friday or Saturday 21:00: when the last bus home leaves, from today's timetable when the network
+// answers, and the next evening's alarm.
+@pragma('vm:entry-point')
+Future<void> nudgeFired() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AndroidAlarmManager.initialize();
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.reload(); // the alarm isolate may live on with an old copy
+  final store = AppStore(prefs);
+  await AlertService.syncNudge(store);
+  final home = store.favs.where((f) => f.place == Place.home && f.lines.isNotEmpty).firstOrNull;
+  if (!store.lastBusNudge || home == null) return;
+  var body = 'Δες πότε φεύγει το τελευταίο ${home.lines.first} για ${titleCase(home.name)} και βάλε ειδοποίηση.';
+  try {
+    final api = Api();
+    final line = home.lines.first;
+    final st = await api.lineStatic(line);
+    final sched = await api.lineSchedule(line);
+    final h = sched == null ? null : homeLast(sched, st, stopIdsNear(st, home.name, home.lat, home.lon));
+    if (h != null) body = 'Το τελευταίο $line φεύγει ${gtfsClock(h.t)} από ${titleCase(h.from)}. Θες ειδοποίηση;';
+  } catch (_) {/* the general text */}
+  await _initNotes();
+  await _notes.show(
+    id: _nudgeAlarmId,
+    title: 'Βράδυ ${athensWall(DateTime.now().toUtc()).weekday == DateTime.friday ? 'Παρασκευής' : 'Σαββάτου'} · το τελευταίο για το σπίτι',
+    body: body,
+    notificationDetails: const NotificationDetails(android: _hitChannel),
+    payload: _favsPayload,
+  );
+}
+
+@pragma('vm:entry-point')
 void startCallback() => FlutterForegroundTask.setTaskHandler(RuleTask());
 
 class RuleTask extends TaskHandler {
@@ -239,6 +348,7 @@ class RuleTask extends TaskHandler {
   final _offline = <String>{};
   RuleWatcher _watcher = RuleWatcher();
   final _startLeft = <String, int>{}; // stops left when the live card first showed a bus: the bar's 0 %
+  final _boarding = <String, BoardWatch>{}; // followed trips still looking for their bus
   SharedPreferences? _prefs;
   bool _busy = false;
 
@@ -277,12 +387,23 @@ class RuleTask extends TaskHandler {
         }
       }
       final stopped = _stopped(p, nowS);
-      final active = rules.where((r) => r.activeAt(now) && !stopped.contains(r.id)).toList();
-      if (active.isEmpty) {
+      final all = rules.where((r) => r.activeAt(now) && !stopped.contains(r.id)).toList();
+      if (all.isEmpty) {
         await FlutterForegroundTask.stopService();
         return;
       }
-      final lines = {for (final r in active) r.line}.take(maxLines).toSet();
+      // Followed trips: the bus each rides, once found; the keys of ended rules go.
+      final ids = {for (final r in rules) r.id};
+      for (final k in p.getKeys().where((k) => k.startsWith(_boardedPrefix)).toList()) {
+        if (!ids.contains(k.substring(_boardedPrefix.length))) await p.remove(k);
+      }
+      final boarded = {
+        for (final r in all) r.id: ?p.getString('$_boardedPrefix${r.id}'),
+      };
+      final looking = lookingRules(all, boarded);
+      _boarding.removeWhere((id, _) => !looking.any((r) => r.id == id));
+      final active = watchedRules(all, boarded);
+      final lines = {for (final r in all) r.line}.take(maxLines).toSet();
       _lives.removeWhere((l, _) => !lines.contains(l));
       for (final line in lines) {
         if (nowS < (_due[line] ?? 0)) continue; // the backend has nothing newer yet
@@ -303,6 +424,7 @@ class RuleTask extends TaskHandler {
       }
       final lives = {for (final l in lines) l: ?_lives[l]};
       final offline = lines.any(_offline.contains);
+      await _look(p, looking, lives, nowS);
       for (final h in _watcher.check(active, _statics, lives, nowS)) {
         final r = active.firstWhere((x) => x.id == h.ruleId);
         // "Είμαι μέσα" is one ride: done once it fired, or the bus's next run would fire it again.
@@ -317,16 +439,52 @@ class RuleTask extends TaskHandler {
         );
       }
       await p.setString(_watcherKey, jsonEncode(_watcher.toJson()));
-      await _updateLive(active.where((r) => r.live).toList(), lives, nowS, offline);
+      await _updateLive(active.where((r) => r.live).toList(), lives, nowS, offline, looking: looking);
     } finally {
       _busy = false;
+    }
+  }
+
+  // Followed trips: the phone now, and the buses of each trip's direction moved on to now. A bus the
+  // phone rides becomes the trip's bus: the ride alert of that bus from the next tick.
+  Future<void> _look(SharedPreferences p, List<Rule> looking, Map<String, LineLive> lives, int nowS) async {
+    if (looking.isEmpty) return;
+    Pt? me;
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 8)));
+      me = (pos.latitude, pos.longitude);
+    } catch (_) {
+      return; // no fix this tick: the watch keeps what it has (a long gap starts it again)
+    }
+    for (final r in looking) {
+      final buses = [
+        for (final v in lives[r.line]?.vehicles ?? const <Vehicle>[])
+          if (v.variant == r.variant && nowS - v.positionAt <= 180) v,
+      ];
+      final id = (_boarding[r.id] ??= BoardWatch()).add(nowS, me, buses);
+      if (id == null) continue;
+      _boarding.remove(r.id);
+      await p.setString('$_boardedPrefix${r.id}', id);
+      await _notes.show(
+        id: 'board|${r.id}'.hashCode & 0x7fffffff,
+        title: 'Είσαι στο ${r.line}',
+        body: 'Θα σε ειδοποιήσω μία στάση πριν από ${titleCase(r.stopName)}.',
+        notificationDetails: const NotificationDetails(android: _hitChannel),
+      );
     }
   }
 
   // The live card: the nearest bus of the first live rule — "040 · Πανεπιστήμιο σε 3′", "φτάνει 8:56 ·
   // 2 στάσεις · στην ώρα του", and a bar from where it was when the card first showed it. The minutes
   // round as in the app (`mins`).
-  Future<void> _updateLive(List<Rule> rules, Map<String, LineLive> lives, int nowS, bool offline) async {
+  Future<void> _updateLive(List<Rule> rules, Map<String, LineLive> lives, int nowS, bool offline, {List<Rule> looking = const []}) async {
+    if (rules.isEmpty && looking.isNotEmpty) {
+      final r = looking.first;
+      await FlutterForegroundTask.updateService(
+          notificationTitle: 'Σε ακολουθώ · ${r.line}', notificationText: 'Όταν ανέβεις, σε ειδοποιώ πριν από ${titleCase(r.stopName)}.');
+      return;
+    }
     if (rules.isEmpty) {
       await FlutterForegroundTask.updateService(notificationTitle: 'Athens Transit', notificationText: 'Σε ειδοποιώ όταν έρθει το λεωφορείο.');
       return;

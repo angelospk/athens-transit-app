@@ -6,11 +6,45 @@ import 'package:flutter/material.dart';
 
 import '../background/service.dart';
 import '../core/eta.dart';
+import '../core/geo.dart';
 import '../core/models.dart';
 import '../core/nearby.dart' show fold;
 import '../core/rules.dart';
+import '../data/locate.dart';
+import 'map_sel.dart';
 import 'theme.dart';
 import 'widgets.dart';
+
+/// «Ανέβηκα» on a planned trip: a ride alert for the stop to get off at ([alight], by name). The bus
+/// is the one of this direction nearest the phone now (the one counted on has usually left the stop
+/// by then); none or two of them: the line on the map, to pick it there.
+Future<void> rideFromHere(BuildContext context, {required String line, required String variant, required String alight}) async {
+  final d = Deps.of(context);
+  final me = await myPosition(fresh: true);
+  Vehicle? bus;
+  if (me != null) {
+    try {
+      // The line's own feed: tile vehicles have no next stop, which the ride alert needs.
+      final live = await d.api.live(line);
+      d.live.statics[line] ??= await d.api.lineStatic(line);
+      // Fresh fixes of this direction within 250 m; two of them (bunched buses): ask on the map.
+      final now = d.live.nowS;
+      final near = [
+        for (final v in live.vehicles)
+          if (v.variant == variant && v.nextStopId != null && now - v.positionAt <= 120 && distM(me, (v.lat, v.lon)) <= 250) v,
+      ];
+      if (near.length == 1) bus = near.single;
+    } catch (_) {/* offline: the line's sheet instead */}
+  }
+  final st = d.live.statics[line];
+  if (!context.mounted) return;
+  if (st == null || bus == null) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρήκα το λεωφορείο δίπλα σου. Διάλεξέ το στον χάρτη και πάτα «Είμαι μέσα».')));
+    showOnMap(LineSel(line, variants: {variant}));
+    return;
+  }
+  await showRide(context, line: line, st: st, vehicle: bus, alight: alight);
+}
 
 // [alight]: the stop to get off at, by name (the planner knows it): no picker then.
 Future<void> showRide(BuildContext context, {required String line, required LineStatic st, required Vehicle vehicle, String? alight}) async {

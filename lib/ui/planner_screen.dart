@@ -1,8 +1,8 @@
 // The middle tab · Διαδρομή: from here (or a picked place) to a stop, area, shop or address. The
 // planner (core/tp.dart, the web's planner) finds the bus lines with no change or one; each result
 // shows walking, riding and, when leaving now, the next bus live at the stop to board, so "leave in N′"
-// is real. With "Με μετρό" a metro or tram line between the two ends comes first. A result opens its
-// stop on the map, where the alerts and "Πες μου πότε να φύγω" are.
+// is real. With "Με μετρό" a metro or tram line between the two ends comes first. A result opens the
+// trip step by step (route_screen.dart), with «Πότε να φύγω», «Ανέβηκα» and «Ακολούθησέ με».
 
 import 'dart:async';
 import 'dart:math';
@@ -14,12 +14,14 @@ import '../core/geo.dart';
 import '../core/leave.dart';
 import '../core/models.dart';
 import '../core/nearby.dart';
+import '../core/route_steps.dart';
 import '../core/trip.dart' as tp;
-import '../data/live.dart' show stopIdsNear;
+import '../data/live.dart' show nextArrivalsAt;
 import '../data/locate.dart';
 import 'alert_sheet.dart';
 import 'map_sel.dart';
 import 'ride.dart';
+import 'route_screen.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -43,9 +45,34 @@ class _PlannerScreenState extends State<PlannerScreen> {
   List<tp.MetroStation> _stations = [];
 
   @override
+  void initState() {
+    super.initState();
+    planRequest.addListener(_request);
+  }
+
+  @override
+  void dispose() {
+    planRequest.removeListener(_request);
+    super.dispose();
+  }
+
+  // Another screen asks for a trip (a run that did not start: «Άλλη επιλογή»).
+  void _request() {
+    final r = planRequest.value;
+    if (r == null) return;
+    planRequest.value = null;
+    setState(() {
+      if (r.from != null) _from = r.from;
+      _to = r.to;
+      _at = null;
+    });
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_ix == null) _init();
+    _request(); // asked before this tab was first built
   }
 
   // Each part on its own: without the line list or the metro the buses still plan.
@@ -258,7 +285,15 @@ class _PlannerScreenState extends State<PlannerScreen> {
       if (metro != null) _metroCard(t, metro),
       if (combo != null) _comboCard(t, ix, combo),
       if (direct.isNotEmpty) _head(t, 'Χωρίς αλλαγή'),
-      for (final r in direct) _DirectCard(key: ValueKey('${r.line}|${from.label}|${to.label}'), ix: ix, trip: r, from: from.pts, live: now),
+      for (final r in direct)
+        _DirectCard(
+          key: ValueKey('${r.line}|${from.label}|${to.label}'),
+          ix: ix,
+          trip: r,
+          from: from.pts,
+          live: now,
+          onOpen: () => _open(directSteps(ix, r, from: from.pts, to: to.pts)),
+        ),
       if (changes.isNotEmpty) _head(t, 'Με μία αλλαγή'),
       for (final c in changes) _changeCard(t, ix, c),
       Padding(
@@ -290,12 +325,15 @@ class _PlannerScreenState extends State<PlannerScreen> {
       leading: Icon(m.line.startsWith('T') ? Icons.tram_outlined : Icons.subway_outlined),
       title: Text('${m.line.startsWith('T') ? 'Τραμ' : 'Μετρό'} ${m.line}: ${titleCase(m.from)} → ${titleCase(m.to)}'),
       subtitle: Text('Περπάτημα ${walkMinutes(m.walk)}′ συνολικά · τρένο κάθε λίγα λεπτά (πρόγραμμα, όχι live)'),
-      onTap: () {
-        final s = _stations.where((x) => x.name == m.from).firstOrNull;
-        if (s != null) showOnMap(StationSel(s.name, (s.lat, s.lon), lines: s.lines));
-      },
+      onTap: () => _open(metroSteps(_stations, m, from: _from!.pts, to: _to!.pts)),
     ),
   );
+
+  void _open(List<RouteStep> steps) {
+    final ix = _ix, from = _from, to = _to;
+    if (steps.isEmpty || ix == null || from == null || to == null) return;
+    openRoute(context, ix: ix, steps: steps, fromLabel: from.label, toLabel: to.label, live: _at == null, stations: _stations);
+  }
 
   // A bus and the metro: the bus leg as on the other cards, then (or before it) the metro.
   Widget _comboCard(Tones t, TripIndex ix, _Combo c) {
@@ -310,12 +348,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => c.busFirst
-            ? showOnMap(StopSel(StopRef(name: board.$1, lat: board.$2, lon: board.$3, lines: linesAt(ix, board.$1, board.$2, board.$3))))
-            : switch (_stations.where((x) => x.name == c.station).firstOrNull) {
-                final st? => showOnMap(StationSel(st.name, (st.lat, st.lon), lines: st.lines)),
-                null => null,
-              },
+        onTap: () => _open(comboSteps(ix, _stations, c, from: _from!.pts, to: _to!.pts)),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -346,7 +379,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => showOnMap(StopSel(StopRef(name: board.$1, lat: board.$2, lon: board.$3, lines: linesAt(ix, board.$1, board.$2, board.$3)))),
+        onTap: () => _open(transferSteps(ix, c, from: _from!.pts, to: _to!.pts)),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -379,11 +412,12 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
 // One line with no change: walk, ride and, leaving now, the next bus at the stop to board (live).
 class _DirectCard extends StatefulWidget {
-  const _DirectCard({super.key, required this.ix, required this.trip, required this.from, required this.live});
+  const _DirectCard({super.key, required this.ix, required this.trip, required this.from, required this.live, required this.onOpen});
   final TripIndex ix;
   final tp.TripLine trip;
   final List<Pt> from;
   final bool live;
+  final VoidCallback onOpen;
 
   @override
   State<_DirectCard> createState() => _DirectCardState();
@@ -431,18 +465,9 @@ class _DirectCardState extends State<_DirectCard> {
   // The buses of the shown variant coming to the boarding stop, from the citywide tiles around it.
   Future<void> _load() async {
     final live = Deps.of(context).live;
-    final (name, lat, lon) = _board;
-    final line = widget.trip.line;
-    final variant = widget.trip.variants.first.id;
     final gen = _gen;
     try {
-      final lives = await live.nearbyLives(lat, lon, [line]);
-      final st = live.statics[line];
-      final got = st == null || lives[line] == null
-          ? <Arrival>[]
-          : ([
-              for (final id in stopIdsNear(st, name, lat, lon)) ...arrivalsAt(id, {line: st}, {line: lives[line]!}, live.nowS),
-            ].where((a) => a.variant == variant).toList()..sort((a, b) => a.etaS.compareTo(b.etaS)));
+      final got = await nextArrivalsAt(live, widget.trip.line, widget.trip.variants.first.id, _board);
       if (mounted && gen == _gen) {
         setState(() {
           _arrivals = got;
@@ -453,37 +478,6 @@ class _DirectCardState extends State<_DirectCard> {
     } catch (_) {
       if (mounted && gen == _gen) setState(() => _asked = true); // no live: the estimate stays
     }
-  }
-
-  // On the bus: a ride alert for the stop to get off at. The bus is the one of this direction
-  // nearest the phone now (the one counted on has usually left the stop by then).
-  Future<void> _boarded(String off) async {
-    final d = Deps.of(context);
-    final line = widget.trip.line, variant = widget.trip.variants.first.id;
-    final me = await myPosition(fresh: true);
-    Vehicle? bus;
-    if (me != null) {
-      try {
-        // The line's own feed: tile vehicles have no next stop, which the ride alert needs.
-        final live = await d.api.live(line);
-        d.live.statics[line] ??= await d.api.lineStatic(line);
-        // Fresh fixes of this direction within 250 m; two of them (bunched buses): ask on the map.
-        final now = d.live.nowS;
-        final near = [
-          for (final v in live.vehicles)
-            if (v.variant == variant && v.nextStopId != null && now - v.positionAt <= 120 && distM(me, (v.lat, v.lon)) <= 250) v,
-        ];
-        if (near.length == 1) bus = near.single;
-      } catch (_) {/* offline: the line's sheet instead */}
-    }
-    final st = d.live.statics[line];
-    if (!mounted) return;
-    if (st == null || bus == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρήκα το λεωφορείο δίπλα σου. Διάλεξέ το στον χάρτη και πάτα «Είμαι μέσα».')));
-      showOnMap(LineSel(line, variants: {variant}));
-      return;
-    }
-    await showRide(context, line: line, st: st, vehicle: bus, alight: off);
   }
 
   @override
@@ -507,7 +501,7 @@ class _DirectCardState extends State<_DirectCard> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => showOnMap(StopSel(StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)))),
+        onTap: widget.onOpen,
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -568,7 +562,7 @@ class _DirectCardState extends State<_DirectCard> {
                     TextButton.icon(
                       icon: const Icon(Icons.airline_seat_recline_normal, size: 18),
                       label: const Text('Ανέβηκα'),
-                      onPressed: () => _boarded(off.$1),
+                      onPressed: () => rideFromHere(context, line: r.line, variant: v.id, alight: off.$1),
                     ),
                   ],
                 ),

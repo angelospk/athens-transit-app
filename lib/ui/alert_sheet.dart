@@ -9,6 +9,7 @@ import '../background/service.dart';
 import '../core/athens_time.dart';
 import '../core/eta.dart';
 import '../core/geo.dart';
+import '../core/last_bus.dart';
 import '../core/leave.dart';
 import '../core/models.dart';
 import '../core/rules.dart';
@@ -35,6 +36,35 @@ Future<void> showAlertSheet(BuildContext context, {required StopRef stop, requir
     isScrollControlled: true,
     builder: (_) => AlertSheet(stop: stop, line: arrival.line, variantId: arrival.variant, st: st, stopIndex: i, etaS: arrival.etaS),
   );
+}
+
+/// "HH:MM" of [s] seconds after an Athens midnight (past 24:00 too).
+String dayClock(int s) => '${(s ~/ 3600 % 24).toString().padLeft(2, '0')}:${(s % 3600 ~/ 60).toString().padLeft(2, '0')}';
+
+/// «Ειδοποίησέ με για το τελευταίο» (screen 24): a notification [beforeMin] minutes before the last run
+/// of today's timetable passes stop [i] of [variantId]. Returns what to tell the user.
+Future<String> remindLast(BuildContext context,
+    {required String line, required LineStatic st, required String variantId, required int i, required String stopName, int beforeMin = 15}) async {
+  final d = Deps.of(context);
+  final now = DateTime.now().toUtc();
+  try {
+    final sched = await d.api.lineSchedule(line);
+    final r = sched == null ? null : lastRun(sched, st, variantId, i);
+    if (r == null) return 'Δεν βρήκα πρόγραμμα για το $line.';
+    final at = athensDayUtc(now, r.atStopS);
+    if (at.isBefore(now)) return 'Το τελευταίο $line πέρασε ήδη (~${dayClock(r.atStopS)}).';
+    if (context.mounted) await AlertService.ensurePermissions(context);
+    var fire = at.subtract(Duration(minutes: beforeMin));
+    if (fire.isBefore(now)) fire = now.add(const Duration(seconds: 5));
+    await AlertService.noteAt(
+      fire,
+      'Σε λίγο περνά το τελευταίο $line',
+      'Από ${titleCase(stopName)} ~${dayClock(r.atStopS)} (φεύγει ${gtfsClock(r.t)} από την αφετηρία).',
+    );
+    return 'Θα σε ειδοποιήσω $beforeMin′ πριν: το τελευταίο $line περνά ~${dayClock(r.atStopS)}.';
+  } catch (_) {
+    return 'Δεν φόρτωσε το πρόγραμμα. Δοκίμασε ξανά με σύνδεση.';
+  }
 }
 
 class AlertSheet extends StatefulWidget {
@@ -134,6 +164,14 @@ class _AlertSheetState extends State<AlertSheet> {
                   : 'Θα σε ειδοποιήσω για το ${widget.line}.')
           : 'Χωρίς άδεια ειδοποιήσεων δεν μπορώ να σε ειδοποιήσω.'),
     ));
+  }
+
+  Future<void> _last() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
+    final msg = await remindLast(context, line: widget.line, st: widget.st, variantId: widget.variantId, i: widget.stopIndex, stopName: widget.stop.name);
+    if (mounted) nav.pop();
+    messenger.showSnackBar(SnackBar(content: Text(msg)));
   }
 
   // Screen 16: "Φύγε σε N′", the bar now / walk / wait, and how early to be at the stop.
@@ -318,6 +356,13 @@ class _AlertSheetState extends State<AlertSheet> {
           title: const Text('Κάθε καθημερινή τέτοια ώρα;', style: TextStyle(fontWeight: FontWeight.w600)),
           trailing: const Icon(Icons.chevron_right),
           onTap: leave && walk == null ? null : () => _create(weekly: true),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.nightlight_outlined),
+          title: const Text('Για το τελευταίο της ημέρας', style: TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: const Text('Ειδοποίηση 15′ πριν περάσει από εδώ, από το πρόγραμμα'),
+          onTap: _last,
         ),
         const SizedBox(height: 4),
         SizedBox(

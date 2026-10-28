@@ -260,6 +260,9 @@ int _metroScore(Place p) => p.kind == PlaceKind.metro ? 1 : 0;
 
 double _walkMin(double m) => m * _detour / _walkMpm;
 
+/// Minutes on the bus for [metres] stop to stop in straight lines, stops included.
+double rideMinutes(double metres) => metres / _rideMpm;
+
 final _rides = Expando<Map<String, List<double>>>('rides');
 
 /// Metres on the bus up to each stop of a variant (straight lines between stops), cached per index.
