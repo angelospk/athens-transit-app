@@ -309,7 +309,7 @@ class RuleTask extends TaskHandler {
         if (r.kind == RuleKind.ride) await p.setInt('$_stoppedPrefix${r.id}', r.untilS ?? nowS + 3 * 3600);
         final (title, body) = ruleHitText(r, h, r.stopName);
         await _notes.show(
-          id: h.vehicleId.hashCode & 0x7fffffff,
+          id: (h.late ? 'late|${h.vehicleId}' : h.vehicleId).hashCode & 0x7fffffff, // the delay alert must not replace the arrival
           title: title,
           body: body,
           notificationDetails: const NotificationDetails(android: _hitChannel),

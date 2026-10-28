@@ -18,6 +18,24 @@ void main() {
     expect(ruleHitText(r.copyWith(kind: RuleKind.leave), h, 'ΣΥΝΤΑΓΜΑ').$1, 'Φύγε τώρα για το 040');
   });
 
+  test('lateMin survives json; an old rule has none and writes no key', () {
+    final late = r.copyWith(lateMin: 7);
+    expect(Rule.fromJson(late.toJson()), late);
+    expect(Rule.fromJson(late.toJson()).lateMin, 7);
+    expect(r.toJson().containsKey('lateMin'), isFalse);
+    expect(Rule.fromJson(r.toJson()).lateMin, isNull);
+  });
+
+  test('a delay hit says how late, whatever the kind', () {
+    const late = RuleHit(ruleId: '1', line: '040', vehicleId: 'v', stopsLeft: 4, etaS: 600, delayS: 420, late: true);
+    final (title, body) = ruleHitText(r.copyWith(lateMin: 5), late, 'ΣΥΝΤΑΓΜΑ');
+    expect(title, '040 αργεί 7′');
+    expect(body, contains('ΣΥΝΤΑΓΜΑ'));
+    expect(body, contains('~10′'));
+    expect(ruleHitText(r.copyWith(kind: RuleKind.leave, lateMin: 5), late, 'ΣΥΝΤΑΓΜΑ').$1, '040 αργεί 7′');
+    expect(h.late, isFalse);
+  });
+
   test('a rule for one bus ignores the others of the line', () {
     final one = r.copyWith(vehicle: 'mine');
     expect(Rule.fromJson(one.toJson()).vehicle, 'mine');

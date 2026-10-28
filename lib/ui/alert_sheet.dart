@@ -19,6 +19,7 @@ import 'theme.dart';
 import 'widgets.dart';
 
 const oneOffS = 90 * 60; // a one-off alert watches for 90 minutes
+const lateAlertMin = 5; // "Πες μου και αν αργεί": a delay of this many minutes
 
 Future<void> showAlertSheet(BuildContext context, {required StopRef stop, required Arrival arrival}) async {
   final d = Deps.of(context);
@@ -55,6 +56,7 @@ class _AlertSheetState extends State<AlertSheet> {
   int margin = 3; // minutes at the stop before the bus
   int? walk; // minutes on foot from the user's position; null until asked
   bool locating = false;
+  bool late = false; // "Πες μου και αν αργεί"
 
   // The user's position, asked only when "when to leave" is picked; the sheet says why first.
   Future<void> _locate() async {
@@ -110,6 +112,7 @@ class _AlertSheetState extends State<AlertSheet> {
       endMin: (start + 45).clamp(0, 1440),
       untilS: weekly ? null : now.millisecondsSinceEpoch ~/ 1000 + oneOffS,
       live: live,
+      lateMin: late ? lateAlertMin : null,
     );
   }
 
@@ -301,6 +304,13 @@ class _AlertSheetState extends State<AlertSheet> {
           subtitle: const Text('Δείχνει την πορεία ως τη στάση σου'),
           value: live,
           onChanged: (x) => setState(() => live = x),
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Πες μου και αν αργεί'),
+          subtitle: const Text('Μία ειδοποίηση όταν ένα λεωφορείο για τη στάση σου έχει καθυστέρηση $lateAlertMin′ ή παραπάνω'),
+          value: late,
+          onChanged: (x) => setState(() => late = x),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,

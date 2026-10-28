@@ -389,6 +389,38 @@ void main() {
       expect(RuleWatcher().check([rule()], st, live, 1000 + 121), isEmpty);
     });
 
+    test('watcher: "πες μου αν αργεί" fires once per bus when its delay reaches the minutes', () {
+      final st = {'T1': straightLine()};
+      LineLive feed(List<Vehicle> vs, int at) => LineLive(line: 'T1', updatedAt: at, nextUpdateAt: at + 30, vehicles: vs);
+      final r = rule().copyWith(lateMin: 5);
+      // Far away (400 s > 5′, no arrival alert yet) and 7′ late: one delay alert.
+      final w = RuleWatcher();
+      final hits = w.check([r], st, {'T1': feed([vehicleAt(0, next: 's1', speeds: List.filled(8, 5.0), delay: 420, id: 'A')], 1000)}, 1000);
+      expect(hits.map((h) => (h.vehicleId, h.late)), [('A', true)]);
+      expect(hits.first.delayS, 420);
+      expect(w.check([r], st, {'T1': feed([vehicleAt(100, next: 's1', at: 1030, speeds: List.filled(8, 5.0), delay: 480, id: 'A')], 1030)}, 1030), isEmpty,
+          reason: 'same bus, already told');
+      // On time, then late: the alert comes when the delay crosses.
+      final w2 = RuleWatcher();
+      expect(w2.check([r], st, {'T1': feed([vehicleAt(0, next: 's1', speeds: List.filled(8, 5.0), delay: 120, id: 'B')], 1000)}, 1000), isEmpty);
+      expect(w2.check([r], st, {'T1': feed([vehicleAt(50, next: 's1', at: 1030, speeds: List.filled(8, 5.0), delay: 300, id: 'B')], 1030)}, 1030).map((h) => h.late), [true]);
+      // Without lateMin a late bus far away says nothing.
+      expect(RuleWatcher().check([rule()], st, {'T1': feed([vehicleAt(0, next: 's1', speeds: List.filled(8, 5.0), delay: 900, id: 'C')], 1000)}, 1000), isEmpty);
+    });
+
+    test('watcher: a late bus that is also near gives the delay alert first, then the arrival', () {
+      final st = {'T1': straightLine()};
+      final live = {'T1': LineLive(line: 'T1', updatedAt: 1000, nextUpdateAt: 1030, vehicles: [vehicleAt(1200, next: 's2', speeds: List.filled(8, 5.0), delay: 600, id: 'A')])};
+      final hits = RuleWatcher().check([rule().copyWith(lateMin: 5)], st, live, 1000);
+      expect(hits.map((h) => h.late), [true, false]);
+    });
+
+    test('watcher: a bus past the stop gives no delay alert', () {
+      final st = {'T1': straightLine()};
+      final live = {'T1': LineLive(line: 'T1', updatedAt: 1000, nextUpdateAt: 1030, vehicles: [vehicleAt(2500, next: 's3', speeds: List.filled(8, 5.0), delay: 900, id: 'A')])};
+      expect(RuleWatcher().check([rule().copyWith(lateMin: 5)], st, live, 1000), isEmpty);
+    });
+
     test('next start of a weekly rule, in UTC', () {
       final r = rule(); // Mon-Fri 08:00 Athens
       // Tue 27 Oct 2026 08:10 Athens (inside): next is Wed 08:00 = 06:00 UTC (EET).

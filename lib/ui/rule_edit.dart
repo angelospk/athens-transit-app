@@ -9,6 +9,7 @@ import '../core/models.dart';
 import '../core/rules.dart';
 import '../data/live.dart';
 import '../data/store.dart';
+import 'alert_sheet.dart' show lateAlertMin;
 import 'rules_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -29,9 +30,14 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
   late int days = widget.rule?.days ?? 0x1F;
   late int start = widget.rule?.startMin ?? 8 * 60;
   late int end = widget.rule?.endMin ?? 8 * 60 + 40;
-  late When when = widget.rule?.mode == AlertMode.stops ? When.stops : When.minutes;
+  late When when = switch (widget.rule) {
+    final r? when r.kind == RuleKind.leave => When.leave,
+    final r? when r.mode == AlertMode.stops => When.stops,
+    _ => When.minutes,
+  };
   late int n = widget.rule?.n ?? 5;
   late bool live = widget.rule?.live ?? true;
+  late bool lateToo = widget.rule?.lateMin != null; // "Πες μου και αν αργεί"
   FavStop? fav;
   String? line;
   // variant id → (stop index, headsign) for the chosen line at the chosen stop
@@ -114,6 +120,8 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
       live: live,
       enabled: widget.rule?.enabled ?? true,
       pausedUntilS: widget.rule?.pausedUntilS,
+      kind: when == When.leave ? RuleKind.leave : RuleKind.arrive,
+      lateMin: lateToo ? (widget.rule?.lateMin ?? lateAlertMin) : null,
     );
     d.store.putRule(r);
     await AlertService.sync(d.store);
@@ -219,6 +227,13 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
         if (end <= start) Text('Το τέλος πρέπει να είναι μετά την αρχή.', style: TextStyle(color: t.late)),
         const SizedBox(height: 16),
         SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Live στην οθόνη κλειδώματος'), value: live, onChanged: (x) => setState(() => live = x)),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Πες μου και αν αργεί'),
+          subtitle: const Text('Όταν η καθυστέρηση φτάσει $lateAlertMin′'),
+          value: lateToo,
+          onChanged: (x) => setState(() => lateToo = x),
+        ),
       ]),
     );
   }

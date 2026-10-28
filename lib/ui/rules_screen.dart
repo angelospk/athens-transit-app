@@ -20,7 +20,8 @@ String daysText(int days) {
 
 String hm(int m) => '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
 
-String whenText(Rule r) => r.mode == AlertMode.minutes ? '${r.n}′ πριν' : '${r.n} ${r.n == 1 ? 'στάση' : 'στάσεις'} πριν';
+String whenText(Rule r) =>
+    (r.mode == AlertMode.minutes ? '${r.n}′ πριν' : '${r.n} ${r.n == 1 ? 'στάση' : 'στάσεις'} πριν') + (r.lateMin == null ? '' : ' · και αν αργεί');
 
 class RulesScreen extends StatefulWidget {
   const RulesScreen({super.key});

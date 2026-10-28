@@ -23,6 +23,9 @@ class Rule {
   final RuleKind kind;
   final String? vehicle; // only this bus ("Είμαι μέσα"); null: any bus of the line
 
+  /// "Πες μου και αν αργεί": also alert once per bus whose delay reaches these minutes. null: no.
+  final int? lateMin;
+
   const Rule({
     required this.id,
     required this.line,
@@ -41,6 +44,7 @@ class Rule {
     this.pausedUntilS,
     this.kind = RuleKind.arrive,
     this.vehicle,
+    this.lateMin,
   });
 
   Rule copyWith({
@@ -61,6 +65,7 @@ class Rule {
     int? pausedUntilS,
     RuleKind? kind,
     String? vehicle,
+    int? lateMin,
   }) =>
       Rule(
         id: id ?? this.id,
@@ -80,6 +85,7 @@ class Rule {
         pausedUntilS: pausedUntilS ?? this.pausedUntilS,
         kind: kind ?? this.kind,
         vehicle: vehicle ?? this.vehicle,
+        lateMin: lateMin ?? this.lateMin,
       );
 
   bool activeAt(DateTime utc) {
@@ -111,6 +117,7 @@ class Rule {
         'pausedUntilS': pausedUntilS,
         if (kind != RuleKind.arrive) 'kind': kind.name,
         'vehicle': ?vehicle,
+        'lateMin': ?lateMin,
       };
 
   factory Rule.fromJson(Map<String, dynamic> j) => Rule(
@@ -131,6 +138,7 @@ class Rule {
         pausedUntilS: (j['pausedUntilS'] as num?)?.toInt(),
         kind: RuleKind.values.firstWhere((k) => k.name == j['kind'], orElse: () => RuleKind.arrive),
         vehicle: j['vehicle'] as String?,
+        lateMin: (j['lateMin'] as num?)?.toInt(),
       );
 
   @override
@@ -152,17 +160,19 @@ class Rule {
       other.enabled == enabled &&
       other.pausedUntilS == pausedUntilS &&
       other.kind == kind &&
-      other.vehicle == vehicle;
+      other.vehicle == vehicle &&
+      other.lateMin == lateMin;
 
   @override
   int get hashCode => Object.hashAll([
-        id, line, variant, stopIndex, stopId, stopName, mode, n, days, startMin, endMin, untilS, live, enabled, pausedUntilS, kind, vehicle,
+        id, line, variant, stopIndex, stopId, stopName, mode, n, days, startMin, endMin, untilS, live, enabled, pausedUntilS, kind, vehicle, lateMin,
       ]);
 }
 
 class RuleHit {
   final String ruleId, line, vehicleId;
   final int? stopsLeft, etaS, delayS;
+  final bool late; // the delay alert of [Rule.lateMin], not the arrival
   const RuleHit({
     required this.ruleId,
     required this.line,
@@ -170,6 +180,7 @@ class RuleHit {
     required this.stopsLeft,
     required this.etaS,
     required this.delayS,
+    this.late = false,
   });
 }
 
@@ -203,10 +214,16 @@ class RuleWatcher {
         if (v.variant == null) continue; // unknown: neither a hit nor the end of the run
         if (v.variant != r.variant || _pastStop(st, stops, r.stopIndex, v)) {
           _fired.remove(key);
+          _fired.remove('late|$key');
           continue;
         }
         final left = stopsLeft(stops, r.stopIndex, v, nowS);
         final eta = etaSeconds(st, v, r.stopIndex, nowS);
+        final lateMin = r.lateMin;
+        if (lateMin != null && (v.delayS ?? 0) >= lateMin * 60 && !_fired.containsKey('late|$key')) {
+          _fired['late|$key'] = nowS;
+          hits.add(RuleHit(ruleId: r.id, line: r.line, vehicleId: v.id, stopsLeft: left, etaS: eta, delayS: v.delayS, late: true));
+        }
         final fire = switch (r.mode) {
           AlertMode.minutes => eta != null && eta <= r.n * 60,
           AlertMode.stops => left != null && left >= 1 && left <= r.n,
@@ -244,7 +261,12 @@ String hitText(RuleHit h, String stop) {
 
 /// The notification's title and text for a hit of [r]: the arrival wording, or "leave now", or "get
 /// off at the next stop".
-(String, String) ruleHitText(Rule r, RuleHit h, String stop) => switch (r.kind) {
+(String, String) ruleHitText(Rule r, RuleHit h, String stop) => h.late
+    ? (
+        '${h.line} αργεί ${((h.delayS ?? 0) / 60).round()}′',
+        'Για τη στάση $stop${h.etaS == null ? '' : ': φτάνει σε ~${(h.etaS! / 60).round()}′'}${h.stopsLeft == null ? '' : ' (${h.stopsLeft} ${h.stopsLeft == 1 ? 'στάση' : 'στάσεις'})'}.'
+      )
+    : switch (r.kind) {
       RuleKind.arrive => ('${h.line} → $stop', hitText(h, stop)),
       RuleKind.leave => ('Φύγε τώρα για το ${h.line}', 'Για να είσαι στη στάση $stop πριν έρθει${h.etaS == null ? '' : ' (σε ~${(h.etaS! / 60).round()}′)'}.'),
       RuleKind.ride => ('Κατέβα στην επόμενη', 'Η επόμενη στάση του ${h.line} είναι η $stop.'),
