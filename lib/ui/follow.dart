@@ -39,7 +39,10 @@ class _FollowButtonState extends State<FollowButton> {
         return;
       }
       if (!mounted) return;
-      await AlertService.ensurePermissions(context);
+      if (!await AlertService.ensurePermissions(context)) {
+        _say('Χωρίς άδεια ειδοποιήσεων δεν μπορώ να σε ειδοποιήσω.');
+        return;
+      }
       final st = d.live.statics[b.line!] ??= await d.api.lineStatic(b.line!);
       final stops = st.variants[b.variant!]?.stops;
       if (stops == null || b.j == null || b.j! >= stops.length) {

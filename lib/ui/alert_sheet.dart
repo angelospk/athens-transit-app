@@ -53,7 +53,9 @@ Future<String> remindLast(BuildContext context,
     if (r == null) return 'Δεν βρήκα πρόγραμμα για το $line.';
     final at = athensDayUtc(now, r.atStopS);
     if (at.isBefore(now)) return 'Το τελευταίο $line πέρασε ήδη (~${dayClock(r.atStopS)}).';
-    if (context.mounted) await AlertService.ensurePermissions(context);
+    if (!context.mounted || !await AlertService.ensurePermissions(context)) {
+      return 'Χωρίς άδεια ειδοποιήσεων δεν μπορώ να σε ειδοποιήσω.';
+    }
     var fire = at.subtract(Duration(minutes: beforeMin));
     if (fire.isBefore(now)) fire = now.add(const Duration(seconds: 5));
     await AlertService.noteAt(
