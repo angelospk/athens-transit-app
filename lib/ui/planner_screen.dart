@@ -19,6 +19,7 @@ import '../data/live.dart' show stopIdsNear;
 import '../data/locate.dart';
 import 'alert_sheet.dart';
 import 'map_sel.dart';
+import 'ride.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -60,16 +61,27 @@ class _PlannerScreenState extends State<PlannerScreen> {
     try {
       final lines = await api.lines();
       if (mounted) setState(() => _known = {for (final l in lines) l.id});
-    } catch (_) {/* every line of the index counts */}
+    } catch (_) {
+      /* every line of the index counts */
+    }
     try {
       final m = await api.metro();
       if (mounted) {
-        setState(() => _stations = [
-              for (final s in m['stations'] as List)
-                (name: s['name'] as String, lat: (s['lat'] as num).toDouble(), lon: (s['lon'] as num).toDouble(), lines: [for (final l in s['lines'] as List) l as String]),
-            ]);
+        setState(
+          () => _stations = [
+            for (final s in m['stations'] as List)
+              (
+                name: s['name'] as String,
+                lat: (s['lat'] as num).toDouble(),
+                lon: (s['lon'] as num).toDouble(),
+                lines: [for (final l in s['lines'] as List) l as String],
+              ),
+          ],
+        );
       }
-    } catch (_) {/* no metro suggestion */}
+    } catch (_) {
+      /* no metro suggestion */
+    }
     if (mounted && _from == null) _here();
   }
 
@@ -99,92 +111,119 @@ class _PlannerScreenState extends State<PlannerScreen> {
     final t = context.tones;
     final from = _from, to = _to, ix = _ix;
     return SafeArea(
-      child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 110), children: [
-        Text('Διαδρομή', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 28)),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(20)),
-          child: Row(children: [
-            Expanded(
-              child: Column(children: [
-                _endTile(t, Icons.trip_origin, 'Από', from?.label ?? (_locating ? 'Βρίσκω τη θέση σου…' : 'Πού είσαι;'), () => _pick(true)),
-                Divider(height: 1, indent: 52, color: t.rule),
-                _endTile(t, Icons.place, 'Προς', to?.label ?? 'Πού πας; στάση, περιοχή, κατάστημα, διεύθυνση', () => _pick(false)),
-              ]),
-            ),
-            IconButton(
-              tooltip: 'Αντιστροφή',
-              icon: const Icon(Icons.swap_vert),
-              onPressed: () => setState(() {
-                final f = _from;
-                _from = _to;
-                _to = f;
-              }),
-            ),
-          ]),
-        ),
-        const SizedBox(height: 10),
-        Wrap(spacing: 8, runSpacing: 6, children: [
-          ChoiceChip(label: const Text('Τώρα'), selected: _at == null, onSelected: (_) => setState(() => _at = null)),
-          ChoiceChip(
-            avatar: const Icon(Icons.schedule, size: 18),
-            label: Text(_at == null ? 'Αργότερα' : 'Φεύγω ${_at!.format(context)}'),
-            selected: _at != null,
-            onSelected: (_) async {
-              final got = await showTimePicker(context: context, initialTime: _at ?? TimeOfDay.now());
-              if (got != null && mounted) setState(() => _at = got);
-            },
-          ),
-          FilterChip(
-            avatar: const Icon(Icons.subway_outlined, size: 18),
-            label: const Text('Με μετρό'),
-            selected: _metro,
-            showCheckmark: false,
-            onSelected: (v) => setState(() => _metro = v),
-          ),
-        ]),
-        const SizedBox(height: 8),
-        if (ix == null && !_failed) const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator())),
-        if (ix == null && _failed)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(children: [
-              Text('Δεν φόρτωσαν οι γραμμές. Χρειάζεται σύνδεση την πρώτη φορά.', style: TextStyle(color: t.muted)),
-              TextButton(onPressed: _init, child: const Text('Δοκίμασε ξανά')),
-            ]),
-          ),
-        if (ix != null && from != null && to != null) ..._results(t, ix, from, to),
-        if (ix != null && (from == null || to == null))
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              from == null
-                  ? 'Διάλεξε από πού φεύγεις, ή δώσε άδεια θέσης: με αυτή υπολογίζω πόσο περπατάς ως τη στάση.'
-                  : 'Διάλεξε πού πας. Βρίσκω λεωφορεία χωρίς αλλαγή ή με μία, και το μετρό όταν σε βολεύει.',
-              style: TextStyle(color: t.muted),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
+        children: [
+          Text('Διαδρομή', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 28)),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(20)),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      _endTile(t, Icons.trip_origin, 'Από', from?.label ?? (_locating ? 'Βρίσκω τη θέση σου…' : 'Πού είσαι;'), () => _pick(true)),
+                      Divider(height: 1, indent: 52, color: t.rule),
+                      _endTile(t, Icons.place, 'Προς', to?.label ?? 'Πού πας; στάση, περιοχή, κατάστημα, διεύθυνση', () => _pick(false)),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Αντιστροφή',
+                  icon: const Icon(Icons.swap_vert),
+                  onPressed: () => setState(() {
+                    final f = _from;
+                    _from = _to;
+                    _to = f;
+                  }),
+                ),
+              ],
             ),
           ),
-      ]),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              ChoiceChip(label: const Text('Τώρα'), selected: _at == null, onSelected: (_) => setState(() => _at = null)),
+              ChoiceChip(
+                avatar: const Icon(Icons.schedule, size: 18),
+                label: Text(_at == null ? 'Αργότερα' : 'Φεύγω ${_at!.format(context)}'),
+                selected: _at != null,
+                onSelected: (_) async {
+                  final got = await showTimePicker(context: context, initialTime: _at ?? TimeOfDay.now());
+                  if (got != null && mounted) setState(() => _at = got);
+                },
+              ),
+              FilterChip(
+                avatar: const Icon(Icons.subway_outlined, size: 18),
+                label: const Text('Με μετρό'),
+                selected: _metro,
+                showCheckmark: false,
+                onSelected: (v) => setState(() => _metro = v),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (ix == null && !_failed)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          if (ix == null && _failed)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Text('Δεν φόρτωσαν οι γραμμές. Χρειάζεται σύνδεση την πρώτη φορά.', style: TextStyle(color: t.muted)),
+                  TextButton(onPressed: _init, child: const Text('Δοκίμασε ξανά')),
+                ],
+              ),
+            ),
+          if (ix != null && from != null && to != null) ..._results(t, ix, from, to),
+          if (ix != null && (from == null || to == null))
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                from == null
+                    ? 'Διάλεξε από πού φεύγεις, ή δώσε άδεια θέσης: με αυτή υπολογίζω πόσο περπατάς ως τη στάση.'
+                    : 'Διάλεξε πού πας. Βρίσκω λεωφορεία χωρίς αλλαγή ή με μία, και το μετρό όταν σε βολεύει.',
+                style: TextStyle(color: t.muted),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
   Widget _endTile(Tones t, IconData icon, String label, String value, VoidCallback onTap) => InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
-          child: Row(children: [
-            Icon(icon, size: 20, color: t.muted),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(20),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: t.muted),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(label, style: TextStyle(fontSize: 12, color: t.muted)),
-                Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-              ]),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ],
             ),
-          ]),
-        ),
-      );
+          ),
+        ],
+      ),
+    ),
+  );
 
   List<Widget> _results(Tones t, TripIndex ix, _End from, _End to) {
     final direct = tp.findTrips(ix, from.pts, to.pts, tp.walkM, _known).take(5).toList();
@@ -195,7 +234,10 @@ class _PlannerScreenState extends State<PlannerScreen> {
       return [
         Padding(
           padding: const EdgeInsets.all(16),
-          child: Text('Δεν βρήκα λεωφορείο ως 500 μ. από τις δύο άκρες, ούτε με μία αλλαγή. Δοκίμασε μια κοντινή στάση ή το μετρό.', style: TextStyle(color: t.muted)),
+          child: Text(
+            'Δεν βρήκα λεωφορείο ως 500 μ. από τις δύο άκρες, ούτε με μία αλλαγή. Δοκίμασε μια κοντινή στάση ή το μετρό.',
+            style: TextStyle(color: t.muted),
+          ),
         ),
       ];
     }
@@ -218,25 +260,28 @@ class _PlannerScreenState extends State<PlannerScreen> {
   }
 
   Widget _head(Tones t, String s) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 14, 4, 6),
-        child: Text(s, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: t.muted)),
-      );
+    padding: const EdgeInsets.fromLTRB(4, 14, 4, 6),
+    child: Text(
+      s,
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: t.muted),
+    ),
+  );
 
   Widget _metroCard(Tones t, ({String line, String from, String to, double walk}) m) => Card(
-        elevation: 0,
-        color: t.surface,
-        margin: const EdgeInsets.only(top: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: ListTile(
-          leading: Icon(m.line.startsWith('T') ? Icons.tram_outlined : Icons.subway_outlined),
-          title: Text('${m.line.startsWith('T') ? 'Τραμ' : 'Μετρό'} ${m.line}: ${titleCase(m.from)} → ${titleCase(m.to)}'),
-          subtitle: Text('Περπάτημα ${walkMinutes(m.walk)}′ συνολικά · τρένο κάθε λίγα λεπτά (πρόγραμμα, όχι live)'),
-          onTap: () {
-            final s = _stations.where((x) => x.name == m.from).firstOrNull;
-            if (s != null) showOnMap(StationSel(s.name, (s.lat, s.lon), lines: s.lines));
-          },
-        ),
-      );
+    elevation: 0,
+    color: t.surface,
+    margin: const EdgeInsets.only(top: 8),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    child: ListTile(
+      leading: Icon(m.line.startsWith('T') ? Icons.tram_outlined : Icons.subway_outlined),
+      title: Text('${m.line.startsWith('T') ? 'Τραμ' : 'Μετρό'} ${m.line}: ${titleCase(m.from)} → ${titleCase(m.to)}'),
+      subtitle: Text('Περπάτημα ${walkMinutes(m.walk)}′ συνολικά · τρένο κάθε λίγα λεπτά (πρόγραμμα, όχι live)'),
+      onTap: () {
+        final s = _stations.where((x) => x.name == m.from).firstOrNull;
+        if (s != null) showOnMap(StationSel(s.name, (s.lat, s.lon), lines: s.lines));
+      },
+    ),
+  );
 
   Widget _changeCard(Tones t, TripIndex ix, tp.TripTransfer c) {
     final a = c.legs.first, b = c.legs.last;
@@ -251,18 +296,28 @@ class _PlannerScreenState extends State<PlannerScreen> {
         onTap: () => showOnMap(StopSel(StopRef(name: board.$1, lat: board.$2, lon: board.$3, lines: linesAt(ix, board.$1, board.$2, board.$3)))),
         child: Padding(
           padding: const EdgeInsets.all(14),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              LineBadge(a.line),
-              Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: Icon(Icons.arrow_forward, size: 16, color: t.muted)),
-              LineBadge(b.line),
-              const Spacer(),
-              Text('~${c.min.round()}′', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-            ]),
-            const SizedBox(height: 6),
-            Text('Ανεβαίνεις: ${titleCase(board.$1)} · αλλαγή: ${titleCase(change.$1)}${c.xfer > 30 ? ' (${c.xfer.round()} μ. με τα πόδια)' : ''}',
-                style: TextStyle(fontSize: 13, color: t.muted)),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  LineBadge(a.line),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Icon(Icons.arrow_forward, size: 16, color: t.muted),
+                  ),
+                  LineBadge(b.line),
+                  const Spacer(),
+                  Text('~${c.min.round()}′', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Ανεβαίνεις: ${titleCase(board.$1)} · αλλαγή: ${titleCase(change.$1)}${c.xfer > 30 ? ' (${c.xfer.round()} μ. με τα πόδια)' : ''}',
+                style: TextStyle(fontSize: 13, color: t.muted),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -334,8 +389,7 @@ class _DirectCardState extends State<_DirectCard> {
           ? <Arrival>[]
           : ([
               for (final id in stopIdsNear(st, name, lat, lon)) ...arrivalsAt(id, {line: st}, {line: lives[line]!}, live.nowS),
-            ].where((a) => a.variant == variant).toList()
-            ..sort((a, b) => a.etaS.compareTo(b.etaS)));
+            ].where((a) => a.variant == variant).toList()..sort((a, b) => a.etaS.compareTo(b.etaS)));
       if (mounted && gen == _gen) {
         setState(() {
           _arrivals = got;
@@ -346,6 +400,37 @@ class _DirectCardState extends State<_DirectCard> {
     } catch (_) {
       if (mounted && gen == _gen) setState(() => _asked = true); // no live: the estimate stays
     }
+  }
+
+  // On the bus: a ride alert for the stop to get off at. The bus is the one of this direction
+  // nearest the phone now (the one counted on has usually left the stop by then).
+  Future<void> _boarded(String off) async {
+    final d = Deps.of(context);
+    final line = widget.trip.line, variant = widget.trip.variants.first.id;
+    final me = await myPosition(fresh: true);
+    Vehicle? bus;
+    if (me != null) {
+      try {
+        // The line's own feed: tile vehicles have no next stop, which the ride alert needs.
+        final live = await d.api.live(line);
+        d.live.statics[line] ??= await d.api.lineStatic(line);
+        // Fresh fixes of this direction within 250 m; two of them (bunched buses): ask on the map.
+        final now = d.live.nowS;
+        final near = [
+          for (final v in live.vehicles)
+            if (v.variant == variant && v.nextStopId != null && now - v.positionAt <= 120 && distM(me, (v.lat, v.lon)) <= 250) v,
+        ];
+        if (near.length == 1) bus = near.single;
+      } catch (_) {/* offline: the line's sheet instead */}
+    }
+    final st = d.live.statics[line];
+    if (!mounted) return;
+    if (st == null || bus == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρήκα το λεωφορείο δίπλα σου. Διάλεξέ το στον χάρτη και πάτα «Είμαι μέσα».')));
+      showOnMap(LineSel(line, variants: {variant}));
+      return;
+    }
+    await showRide(context, line: line, st: st, vehicle: bus, alight: off);
   }
 
   @override
@@ -372,45 +457,71 @@ class _DirectCardState extends State<_DirectCard> {
         onTap: () => showOnMap(StopSel(StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)))),
         child: Padding(
           padding: const EdgeInsets.all(14),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              LineBadge(r.line, big: true),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text('${v.stops} στάσεις · περπάτημα $walk′', style: TextStyle(fontSize: 13, color: t.muted)),
-              ),
-              Text('~${total.round()}′', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-            ]),
-            const SizedBox(height: 6),
-            Text('Ανεβαίνεις: ${titleCase(name)}', style: const TextStyle(fontSize: 15)),
-            Text('Κατεβαίνεις: ${titleCase(off.$1)}', style: TextStyle(fontSize: 13, color: t.muted)),
-            if (widget.live) ...[
-              const SizedBox(height: 6),
-              if (next == null)
-                Text(_asked ? (_arrivals.isEmpty ? 'Κανένα λεωφορείο με GPS κοντά τώρα' : 'Δεν προλαβαίνεις αυτά που έρχονται τώρα') : '', style: TextStyle(fontSize: 13, color: t.muted))
-              else
-                Row(children: [
-                  Dot(delayNote(context, next.a.delayS)?.$2 ?? t.onTime),
-                  const SizedBox(width: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  LineBadge(r.line, big: true),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      'Το επόμενο που προλαβαίνεις σε ${mins(next.eta)} (${clockIn(next.eta)})${leave == null ? '' : leave <= 0 ? ' · φύγε τώρα' : ' · φύγε σε $leave′'}',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: leave != null && leave <= 0 ? t.late : null),
+                    child: Text('${v.stops} στάσεις · περπάτημα $walk′', style: TextStyle(fontSize: 13, color: t.muted)),
+                  ),
+                  Text('~${total.round()}′', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text('Ανεβαίνεις: ${titleCase(name)}', style: const TextStyle(fontSize: 15)),
+              Text('Κατεβαίνεις: ${titleCase(off.$1)}', style: TextStyle(fontSize: 13, color: t.muted)),
+              if (widget.live) ...[
+                const SizedBox(height: 6),
+                if (next == null)
+                  Text(
+                    _asked ? (_arrivals.isEmpty ? 'Κανένα λεωφορείο με GPS κοντά τώρα' : 'Δεν προλαβαίνεις αυτά που έρχονται τώρα') : '',
+                    style: TextStyle(fontSize: 13, color: t.muted),
+                  )
+                else
+                  Row(
+                    children: [
+                      Dot(delayNote(context, next.a.delayS)?.$2 ?? t.onTime),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Το επόμενο που προλαβαίνεις σε ${mins(next.eta)} (${clockIn(next.eta)})${leave == null
+                              ? ''
+                              : leave <= 0
+                              ? ' · φύγε τώρα'
+                              : ' · φύγε σε $leave′'}',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: leave != null && leave <= 0 ? t.late : null),
+                        ),
+                      ),
+                    ],
+                  ),
+                // Following the trip: an alert when to leave for the stop, then on the bus one before
+                // the stop to get off at.
+                Wrap(
+                  spacing: 4,
+                  children: [
+                    if (next != null)
+                      TextButton.icon(
+                        icon: const Icon(Icons.notifications_active_outlined, size: 18),
+                        label: const Text('Πότε να φύγω'),
+                        onPressed: () => showAlertSheet(
+                          context,
+                          stop: StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)),
+                          arrival: next.a,
+                        ),
+                      ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.airline_seat_recline_normal, size: 18),
+                      label: const Text('Ανέβηκα'),
+                      onPressed: () => _boarded(off.$1),
                     ),
-                  ),
-                ]),
-              if (next != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.notifications_active_outlined, size: 18),
-                    label: const Text('Ειδοποίησέ με πότε να φύγω'),
-                    onPressed: () => showAlertSheet(context,
-                        stop: StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)), arrival: next.a),
-                  ),
+                  ],
                 ),
+              ],
             ],
-          ]),
+          ),
         ),
       ),
     );
@@ -461,7 +572,9 @@ class _PlacePickerState extends State<_PlacePicker> {
         try {
           final got = await Deps.of(context).api.places(q.trim());
           if (mounted && n == _asked) setState(() => _osm = got.take(5).toList());
-        } catch (_) {/* offline: the network's own places still work */}
+        } catch (_) {
+          /* offline: the network's own places still work */
+        }
       });
     }
   }
@@ -473,58 +586,68 @@ class _PlacePickerState extends State<_PlacePicker> {
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SizedBox(
         height: MediaQuery.sizeOf(context).height * .75,
-        child: Column(children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: TextField(
-              controller: _c,
-              autofocus: true,
-              onChanged: _search,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: widget.from ? 'Από: στάση, περιοχή, διεύθυνση' : 'Προς: στάση, περιοχή, κατάστημα, διεύθυνση',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(28)),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: TextField(
+                controller: _c,
+                autofocus: true,
+                onChanged: _search,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search),
+                  hintText: widget.from ? 'Από: στάση, περιοχή, διεύθυνση' : 'Προς: στάση, περιοχή, κατάστημα, διεύθυνση',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(28)),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: ListView(children: [
-              ListTile(
-                leading: const Icon(Icons.my_location),
-                title: const Text('Η θέση μου'),
-                onTap: () async {
-                  final p = await myPosition();
-                  if (!context.mounted) return;
-                  if (p == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρήκα τη θέση σου. Άνοιξε την τοποθεσία ή διάλεξε ένα μέρος.')));
-                    return;
-                  }
-                  Navigator.pop(context, (label: 'Η θέση μου', pts: [p]));
-                },
+            Expanded(
+              child: ListView(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.my_location),
+                    title: const Text('Η θέση μου'),
+                    onTap: () async {
+                      final p = await myPosition();
+                      if (!context.mounted) return;
+                      if (p == null) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(content: Text('Δεν βρήκα τη θέση σου. Άνοιξε την τοποθεσία ή διάλεξε ένα μέρος.')));
+                        return;
+                      }
+                      Navigator.pop(context, (label: 'Η θέση μου', pts: [p]));
+                    },
+                  ),
+                  for (final p in _hits)
+                    ListTile(
+                      leading: Icon(switch (p.kind) {
+                        tp.PlaceKind.metro || tp.PlaceKind.metroAny => Icons.subway_outlined,
+                        tp.PlaceKind.stop => Icons.directions_bus_outlined,
+                        _ => Icons.location_city_outlined,
+                      }),
+                      title: Text(titleCase(p.label)),
+                      subtitle: p.hint == null && p.lines.isEmpty
+                          ? null
+                          : Text(p.hint ?? p.lines.take(8).join(', '), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      onTap: () => Navigator.pop(context, (label: titleCase(p.label), pts: p.pts)),
+                    ),
+                  for (final p in _osm)
+                    ListTile(
+                      leading: const Icon(Icons.place_outlined),
+                      title: Text(p.name),
+                      subtitle: p.detail.isEmpty ? null : Text(p.detail, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      onTap: () => Navigator.pop(context, (label: p.name, pts: [(p.lat, p.lon)])),
+                    ),
+                  if (_c.text.trim().length >= 2 && _hits.isEmpty && _osm.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text('Ψάχνω…', style: TextStyle(color: t.muted)),
+                    ),
+                ],
               ),
-              for (final p in _hits)
-                ListTile(
-                  leading: Icon(switch (p.kind) {
-                    tp.PlaceKind.metro || tp.PlaceKind.metroAny => Icons.subway_outlined,
-                    tp.PlaceKind.stop => Icons.directions_bus_outlined,
-                    _ => Icons.location_city_outlined,
-                  }),
-                  title: Text(titleCase(p.label)),
-                  subtitle: p.hint == null && p.lines.isEmpty ? null : Text(p.hint ?? p.lines.take(8).join(', '), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  onTap: () => Navigator.pop(context, (label: titleCase(p.label), pts: p.pts)),
-                ),
-              for (final p in _osm)
-                ListTile(
-                  leading: const Icon(Icons.place_outlined),
-                  title: Text(p.name),
-                  subtitle: p.detail.isEmpty ? null : Text(p.detail, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  onTap: () => Navigator.pop(context, (label: p.name, pts: [(p.lat, p.lon)])),
-                ),
-              if (_c.text.trim().length >= 2 && _hits.isEmpty && _osm.isEmpty)
-                Padding(padding: const EdgeInsets.all(16), child: Text('Ψάχνω…', style: TextStyle(color: t.muted))),
-            ]),
-          ),
-        ]),
+            ),
+          ],
+        ),
       ),
     );
   }

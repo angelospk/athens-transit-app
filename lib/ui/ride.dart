@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
 import '../background/service.dart';
 import '../core/eta.dart';
 import '../core/models.dart';
+import '../core/nearby.dart' show fold;
 import '../core/rules.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-Future<void> showRide(BuildContext context, {required String line, required LineStatic st, required Vehicle vehicle}) async {
+// [alight]: the stop to get off at, by name (the planner knows it): no picker then.
+Future<void> showRide(BuildContext context, {required String line, required LineStatic st, required Vehicle vehicle, String? alight}) async {
   final stops = st.variants[vehicle.variant]?.stops;
   final next = vehicle.nextStopId == null || stops == null ? -1 : stops.indexOf(vehicle.nextStopId!);
   if (stops == null || next < 0) return;
@@ -24,7 +26,8 @@ Future<void> showRide(BuildContext context, {required String line, required Line
     return;
   }
   final t = context.tones;
-  final k = await showModalBottomSheet<int>(
+  final known = alight == null ? -1 : stops.indexWhere((id) => fold(st.stops[id]?.name ?? '') == fold(alight));
+  final k = known >= from ? known : await showModalBottomSheet<int>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../core/athens_time.dart';
+import '../core/board.dart';
 import '../core/geo.dart';
 import '../core/map_geo.dart';
 import '../core/marker.dart';
@@ -52,6 +53,11 @@ class _MapScreenState extends State<MapScreen> {
   int _z = 13;
   Timer? _refresh, _glide;
   final _motion = Motion();
+  // "Am I on a bus?": the phone's fixes and the shown buses near it, the last 90 s.
+  Timer? _boardTimer;
+  final _myTrack = <Fix>[];
+  final _busTrack = <String, List<Fix>>{};
+  String? _offered;
   Pt? _me;
   TripIndex? _ix;
   String? _styleFor;
@@ -75,6 +81,7 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
     _glide = Timer.periodic(const Duration(seconds: 1), (_) => _draw()); // the buses move between fixes
     _refresh = Timer.periodic(const Duration(seconds: 30), (_) => _loadTiles(force: true));
+    _boardTimer = Timer.periodic(const Duration(seconds: 15), (_) => _sampleBoard());
     darkStyle().then((j) {
       if (mounted && j != null) setState(() => _dark = j);
     });
@@ -93,6 +100,7 @@ class _MapScreenState extends State<MapScreen> {
     appTab.removeListener(_onTab);
     _refresh?.cancel();
     _glide?.cancel();
+    _boardTimer?.cancel();
     _calm?.cancel();
     _sheet.dispose();
     super.dispose();
@@ -411,6 +419,52 @@ class _MapScreenState extends State<MapScreen> {
     _motion.update(id,
         path: v.path, speed: v.speed, positionAt: v.positionAt, pathSpeeds: v.pathSpeeds, fix: (v.lat, v.lon), nowS: nowS);
     return _motion.step(id, nowS);
+  }
+
+  // With the map open and location already allowed: a bus that moved with the phone for a minute
+  // is offered once ("Είσαι στο 040;"), and its sheet has «Είμαι μέσα».
+  Future<void> _sampleBoard() async {
+    bool shown() => mounted && appTab.value == 0 && WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+    if (!shown()) {
+      _myTrack.clear(); // a gap: the minute together starts again
+      _busTrack.clear();
+      return;
+    }
+    final p = await quietPosition();
+    if (!mounted || !shown()) {
+      _myTrack.clear();
+      _busTrack.clear();
+      return;
+    }
+    if (p == null) {
+      _myTrack.clear();
+      _busTrack.clear();
+      return;
+    }
+    final t = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    _myTrack
+      ..add((t: t, at: p))
+      ..removeWhere((f) => t - f.t > 90);
+    for (final v in _vehicles(Deps.of(context).store)) {
+      final id = '${v.line}|${v.id}';
+      final at = _motion.shown(id) ?? (v.lat, v.lon);
+      if (distM(at, p) <= 400) (_busTrack[id] ??= []).add((t: t, at: at));
+    }
+    for (final l in _busTrack.values) {
+      l.removeWhere((f) => t - f.t > 90);
+    }
+    _busTrack.removeWhere((_, l) => l.isEmpty);
+    final id = boardedOn(_myTrack, _busTrack);
+    if (id == null || id == _offered) return;
+    _offered = id;
+    final cut = id.indexOf('|');
+    final line = id.substring(0, cut), vehicle = id.substring(cut + 1);
+    if (mapSel.value case BusSel(line: final l, vehicleId: final v) when l == line && v == vehicle) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 20),
+      content: Text('Είσαι στο $line; Πες μου πού κατεβαίνεις.'),
+      action: SnackBarAction(label: 'Άνοιξέ το', onPressed: () => showOnMap(BusSel(line, vehicle))),
+    ));
   }
 
   List<Vehicle> _vehicles(AppStore store) {
