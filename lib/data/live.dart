@@ -133,6 +133,12 @@ class LiveHub extends ChangeNotifier {
     return out..sort((a, b) => a.etaS.compareTo(b.etaS));
   }
 
+  // Static data of lines with no bus near: a stop's runs that have not started yet need the route.
+  Future<void> loadStatics(Iterable<String> lines) => Future.wait([
+        for (final l in lines.where((l) => !statics.containsKey(l)))
+          api.lineStatic(l).then<void>((s) => statics[l] ??= s).catchError((_) {}),
+      ]);
+
   // Every line near a point from the citywide snapshot tiles (z 13, ~3.9 km): arrivals for lines the
   // user does not watch, without asking the backend to watch them. No next_stop_id there, so the stop
   // counts are unknown and the ETA comes from the position alone.

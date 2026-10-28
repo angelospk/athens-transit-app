@@ -13,7 +13,8 @@ import '../core/rail.dart';
 import '../core/stats.dart';
 import 'cache.dart';
 
-const apiBase = 'https://transit.haroldpoi.dev';
+// `--dart-define=API_BASE=http://127.0.0.1:18095` points a debug build at a local backend (QA).
+const apiBase = String.fromEnvironment('API_BASE', defaultValue: 'https://transit.haroldpoi.dev');
 const staticBase = 'https://angelospk.github.io/athens-transit-rt/static/v1';
 const tripsUrl = 'https://bus.haroldpoi.dev/trips.json';
 const metroUrl = 'https://bus.haroldpoi.dev/metro.json'; // metro, ISAP, tram: STASY GTFS + OSM tracks

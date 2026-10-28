@@ -37,6 +37,17 @@ void main() {
     expect(departuresFor(const {'directions': []}, st.variants['v1']!), isNull);
   });
 
+  test('a GTFS headsign names both ends («start - via - end»): the timetable direction is the one to its end', () {
+    Variant v(String h) => Variant.fromJson({'headsign': h, 'direction': 0, 'shape': [], 'stops': []});
+    final j = sched([(0, 'ΝΕΟ ΨΥΧΙΚΟ', ['05:00']), (1, 'Ν. ΦΙΛΑΔΕΛΦΕΙΑ', ['05:10'])]);
+    expect(departuresFor(j, v('Ν. ΦΙΛΑΔΕΛΦΕΙΑ - ΑΝΩ ΠΑΤΗΣΙΑ - ΝΕΟ ΨΥΧΙΚΟ')), ['05:00']);
+    expect(departuresFor(j, v('ΝΕΟ ΨΥΧΙΚΟ - ΑΝΩ ΠΑΤΗΣΙΑ - Ν. ΦΙΛΑΔΕΛΦΕΙΑ')), ['05:10']);
+    final p = sched([(0, 'ΣΥΝΤΑΓΜΑ', ['06:00']), (1, 'ΠΕΙΡΑΙΑΣ', ['06:30'])]);
+    expect(departuresFor(p, v('ΣΥΝΤΑΓΜΑ - ΠΕΙΡΑΙΑΣ(ΠΡΟΣΩΡΙΝΗ ΛΟΓΩ ΕΡΓΩΝ)')), ['06:30']);
+    final loop = sched([(0, 'ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)', ['05:00'])]);
+    expect(departuresFor(loop, v('ΙΛΙΟΝ - ΑΓ. ΦΑΝΟΥΡΙΟΣ - ΑΚΑΔΗΜΙΑ')), ['05:00']);
+  });
+
   test('a run that has not started reaches the stop at departure + distance / speed', () {
     // 10:00 now (36000 s after Athens midnight). b is 2100 m from the start: 500 s at 4.2 m/s.
     final etas = plannedEtas(['09:50', '10:05', '10:20', '11:30'], st, 'v1', 1, 36000);

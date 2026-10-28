@@ -284,7 +284,11 @@ class _LinePanelState extends State<LinePanel> {
               ];
             }(),
             const SizedBox(height: 10),
-            Text('Πρόγραμμα ΟΑΣΑ (GTFS), ώρα αναχώρησης από την αφετηρία. Διαγραμμένη: δεν φάνηκε λεωφορείο.', style: TextStyle(fontSize: 12, color: t.muted)),
+            Text(
+                j['source'] == 'oasa-daily'
+                    ? 'Πρόγραμμα ημέρας ΟΑΣΑ, ώρα αναχώρησης από την αφετηρία.' // no seen flags: OASA runs are not matched
+                    : 'Πρόγραμμα ΟΑΣΑ (GTFS), ώρα αναχώρησης από την αφετηρία. Διαγραμμένη: δεν φάνηκε λεωφορείο.',
+                style: TextStyle(fontSize: 12, color: t.muted)),
           ]);
         },
       );

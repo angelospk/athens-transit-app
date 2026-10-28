@@ -185,12 +185,16 @@ int? slowAheadM(List<double?>? steps) {
 List<String>? departuresFor(Map<String, dynamic> schedule, Variant v) {
   final dirs = [for (final d in schedule['directions'] as List? ?? const []) d as Map<String, dynamic>];
   List<String> deps(Map<String, dynamic> d) => [for (final x in d['departures'] as List? ?? const []) '${(x as Map)['t'] ?? ''}'];
-  final want = fold(v.headsign);
-  if (want.isNotEmpty) {
-    for (final d in dirs) {
+  // A GTFS headsign names both ends ("start - via - end"); the timetable direction is named after its
+  // end. Its end first, then the whole name; a match must be the only one.
+  final want = fold(v.headsign), end = fold(v.headsign.split(' - ').last);
+  for (final w in [end, want]) {
+    if (w.isEmpty) continue;
+    final hit = dirs.where((d) {
       final h = fold('${d['headsign'] ?? ''}');
-      if (h.isNotEmpty && (h.contains(want) || want.contains(h))) return deps(d);
-    }
+      return h.isNotEmpty && (h.contains(w) || w.contains(h));
+    }).toList();
+    if (hit.length == 1) return deps(hit.single);
   }
   final same = dirs.where((d) => d['direction'] == v.direction).toList();
   return same.length == 1 ? deps(same.single) : null;

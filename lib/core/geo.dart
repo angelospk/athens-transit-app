@@ -54,6 +54,7 @@ typedef Proj = ({double s, double offM});
 const _tieM = 20.0; // other legs this close to the nearest are candidates too
 const _mergeM = 50.0; // candidates closer than this along the shape are one
 const _backM = 30.0; // GPS noise backwards along the route
+const _startM = 150.0; // the first stop within this of the shape's start sits at its start
 
 /// Every leg of the shape that passes within 20 m of the nearest one (and within
 /// [maxOffM]), by s, one per leg of a loop or out-and-back.
@@ -91,17 +92,19 @@ Proj? project(List<Pt> shape, Pt p, {double maxOffM = 150}) {
 }
 
 /// s of each stop, in order: among the legs at or after the previous stop, the closest
-/// one, then the earliest. Monotone non-decreasing.
+/// one, then the earliest. Monotone non-decreasing. The first stop is where the route starts:
+/// on a loop the end of the shape is the same place, and often nearer to the stop.
 List<double> stopOffsets(List<Pt> shape, List<Pt> stops) {
   var prev = 0.0;
   return [
-    for (final p in stops)
+    for (final (k, p) in stops.indexed)
       () {
         Proj? best;
         for (final c in projectCandidates(shape, p)) {
           if (c.s < prev - _backM) continue;
           if (best == null || c.offM < best.offM - 0.5) best = c;
         }
+        if (k == 0 && best != null && best.s > _startM && distM(shape.first, p) <= _startM) return 0.0;
         final s = max(prev, best?.s ?? prev);
         prev = s;
         return s;
