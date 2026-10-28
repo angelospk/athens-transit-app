@@ -425,6 +425,23 @@ void main() {
       expect((c.station, c.metroLine, c.metroTo), ('S', 'M1', 'R'));
     });
 
+    test('a reachable station behind three closer ones that lead nowhere', () {
+      final more = <MetroStation>[
+        ...stations,
+        // M3 next to the end, its other station far from any bus: no trip there.
+        (name: 'P', lat: 38.0503, lon: 23.7501, lines: ['M3']),
+        (name: 'Q', lat: 38.0504, lon: 23.7502, lines: ['M3']),
+        (name: 'U', lat: 38.0505, lon: 23.7503, lines: ['M3']),
+        (name: 'Far', lat: 38.3, lon: 24.0, lines: ['M3']),
+      ];
+      final c = busMetro(ix, more, [at(0)], [(38.0504, 23.7502)])!; // P, Q, U nearer than S
+      expect((c.station, c.metroTo), ('R', 'S'));
+    });
+
+    test('the same place at both ends: nothing', () {
+      expect(busMetro(ix, stations, [s], [s]), isNull);
+    });
+
     test('no metro near either end: nothing', () {
       expect(busMetro(ix, stations, [at(0)], [(38.2, 23.9)]), isNull);
     });

@@ -45,7 +45,7 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   MapLibreMapController? _map;
   bool _styled = false;
   final _tiles = <String, List<Vehicle>>{}; // "z/x/y" → vehicles
@@ -87,6 +87,7 @@ class _MapScreenState extends State<MapScreen> {
     });
     mapSel.addListener(_onSel);
     appTab.addListener(_onTab);
+    WidgetsBinding.instance.addObserver(this);
     myPosition().then((p) {
       if (!mounted || p == null) return;
       setState(() => _me = p);
@@ -98,6 +99,7 @@ class _MapScreenState extends State<MapScreen> {
   void dispose() {
     mapSel.removeListener(_onSel);
     appTab.removeListener(_onTab);
+    WidgetsBinding.instance.removeObserver(this);
     _refresh?.cancel();
     _glide?.cancel();
     _boardTimer?.cancel();
@@ -106,7 +108,19 @@ class _MapScreenState extends State<MapScreen> {
     super.dispose();
   }
 
+  // Paused, or another tab: the boarding check starts its minute again.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) _forgetTracks();
+  }
+
+  void _forgetTracks() {
+    _myTrack.clear();
+    _busTrack.clear();
+  }
+
   void _onTab() {
+    if (appTab.value != 0) _forgetTracks();
     if (mounted) setState(() {}); // back on the map tab walks the sheet back
     navCompact.value = false;
   }
@@ -442,6 +456,11 @@ class _MapScreenState extends State<MapScreen> {
       return;
     }
     final t = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    // A gap (the app was paused, another tab): the minute together starts again.
+    if (_myTrack.isNotEmpty && t - _myTrack.last.t > 25) {
+      _myTrack.clear();
+      _busTrack.clear();
+    }
     _myTrack
       ..add((t: t, at: p))
       ..removeWhere((f) => t - f.t > 90);

@@ -667,9 +667,11 @@ Place anyMetro(List<MetroStation> stations) => Place(
 ({TripLine bus, String station, String metroLine, String metroTo, bool busFirst, double min})? busMetro(
     TripIndex ix, List<MetroStation> stations, List<Pt> from, List<Pt> to,
     {double radius = 900, Set<String>? known, int tries = 3}) {
+  if (_closeEnough(from, to, radius)) return null;
   ({TripLine bus, String station, String metroLine, String metroTo, bool busFirst, double min})? best;
+  final legs = <String, TripLine?>{}; // one bus search per station and order
   for (final busFirst in [true, false]) {
-    // The metro end: a station within reach of the end (bus first) or of the start (metro first).
+    // The metro end: every station within reach of the end (bus first) or of the start (metro first).
     final ends = busFirst ? to : from, other = busFirst ? from : to;
     for (final s in stations) {
       final walk = _nearest((s.lat, s.lon), ends);
@@ -680,7 +682,8 @@ Place anyMetro(List<MetroStation> stations) => Place(
       ]..sort((a, b) => _nearest((a.lat, a.lon), other).compareTo(_nearest((b.lat, b.lon), other)));
       for (final r in rs.take(tries)) {
         final rPt = <Pt>[(r.lat, r.lon)];
-        final bus = (busFirst ? findTrips(ix, other, rPt, walkM, known) : findTrips(ix, rPt, other, walkM, known)).firstOrNull;
+        final bus = legs.putIfAbsent('$busFirst|${r.lat},${r.lon}',
+            () => (busFirst ? findTrips(ix, other, rPt, walkM, known) : findTrips(ix, rPt, other, walkM, known)).firstOrNull);
         if (bus == null) continue;
         final line = r.lines.firstWhere(s.lines.contains);
         // Metro at 30 km/h with the stops, five minutes to wait, and the walk at the metro end.
