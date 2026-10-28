@@ -26,15 +26,49 @@ Map<String, dynamic> sched(List<(int, String, List<String>)> dirs) => {
     };
 
 void main() {
-  test('the timetable direction of a variant: by headsign (folded), else the only one of its direction', () {
+  test('the timetable direction of a variant: by headsign (folded); no match is no timetable', () {
     final j = sched([(0, 'ΝΕΚΡ. ΖΩΓΡΑΦΟΥ', ['05:00']), (1, 'ΓΑΛΑΤΣΙ', ['06:00'])]);
     expect(departuresFor(j, st.variants['v1']!), ['05:00']);
     expect(departuresFor(j, st.variants['v2']!), ['06:00'], reason: 'Γαλάτσι = ΓΑΛΑΤΣΙ');
-    final byDir = sched([(0, 'ΑΛΛΟ', ['07:00']), (1, 'ΚΑΤΙ', ['08:00'])]);
-    expect(departuresFor(byDir, st.variants['v2']!), ['08:00']);
-    final twoSame = sched([(1, 'Χ', ['07:00']), (1, 'Ψ', ['08:00'])]);
-    expect(departuresFor(twoSame, st.variants['v2']!), isNull, reason: 'two directions 1, no headsign: unknown');
+    // Every GTFS variant has direction 0 here: a direction number says nothing.
+    final other = sched([(0, 'ΑΛΛΟ', ['07:00']), (1, 'ΚΑΤΙ', ['08:00'])]);
+    expect(departuresFor(other, st.variants['v2']!), isNull);
     expect(departuresFor(const {'directions': []}, st.variants['v1']!), isNull);
+  });
+
+  test('a timetable with only the other end gives no times, not the opposite direction (Codex)', () {
+    Variant v(String h) => Variant.fromJson({'headsign': h, 'direction': 0, 'shape': [], 'stops': []});
+    final goOnly = sched([(0, 'ΝΕΟ ΨΥΧΙΚΟ', ['05:00'])]);
+    expect(departuresFor(goOnly, v('Ν. ΦΙΛΑΔΕΛΦΕΙΑ - ΑΝΩ ΠΑΤΗΣΙΑ - ΝΕΟ ΨΥΧΙΚΟ')), ['05:00']);
+    expect(departuresFor(goOnly, v('ΝΕΟ ΨΥΧΙΚΟ - ΑΝΩ ΠΑΤΗΣΙΑ - Ν. ΦΙΛΑΔΕΛΦΕΙΑ')), isNull);
+  });
+
+  test('real OASA and GTFS names: notes in brackets and short forms still find the end (QA, 6 of 49 missed)', () {
+    Variant v(String h) => Variant.fromJson({'headsign': h, 'direction': 0, 'shape': [], 'stops': []});
+    String? to(List<String> dirs, String h) {
+      final j = sched([for (final (k, d) in dirs.indexed) (k, d, ['0$k:00'])]);
+      return departuresFor(j, v(h))?.single;
+    }
+    expect(to(['ΠΕΡΙΣΤΕΡΙ (ΑΝΘΟΥΠΟΛΗ) ΝΥΧΤΕΡΙΝΗ', 'ΓΛΥΦΑΔΑ'], 'ΓΛΥΦΑΔΑ - ΠΕΡΙΣΤΕΡΙ (ΑΝΘΟΥΠΟΛΗ) (ΝΥΧΤΕΡΙΝΗ)'), '00:00');
+    expect(to(['ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)'], 'ΙΛΙΟΝ - ΑΓ. ΦΑΝΟΥΡΙΟΣ - ΑΚΑΔΗΜΙΑ  (Εναλλακτική λόγω λαϊκής κάθε Σάββατο 05:00-17:00)'), '00:00');
+    expect(to(['ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)'], 'ΖΩΟΔΟΧΟΣ ΠΗΓΗ - ΑΚΑΔΗΜΙΑ(Προσωρινή λόγω έργων)'), '00:00');
+    expect(to(['ΠΡΟΦΗΤΗ ΔΑΝΙΗΛ', 'ΙΠΠΟΚΡΑΤΟΥΣ'], 'ΙΠΠΟΚΡΑΤΟΥΣ - ΠΡΟΦ. ΔΑΝΙΗΛ'), '00:00');
+    expect(to(['ΠΡΟΦΗΤΗ ΔΑΝΙΗΛ', 'ΙΠΠΟΚΡΑΤΟΥΣ'], 'ΠΡΟΦ. ΔΑΝΙΗΛ - ΙΠΠΟΚΡΑΤΟΥΣ'), '01:00');
+    expect(to(['Ν. ΚΥΨΕΛΗ (ΚΥΚΛΙΚΗ)'], 'ΑΚΑΔΗΜΙΑ - ΝΕΑ ΚΥΨΕΛΗ'), '00:00');
+    expect(to(['Ν. ΕΛΒΕΤΙΑ', 'ΑΝΩ ΠΑΤΗΣΙΑ'], 'Ν. ΕΛΒΕΤΙΑ - Ν. ΠΑΓΚΡΑΤΙ - Α. ΠΑΤΗΣΙΑ (Προσωρινή λόγω έργων)'), '01:00');
+    expect(to(['ΝΕΑ ΣΜΥΡΝΗ', 'ΠΑΛΑΙΑ ΣΜΥΡΝΗ'], 'ΚΕΝΤΡΟ - Ν. ΣΜΥΡΝΗ'), isNull, reason: 'the last word fits both: unknown');
+    expect(to(['ΝΕΑ ΣΜΥΡΝΗ'], 'ΝΕΑ ΣΜΥΡΝΗ - ΠΑΛΑΙΑ ΣΜΥΡΝΗ'), isNull, reason: 'the only direction is the start: not this one (Codex)');
+    expect(to(['ΝΕΑ ΣΜΥΡΝΗ'], 'Ν. ΣΜΥΡΝΗ - ΠΑΛΑΙΑ ΣΜΥΡΝΗ'), isNull, reason: 'the start written short');
+  });
+
+  test('two directions with the same times stay two directions (Codex)', () {
+    Variant v(String h) => Variant.fromJson({'headsign': h, 'direction': 0, 'shape': [], 'stops': []});
+    final j = sched([(0, 'ΝΕΟ ΨΥΧΙΚΟ', ['05:00', '05:30']), (1, 'Ν. ΦΙΛΑΔΕΛΦΕΙΑ', ['05:00', '05:30'])]);
+    final a = directionFor(j, v('Ν. ΦΙΛΑΔΕΛΦΕΙΑ - ΑΝΩ ΠΑΤΗΣΙΑ - ΝΕΟ ΨΥΧΙΚΟ'));
+    final b = directionFor(j, v('ΝΕΟ ΨΥΧΙΚΟ - ΑΝΩ ΠΑΤΗΣΙΑ - Ν. ΦΙΛΑΔΕΛΦΕΙΑ'));
+    expect(a, isNotNull);
+    expect(identical(a, b), isFalse);
+    expect(identical(a, directionFor(j, v('ΝΕΟ ΨΥΧΙΚΟ (ΣΑΒΒΑΤΟ)'))), isTrue, reason: 'a detour variant to the same end: the same direction');
   });
 
   test('a GTFS headsign names both ends («start - via - end»): the timetable direction is the one to its end', () {

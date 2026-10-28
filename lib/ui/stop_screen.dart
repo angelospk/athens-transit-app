@@ -80,11 +80,12 @@ class _StopPanelState extends State<StopPanel> {
         final b = best[e.value.headsign];
         if (b == null || st.variants[b.$1]!.stops.length < e.value.stops.length) best[e.value.headsign] = (e.key, i);
       }
-      final used = <String>{}; // two variants on one timetable direction (a Saturday detour) are one run
+      final used = <Map<String, dynamic>>{}; // two variants on one timetable direction (a Saturday detour) are one run
       final byLength = best.entries.toList()..sort((a, b) => st.variants[b.value.$1]!.stops.length.compareTo(st.variants[a.value.$1]!.stops.length));
       for (final MapEntry(key: h, value: (vid, i)) in byLength) {
-        final deps = departuresFor(j, st.variants[vid]!);
-        if (deps == null || !used.add(deps.join(','))) continue;
+        final dir = directionFor(j, st.variants[vid]!);
+        if (dir == null || !used.add(dir)) continue;
+        final deps = departuresFor(j, st.variants[vid]!)!;
         final after = live.where((a) => a.line == l && a.headsign == h).fold<int?>(null, (m, a) => m == null || a.etaS > m ? a.etaS : m);
         for (final eta in plannedEtas(deps, st, vid, i, nowWall, afterS: after).take(2)) {
           out.add((l, h, eta));

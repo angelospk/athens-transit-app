@@ -179,25 +179,36 @@ int? slowAheadM(List<double?>? steps) {
   return null;
 }
 
-/// The departures of the timetable direction (backend /v1/lines/{id}/schedule) that matches [v]: the
-/// same headsign (folded, either contains the other), else the only direction with v.direction.
-/// null when none fits for sure.
-List<String>? departuresFor(Map<String, dynamic> schedule, Variant v) {
+/// The timetable direction (backend /v1/lines/{id}/schedule) that matches [v], or null when none fits
+/// for sure. A GTFS headsign names both ends ("start - via - end"), and the timetable direction is named
+/// after its end. Names are folded and lose notes in brackets ("(Προσωρινή λόγω έργων)"). The only
+/// direction that matches that end (either contains the other), else the only one with its last word
+/// ("Α. ΠΑΤΗΣΙΑ" = "ΑΝΩ ΠΑΤΗΣΙΑ") that does not also fit the start, else the only one with the same
+/// whole name. Never by direction number:
+/// every GTFS variant has 0.
+Map<String, dynamic>? directionFor(Map<String, dynamic> schedule, Variant v) {
   final dirs = [for (final d in schedule['directions'] as List? ?? const []) d as Map<String, dynamic>];
-  List<String> deps(Map<String, dynamic> d) => [for (final x in d['departures'] as List? ?? const []) '${(x as Map)['t'] ?? ''}'];
-  // A GTFS headsign names both ends ("start - via - end"); the timetable direction is named after its
-  // end. Its end first, then the whole name; a match must be the only one.
-  final want = fold(v.headsign), end = fold(v.headsign.split(' - ').last);
-  for (final w in [end, want]) {
-    if (w.isEmpty) continue;
-    final hit = dirs.where((d) {
-      final h = fold('${d['headsign'] ?? ''}');
-      return h.isNotEmpty && (h.contains(w) || w.contains(h));
-    }).toList();
-    if (hit.length == 1) return deps(hit.single);
+  String plain(String s) => fold(s).replaceAll(RegExp(r'\([^)]*\)?'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+  String h(Map<String, dynamic> d) => plain('${d['headsign'] ?? ''}');
+  Map<String, dynamic>? only(bool Function(String h) fits) {
+    final hit = dirs.where((d) => h(d).isNotEmpty && fits(h(d))).toList();
+    return hit.length == 1 ? hit.single : null;
   }
-  final same = dirs.where((d) => d['direction'] == v.direction).toList();
-  return same.length == 1 ? deps(same.single) : null;
+
+  final parts = v.headsign.split(' - ');
+  final end = plain(parts.last), start = plain(parts.first);
+  List<String> words(String s) => s.split(RegExp(r'[ .]'));
+  bool near(String x, String place) =>
+      place.isNotEmpty && (x.contains(place) || place.contains(x) || (words(place).last.length >= 4 && words(x).contains(words(place).last)));
+  return (end.isEmpty ? null : only((x) => x.contains(end) || end.contains(x))) ??
+      (parts.length < 2 ? null : only((x) => near(x, end) && !near(x, start))) ?? // the start shares the word: not it
+      only((x) => x == plain(v.headsign));
+}
+
+/// The departures ("HH:MM") of [directionFor].
+List<String>? departuresFor(Map<String, dynamic> schedule, Variant v) {
+  final d = directionFor(schedule, v);
+  return d == null ? null : [for (final x in d['departures'] as List? ?? const []) '${(x as Map)['t'] ?? ''}'];
 }
 
 /// Seconds until runs that have not started yet reach stop [i] of [variantId]: each departure from the
