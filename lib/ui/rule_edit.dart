@@ -97,7 +97,8 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
     }
   }
 
-  int get effectiveN => when == When.leave ? Deps.of(context).store.walkMin + 5 : n;
+  // A leave rule keeps its own lead (the alert sheet set it from the real walk); a new one: walk + 5′.
+  int get effectiveN => when == When.leave ? (widget.rule?.kind == RuleKind.leave ? widget.rule!.n : Deps.of(context).store.walkMin + 5) : n;
 
   Future<void> _save() async {
     final d = Deps.of(context);

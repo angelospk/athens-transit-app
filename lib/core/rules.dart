@@ -220,7 +220,8 @@ class RuleWatcher {
         final left = stopsLeft(stops, r.stopIndex, v, nowS);
         final eta = etaSeconds(st, v, r.stopIndex, nowS);
         final lateMin = r.lateMin;
-        if (lateMin != null && (v.delayS ?? 0) >= lateMin * 60 && !_fired.containsKey('late|$key')) {
+        // Within the hour only: a bus waiting at its start grows a delay long before it matters.
+        if (lateMin != null && eta != null && eta <= 3600 && (v.delayS ?? 0) >= lateMin * 60 && !_fired.containsKey('late|$key')) {
           _fired['late|$key'] = nowS;
           hits.add(RuleHit(ruleId: r.id, line: r.line, vehicleId: v.id, stopsLeft: left, etaS: eta, delayS: v.delayS, late: true));
         }

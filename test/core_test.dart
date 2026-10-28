@@ -415,6 +415,13 @@ void main() {
       expect(hits.map((h) => h.late), [true, false]);
     });
 
+    test('watcher: a late bus more than an hour from the stop (e.g. waiting at the start) gives no delay alert yet', () {
+      final st = {'T1': straightLine()};
+      // 2000 m to the stop at 0.51 m/s: about 65′.
+      final live = {'T1': LineLive(line: 'T1', updatedAt: 1000, nextUpdateAt: 1030, vehicles: [vehicleAt(0, next: 's1', speeds: List.filled(10, 0.51), speed: 0.51, delay: 900, id: 'A')])};
+      expect(RuleWatcher().check([rule().copyWith(lateMin: 5)], st, live, 1000), isEmpty);
+    });
+
     test('watcher: a bus past the stop gives no delay alert', () {
       final st = {'T1': straightLine()};
       final live = {'T1': LineLive(line: 'T1', updatedAt: 1000, nextUpdateAt: 1030, vehicles: [vehicleAt(2500, next: 's3', speeds: List.filled(8, 5.0), delay: 900, id: 'A')])};

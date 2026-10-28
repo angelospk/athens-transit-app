@@ -51,11 +51,12 @@ class _StopPanelState extends State<StopPanel> {
   Future<void> _loadSchedules() async {
     final api = Deps.of(context).api;
     final stop = s;
-    final got = <String, Map<String, dynamic>>{};
-    for (final l in stop.lines.take(12)) {
-      final j = await api.cachedSchedule(l);
-      if (j != null && j['expired'] != true) got[l] = j; // an expired timetable is not today's
-    }
+    final lines = stop.lines.take(12).toList();
+    final all = await Future.wait(lines.map(api.cachedSchedule));
+    final got = <String, Map<String, dynamic>>{
+      for (var k = 0; k < lines.length; k++)
+        if (all[k] case final j? when j['expired'] != true) lines[k]: j, // an expired timetable is not today's
+    };
     if (mounted && stop == s) setState(() => _schedules = got);
   }
 
