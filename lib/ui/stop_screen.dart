@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../core/athens_time.dart';
 import '../core/eta.dart';
 import '../core/models.dart';
 import '../data/live.dart';
@@ -34,6 +35,7 @@ class StopPanel extends StatefulWidget {
 class _StopPanelState extends State<StopPanel> {
   bool all = false;
   Map<String, LineLive> others = {};
+  Map<String, Map<String, dynamic>> _schedules = {}; // line -> today's timetable, when the backend has it
   Timer? _timer;
 
   StopRef get s => widget.stop;
@@ -43,6 +45,48 @@ class _StopPanelState extends State<StopPanel> {
     super.didChangeDependencies();
     _timer ??= Timer.periodic(const Duration(seconds: 30), (_) => _loadOthers());
     if (others.isEmpty) _loadOthers();
+    if (_schedules.isEmpty) _loadSchedules();
+  }
+
+  Future<void> _loadSchedules() async {
+    final api = Deps.of(context).api;
+    final stop = s;
+    final got = <String, Map<String, dynamic>>{};
+    for (final l in stop.lines.take(12)) {
+      final j = await api.cachedSchedule(l);
+      if (j != null && j['expired'] != true) got[l] = j; // an expired timetable is not today's
+    }
+    if (mounted && stop == s) setState(() => _schedules = got);
+  }
+
+  // Runs not started yet, from today's timetable: one direction per headsign, after the last live bus
+  // of that direction. (line, headsign, eta s), soonest first.
+  List<(String, String, int)> _planned(List<String> lines, List<Arrival> live) {
+    final d = Deps.of(context);
+    final w = athensWall(DateTime.now().toUtc());
+    final nowWall = w.hour * 3600 + w.minute * 60 + w.second;
+    final out = <(String, String, int)>[];
+    for (final l in lines) {
+      final j = _schedules[l], st = d.live.statics[l];
+      if (j == null || st == null) continue;
+      final ids = stopIdsNear(st, s.name, s.lat, s.lon).toSet();
+      final best = <String, (String, int)>{}; // headsign -> (variant, stop index), the longest variant
+      for (final e in st.variants.entries) {
+        final i = e.value.stops.indexWhere(ids.contains);
+        if (i < 0 || i == e.value.stops.length - 1) continue; // the terminus: nobody boards there
+        final b = best[e.value.headsign];
+        if (b == null || st.variants[b.$1]!.stops.length < e.value.stops.length) best[e.value.headsign] = (e.key, i);
+      }
+      for (final MapEntry(key: h, value: (vid, i)) in best.entries) {
+        final deps = departuresFor(j, st.variants[vid]!);
+        if (deps == null) continue;
+        final after = live.where((a) => a.line == l && a.headsign == h).fold<int?>(null, (m, a) => m == null || a.etaS > m ? a.etaS : m);
+        for (final eta in plannedEtas(deps, st, vid, i, nowWall, afterS: after).take(2)) {
+          out.add((l, h, eta));
+        }
+      }
+    }
+    return out..sort((a, b) => a.$3.compareTo(b.$3));
   }
 
   Future<void> _loadOthers() async {
@@ -59,7 +103,9 @@ class _StopPanelState extends State<StopPanel> {
     if (old.stop != widget.stop) {
       all = false;
       others = {};
+      _schedules = {};
       _loadOthers();
+      _loadSchedules();
     }
   }
 
@@ -102,6 +148,7 @@ class _StopPanelState extends State<StopPanel> {
         final quiet = s.lines.where((l) => !groups.any((g) => g.$1.line == l)).toList();
         // With "my lines", the other lines come below in short rows: "Περνούν επίσης".
         final also = showAll ? const <(Arrival, List<Arrival>)>[] : groupArrivals(_arrivals(true)).where((g) => !mine.contains(g.$1.line)).take(4).toList();
+        final planned = _planned(showAll ? s.lines : mine, _arrivals(true)).take(6).toList();
         return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
             const SheetHandle(),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -189,6 +236,29 @@ class _StopPanelState extends State<StopPanel> {
                     ]),
                   ),
                 ),
+            ],
+            if (planned.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 16, bottom: 4),
+                child: Text('Δεν ξεκίνησαν ακόμη · από το πρόγραμμα', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+              ),
+              for (final (line, h, eta) in planned)
+                InkWell(
+                  onTap: () => mapSel.value = LineSel(line),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(children: [
+                      LineBadge(line),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text('→ ${titleCase(h)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: t.muted)),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('~${mins(eta)} · ${clockIn(eta)}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: t.muted)),
+                    ]),
+                  ),
+                ),
+              Text('Ώρα αναχώρησης από την αφετηρία + η διαδρομή ως εδώ με μέση ταχύτητα. Όχι live.', style: TextStyle(fontSize: 12, color: t.muted)),
             ],
             if (quiet.isNotEmpty && showAll) ...[
               const SizedBox(height: 12),

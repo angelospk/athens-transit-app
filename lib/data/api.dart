@@ -183,6 +183,17 @@ class Api {
       parseRailDepartures(await _get('$railUrl/stations/${Uri.encodeComponent(stationId)}/departures?limit=$limit'));
 
   // A line's timetable for today, by direction (backend, OASA GTFS): null until the backend serves it.
+  // The timetable for the stops' "not started yet" rows: kept 10 minutes per line, failures too.
+  final _schedules = <String, (int, Future<Map<String, dynamic>?>)>{};
+  Future<Map<String, dynamic>?> cachedSchedule(String line) {
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final hit = _schedules[line];
+    if (hit != null && now - hit.$1 < 600) return hit.$2;
+    final f = lineSchedule(line).catchError((Object _) => null);
+    _schedules[line] = (now, f);
+    return f;
+  }
+
   Future<Map<String, dynamic>?> lineSchedule(String line) async {
     try {
       return (await _get('$apiBase/v1/lines/${Uri.encodeComponent(line)}/schedule')) as Map<String, dynamic>;

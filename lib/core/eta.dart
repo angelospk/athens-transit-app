@@ -1,5 +1,6 @@
 import 'geo.dart';
 import 'models.dart';
+import 'nearby.dart' show fold;
 
 const maxFixAgeS = 120; // an older position says nothing about where the bus is now
 const _fallbackSpeed = 4.2; // m/s
@@ -176,4 +177,44 @@ int? slowAheadM(List<double?>? steps) {
     if (v != null && v * 3.6 < 10) return i * 200;
   }
   return null;
+}
+
+/// The departures of the timetable direction (backend /v1/lines/{id}/schedule) that matches [v]: the
+/// same headsign (folded, either contains the other), else the only direction with v.direction.
+/// null when none fits for sure.
+List<String>? departuresFor(Map<String, dynamic> schedule, Variant v) {
+  final dirs = [for (final d in schedule['directions'] as List? ?? const []) d as Map<String, dynamic>];
+  List<String> deps(Map<String, dynamic> d) => [for (final x in d['departures'] as List? ?? const []) '${(x as Map)['t'] ?? ''}'];
+  final want = fold(v.headsign);
+  if (want.isNotEmpty) {
+    for (final d in dirs) {
+      final h = fold('${d['headsign'] ?? ''}');
+      if (h.isNotEmpty && (h.contains(want) || want.contains(h))) return deps(d);
+    }
+  }
+  final same = dirs.where((d) => d['direction'] == v.direction).toList();
+  return same.length == 1 ? deps(same.single) : null;
+}
+
+/// Seconds until runs that have not started yet reach stop [i] of [variantId]: each departure from the
+/// start ("HH:MM", GTFS style, "24:15" after midnight) not yet gone at [nowWallS] (seconds since Athens
+/// midnight), plus the distance to the stop at [speedMps]. Within [horizonS]; with [afterS], only runs
+/// more than 2′ after it (the last live bus of the direction covers its own run).
+List<int> plannedEtas(List<String> deps, LineStatic st, String variantId, int i, int nowWallS,
+    {int? afterS, double speedMps = 4.2, int horizonS = 3600}) {
+  final offs = st.offsetsFor(variantId);
+  if (i < 0 || i >= offs.length) return const [];
+  final run = (offs[i] - offs.first) / speedMps;
+  final out = <int>[];
+  for (final t in deps) {
+    final p = t.split(':');
+    final h = p.length >= 2 ? int.tryParse(p[0]) : null, m = p.length >= 2 ? int.tryParse(p[1]) : null;
+    if (h == null || m == null) continue;
+    final dep = h * 3600 + m * 60;
+    if (dep < nowWallS - 60) continue; // gone: a live bus or a run that did not start
+    final eta = (dep + run - nowWallS).round();
+    if (eta > horizonS || (afterS != null && eta <= afterS + 120)) continue;
+    out.add(eta);
+  }
+  return out..sort();
 }
