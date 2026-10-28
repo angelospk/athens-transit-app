@@ -14,6 +14,23 @@ with the app closed. Android first; the code is shared with iOS.
 Map · stop · alert · weekly rules · home-screen widget (Android emulator, live data; the emulator does
 not draw the map's street names).
 
+What it does:
+
+- **Map**: every bus of the city live, coloured by delay, moving along its route between GPS fixes;
+  metro, tram and suburban rail stations with their next trains.
+- **Stops and lines**: next arrivals live, runs not started yet from today's timetable, runs that did
+  not start («Δεν ξεκίνησαν») with another option; a line's timetable with each run seen or missed,
+  the gaps between its buses and slow stretches ahead.
+- **Διαδρομή (planner)**: bus without or with one change, bus + metro; a step-by-step screen with the
+  next bus live, «φύγε σε N′», «Ανέβηκα» and «Ακολούθησέ με».
+- **Alerts that run with the app closed**: minutes or stops before the bus, «Πότε να φύγω» from your
+  position, «Πες μου και αν αργεί», weekly rules, a live card on the lock screen, «Είμαι μέσα» (one
+  stop before you get off), «Ακολούθησέ με» (notices when you board), the last bus of the day and a
+  Friday/Saturday evening suggestion for the last bus home.
+- **Αγαπημένα** (home and work stops first by time of day), network statistics, home-screen widget.
+
+Changes per version: [CHANGELOG.md](CHANGELOG.md). Manual test list: [docs/TEST-CHECKLIST.md](docs/TEST-CHECKLIST.md).
+
 Sibling projects:
 
 | Repo | Local path | What |
@@ -36,6 +53,9 @@ notes. The signing key is not in the repo: CI reads it from the `ANDROID_KEYSTOR
 
 - Live: `https://transit.haroldpoi.dev/v1/lines/{id}` for the user's lines (max 5, as the contract asks)
   and `/v1/vehicles/tiles/{z}/{x}/{y}` for the map view.
+- Timetables and rail (same backend): `/v1/lines/{id}/schedule` (today's OASA timetable, `seen` per
+  run), `/v1/rail/stasy/departures` (metro, tram), `/v1/rail/suburban/...` (suburban rail, live).
+  API reference: [docs/API.md](https://github.com/angelospk/athens-transit-rt/blob/main/docs/API.md).
 - Static: `https://angelospk.github.io/athens-transit-rt/static/v1/` (lines, shapes, stops).
 - Stop index: `https://bus.haroldpoi.dev/trips.json` (every stop with the lines that stop there).
 - Map: OpenFreeMap vector styles (OpenStreetMap data) through MapLibre, as on the web.
@@ -48,8 +68,9 @@ estimates from that copy (shown with `~`).
 - `lib/core/` — pure Dart, tested: models, geometry, ETA from typical speeds (`path_speeds`), nearby
   stops, Athens time, alert rules and the watcher that fires each trip once.
 - `lib/data/` — HTTP, disk cache, saved state, live polling.
-- `lib/background/` — the foreground service that watches active rules (30 s polls, a notification per
-  trip, an ongoing "live" notification) and the exact alarm that starts it for weekly rules.
+- `lib/background/` — the foreground service that watches active rules (a notification per trip, an
+  ongoing "live" notification; with the location type while a trip is followed, to notice boarding),
+  the exact alarm that starts it for weekly rules, and the alarms for time notes (the last bus).
 - `lib/ui/` — screens from the mockups (claude.ai artifact "Athens Transit App mockups").
 
 ## Run
