@@ -394,4 +394,39 @@ void main() {
     expect(c.$1, closeTo(38.001, 1e-9));
     expect(c.$2, closeTo(23.701, 1e-9));
   });
+
+  group('bus and metro', () {
+    // Bus A on stops 0..10 (38.000-38.010, 23.7); metro M1 from R (by stop 10) to S, ~6 km away.
+    final ix = tripIndex({
+      'A': {
+        'up': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'down': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+      },
+    });
+    final stations = <MetroStation>[
+      (name: 'R', lat: 38.0101, lon: 23.7, lines: ['M1']),
+      (name: 'S', lat: 38.05, lon: 23.75, lines: ['M1']),
+      (name: 'X', lat: 38.06, lon: 23.80, lines: ['M2']),
+    ];
+    final s = (38.0502, 23.7502);
+
+    test('a bus to a metro station, then the metro to near the end', () {
+      final c = busMetro(ix, stations, [at(0)], [s])!;
+      expect(c.busFirst, isTrue);
+      expect(c.bus.line, 'A');
+      expect((c.station, c.metroLine, c.metroTo), ('R', 'M1', 'S'));
+      expect(c.min, greaterThan(c.bus.min));
+    });
+
+    test('the metro first, then a bus', () {
+      final c = busMetro(ix, stations, [s], [at(0)])!;
+      expect(c.busFirst, isFalse);
+      expect(c.bus.line, 'A');
+      expect((c.station, c.metroLine, c.metroTo), ('S', 'M1', 'R'));
+    });
+
+    test('no metro near either end: nothing', () {
+      expect(busMetro(ix, stations, [at(0)], [(38.2, 23.9)]), isNull);
+    });
+  });
 }

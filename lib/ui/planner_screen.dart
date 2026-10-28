@@ -225,12 +225,25 @@ class _PlannerScreenState extends State<PlannerScreen> {
     ),
   );
 
-  List<Widget> _results(Tones t, TripIndex ix, _End from, _End to) {
+  // The planning runs once per question, not on every rebuild (the live cards rebuild often).
+  Object? _planKey;
+  late _Plan _plan;
+
+  _Plan _planFor(TripIndex ix, _End from, _End to) {
+    final key = (ix, from, to, _metro, _known, _stations);
+    if (key == _planKey) return _plan;
     final direct = tp.findTrips(ix, from.pts, to.pts, tp.walkM, _known).take(5).toList();
     final changes = direct.length >= 3 ? const <tp.TripTransfer>[] : tp.findTransfers(ix, from.pts, to.pts, tp.walkM, _known);
     final metro = _metro && _stations.isNotEmpty ? tp.metroDirect(_stations, from.pts, to.pts, 900) : null;
+    final combo = _metro && metro == null && _stations.isNotEmpty ? tp.busMetro(ix, _stations, from.pts, to.pts, known: _known) : null;
+    _planKey = key;
+    return _plan = (direct: direct, changes: changes, metro: metro, combo: combo);
+  }
+
+  List<Widget> _results(Tones t, TripIndex ix, _End from, _End to) {
+    final (:direct, :changes, :metro, :combo) = _planFor(ix, from, to);
     final now = _at == null;
-    if (direct.isEmpty && changes.isEmpty && metro == null) {
+    if (direct.isEmpty && changes.isEmpty && metro == null && combo == null) {
       return [
         Padding(
           padding: const EdgeInsets.all(16),
@@ -243,6 +256,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
     }
     return [
       if (metro != null) _metroCard(t, metro),
+      if (combo != null) _comboCard(t, ix, combo),
       if (direct.isNotEmpty) _head(t, 'Χωρίς αλλαγή'),
       for (final r in direct) _DirectCard(key: ValueKey('${r.line}|${from.label}|${to.label}'), ix: ix, trip: r, from: from.pts, live: now),
       if (changes.isNotEmpty) _head(t, 'Με μία αλλαγή'),
@@ -282,6 +296,45 @@ class _PlannerScreenState extends State<PlannerScreen> {
       },
     ),
   );
+
+  // A bus and the metro: the bus leg as on the other cards, then (or before it) the metro.
+  Widget _comboCard(Tones t, TripIndex ix, _Combo c) {
+    final v = c.bus.variants.first;
+    final board = ix.s[v.from];
+    final metro = '${c.metroLine.startsWith('T') ? 'Τραμ' : 'Μετρό'} ${c.metroLine}: ${titleCase(c.station)} → ${titleCase(c.metroTo)}';
+    final bus = '${c.bus.line}: ${titleCase(board.$1)} → ${titleCase(ix.s[v.to].$1)}';
+    return Card(
+      elevation: 0,
+      color: t.surface,
+      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => c.busFirst
+            ? showOnMap(StopSel(StopRef(name: board.$1, lat: board.$2, lon: board.$3, lines: linesAt(ix, board.$1, board.$2, board.$3))))
+            : switch (_stations.where((x) => x.name == c.station).firstOrNull) {
+                final st? => showOnMap(StationSel(st.name, (st.lat, st.lon), lines: st.lines)),
+                null => null,
+              },
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Icon(c.busFirst ? Icons.directions_bus_outlined : Icons.subway_outlined, size: 20, color: t.muted),
+              Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: Icon(Icons.arrow_forward, size: 16, color: t.muted)),
+              Icon(c.busFirst ? Icons.subway_outlined : Icons.directions_bus_outlined, size: 20, color: t.muted),
+              const Spacer(),
+              Text('~${c.min.round()}′', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+            ]),
+            const SizedBox(height: 6),
+            Text(c.busFirst ? bus : metro, style: const TextStyle(fontSize: 15)),
+            Text(c.busFirst ? metro : bus, style: const TextStyle(fontSize: 15)),
+            Text('Μετρό με το πρόγραμμα (όχι live), αναμονή ~5′.', style: TextStyle(fontSize: 12, color: t.muted)),
+          ]),
+        ),
+      ),
+    );
+  }
 
   Widget _changeCard(Tones t, TripIndex ix, tp.TripTransfer c) {
     final a = c.legs.first, b = c.legs.last;
@@ -652,3 +705,11 @@ class _PlacePickerState extends State<_PlacePicker> {
     );
   }
 }
+
+typedef _Combo = ({tp.TripLine bus, String station, String metroLine, String metroTo, bool busFirst, double min});
+typedef _Plan = ({
+  List<tp.TripLine> direct,
+  List<tp.TripTransfer> changes,
+  ({String line, String from, String to, double walk})? metro,
+  _Combo? combo,
+});

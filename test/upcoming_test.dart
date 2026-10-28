@@ -35,4 +35,12 @@ void main() {
     expect(gtfsClock('08:15'), '08:15');
     expect(gtfsClock('x'), 'x');
   });
+
+  test('a slow stretch ahead: metres to the first 200 m step under 10 km/h, within 2 km', () {
+    expect(slowAheadM([5.0, 4.0, 2.0, 6.0]), 400); // 2 m/s = 7.2 km/h
+    expect(slowAheadM([5.0, null, 5.0]), isNull);
+    expect(slowAheadM([1.0]), 0);
+    expect(slowAheadM([for (var i = 0; i < 10; i++) 5.0, 1.0]), isNull); // beyond 2 km
+    expect(slowAheadM(null), isNull);
+  });
 }

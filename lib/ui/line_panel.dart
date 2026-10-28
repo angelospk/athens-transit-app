@@ -307,6 +307,12 @@ class _LinePanelState extends State<LinePanel> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              // Traffic ahead: the typical speed of the next 2 km (path_speeds) under 10 km/h somewhere.
+              if (slowAheadM(v.pathSpeeds) case final m?)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Text(m == 0 ? 'αργό κομμάτι' : 'αργό σε $m μ.', style: TextStyle(fontSize: 12, color: t.late)),
+                ),
               if (delayNote(context, v.delayS) case final n?) Text(n.$1, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: n.$2)),
               Icon(Icons.chevron_right, color: t.muted),
             ]),

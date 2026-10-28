@@ -660,3 +660,38 @@ Place anyMetro(List<MetroStation> stations) => Place(
   }
   return best;
 }
+
+/// A bus to a metro (or tram) station and the metro on to a station near the end, or the metro
+/// first and a bus after it. Only the [tries] stations of the shared line nearest the other end
+/// are tried, so it stays cheap. The quickest of both orders, or null.
+({TripLine bus, String station, String metroLine, String metroTo, bool busFirst, double min})? busMetro(
+    TripIndex ix, List<MetroStation> stations, List<Pt> from, List<Pt> to,
+    {double radius = 900, Set<String>? known, int tries = 3}) {
+  ({TripLine bus, String station, String metroLine, String metroTo, bool busFirst, double min})? best;
+  for (final busFirst in [true, false]) {
+    // The metro end: a station within reach of the end (bus first) or of the start (metro first).
+    final ends = busFirst ? to : from, other = busFirst ? from : to;
+    for (final s in stations) {
+      final walk = _nearest((s.lat, s.lon), ends);
+      if (walk > radius) continue;
+      final rs = [
+        for (final r in stations)
+          if (r.name != s.name && r.lines.any(s.lines.contains)) r,
+      ]..sort((a, b) => _nearest((a.lat, a.lon), other).compareTo(_nearest((b.lat, b.lon), other)));
+      for (final r in rs.take(tries)) {
+        final rPt = <Pt>[(r.lat, r.lon)];
+        final bus = (busFirst ? findTrips(ix, other, rPt, walkM, known) : findTrips(ix, rPt, other, walkM, known)).firstOrNull;
+        if (bus == null) continue;
+        final line = r.lines.firstWhere(s.lines.contains);
+        // Metro at 30 km/h with the stops, five minutes to wait, and the walk at the metro end.
+        final min = bus.min + distM((r.lat, r.lon), (s.lat, s.lon)) / 500 + 5 + _walkMin(walk);
+        if (best == null || min < best.min) {
+          best = busFirst
+              ? (bus: bus, station: r.name, metroLine: line, metroTo: s.name, busFirst: true, min: min)
+              : (bus: bus, station: s.name, metroLine: line, metroTo: r.name, busFirst: false, min: min);
+        }
+      }
+    }
+  }
+  return best;
+}
