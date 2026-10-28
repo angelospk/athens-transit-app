@@ -55,10 +55,20 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
       line = r.line;
       variant = r.variant;
       variants = {r.variant: (r.stopIndex, r.stopId, '')};
+      if (fav == null) _stopOfRule(r); // made at a stop the user did not save
     } else if (fav == null && store.favs.isNotEmpty) {
       final f = store.favsByTime(DateTime.now().toUtc()).first;
       _pickStop(f);
     }
+  }
+
+  // The rule's own stop, placed from the line's static data; the sentence and the save need it.
+  Future<void> _stopOfRule(Rule r) async {
+    try {
+      final st = await Deps.of(context).api.lineStatic(r.line);
+      final s = st.stops[r.stopId];
+      if (s != null && mounted && fav == null && line == r.line) setState(() => fav = FavStop(name: r.stopName, lat: s.lat, lon: s.lon));
+    } catch (_) {}
   }
 
   Future<void> _pickStop(FavStop f) async {
@@ -179,7 +189,7 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
         ],
       ),
       body: ListView(padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.paddingOf(context).bottom), children: [
-        if (store.favs.isEmpty)
+        if (store.favs.isEmpty && fav == null)
           Text('Πρώτα αποθήκευσε μια στάση (καρτέλα Στάσεις).', style: TextStyle(color: t.muted))
         else
           DefaultTextStyle.merge(
