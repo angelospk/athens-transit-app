@@ -158,6 +158,46 @@ bool complete(DayStats d) => gaps(d).isEmpty;
 // Saturday and Sunday, from the calendar date of the day file.
 bool isWeekend(String date) => DateTime.parse('${date}T12:00:00Z').weekday >= DateTime.saturday;
 
+typedef WorstOver = ({List<Worst> missed, List<Ranked> slow, int expiredDays});
+
+// The worst lines over several days: the largest share of missed trips (summed per line, only on
+// days the line was seen at all, as in tripShare) and the slowest pooled speed. expiredDays: days
+// whose trips were measured against an expired timetable, so "missed" may be a changed timetable.
+WorstOver worstOver(List<DayStats> days, {int n = 5}) {
+  final missed = <String, int>{}, measured = <String, int>{};
+  final dist = <String, double>{}, time = <String, double>{};
+  var expired = 0;
+  for (final d in days) {
+    final t = d.trips;
+    if (t != null && t.gtfsExpired) expired++;
+    for (final l in t?.byLine ?? const <TripLine>[]) {
+      if (l.run + l.partial == 0) continue;
+      missed[l.line] = (missed[l.line] ?? 0) + l.missed;
+      measured[l.line] = (measured[l.line] ?? 0) + l.planned - l.unmeasured;
+    }
+    for (final l in d.byLine) {
+      dist[l.line] = (dist[l.line] ?? 0) + l.distM;
+      time[l.line] = (time[l.line] ?? 0) + l.timeS;
+    }
+  }
+  final worst = <Worst>[
+    for (final e in missed.entries)
+      if (e.value > 0 && measured[e.key]! >= minLineTrips) (line: e.key, missed: e.value, measured: measured[e.key]!),
+  ]..sort((a, b) {
+      final c = (b.missed / b.measured).compareTo(a.missed / a.measured);
+      return c != 0 ? c : a.line.compareTo(b.line);
+    });
+  final slow = <Ranked>[
+    for (final e in time.entries)
+      if (e.value >= minLineHours * 3600)
+        (line: e.key, kmh: dist[e.key]! / e.value * 3.6, km: (dist[e.key]! / 1000).round(), hours: (e.value / 3600).round()),
+  ]..sort((a, b) {
+      final c = a.kmh.compareTo(b.kmh);
+      return c != 0 ? c : a.line.compareTo(b.line);
+    });
+  return (missed: worst.take(n).toList(), slow: slow.take(n).toList(), expiredDays: expired);
+}
+
 typedef HourBand = ({int h, double? kmh, double? min, double? max, int n});
 
 // Per local hour: pooled km/h over the days, the slowest and fastest day, and the days with a speed.

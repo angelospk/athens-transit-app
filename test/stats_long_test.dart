@@ -195,4 +195,53 @@ void main() {
       expect(validDay(edit(d)..['tz'] = 'Mars/Olympus', '2026-10-07'), isFalse);
     });
   });
+
+  group('worstOver', () {
+    test('sums missed trips per line over the days and ranks by share; small lines are not ranked', () {
+      final days = [
+        _tripDay('2026-10-01', [('A', 20, 15, 5), ('B', 20, 19, 1), ('C', 5, 1, 4)]),
+        _tripDay('2026-10-02', [('A', 20, 10, 10), ('B', 20, 18, 2), ('C', 5, 1, 4)]),
+      ];
+      final w = worstOver(days, n: 5);
+      expect(w.missed.map((x) => (x.line, x.missed, x.measured)), [('A', 15, 40), ('B', 3, 40)]);
+      expect(w.expiredDays, 0);
+    });
+
+    test('a day a line was never seen does not count for it (it may not have run at all)', () {
+      final days = [
+        _tripDay('2026-10-01', [('A', 20, 0, 20)]),
+        _tripDay('2026-10-02', [('A', 20, 18, 2)]),
+      ];
+      expect(worstOver(days).missed.map((x) => (x.line, x.missed, x.measured)), [('A', 2, 20)]);
+    });
+
+    test('slowest lines by pooled speed over the days, with enough hours; days with an expired timetable counted', () {
+      final days = [
+        _tripDay('2026-10-01', const [], expired: true, byLine: [_line('S', 10, 10), _line('F', 20, 10), _line('X', 5, 1)]),
+        _tripDay('2026-10-02', const [], byLine: [_line('S', 14, 10), _line('F', 20, 10)]),
+      ];
+      final w = worstOver(days, n: 1);
+      expect(w.slow.map((x) => x.line), ['S']);
+      expect(w.slow.first.kmh, closeTo(12, 0.01));
+      expect(w.expiredDays, 1);
+    });
+  });
+
 }
+
+// "Ποιες γραμμές πήγαν χειρότερα" over the last days: missed trips and pooled speed, summed per line.
+Map<String, dynamic> _trips(List<(String, int planned, int run, int missed)> lines, {bool expired = false}) => {
+      'gtfs': 'g',
+      'gtfs_expired': expired,
+      'planned': 0,
+      'run': 0,
+      'partial': 0,
+      'missed': 0,
+      'unmeasured': 0,
+      'by_line': [
+        for (final (l, p, r, m) in lines) {'line': l, 'planned': p, 'run': r, 'partial': 0, 'missed': m, 'unmeasured': 0},
+      ],
+    };
+
+DayStats _tripDay(String date, List<(String, int, int, int)> lines, {bool expired = false, List<Map<String, dynamic>> byLine = const []}) =>
+    DayStats.fromJson({..._file(date: date, byLine: byLine), 'trips': _trips(lines, expired: expired)});

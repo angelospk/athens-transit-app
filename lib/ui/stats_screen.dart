@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/stats.dart';
+import 'map_sel.dart';
 import 'widgets.dart';
 import 'theme.dart';
 
@@ -28,6 +29,7 @@ class StatsScreen extends StatefulWidget {
 class _StatsScreenState extends State<StatsScreen> {
   Future<DayStats>? _day;
   Future<List<DayStats>>? _long;
+  int _period = 7; // days for "Χειρότερες γραμμές"
 
   void _load() => setState(() => _day = Deps.of(context).api.stats());
   void _loadLong() => setState(() => _long = Deps.of(context).api.storedDays());
@@ -143,6 +145,7 @@ class _StatsScreenState extends State<StatsScreen> {
         const SizedBox(width: 4),
         Text('Σαββατοκύριακο', style: TextStyle(fontSize: 12, color: t.muted)),
       ]),
+      ..._worst(t, days),
       if (trends != null) ...[
         _title('Γραμμές που άλλαξαν (${_date(trends.date)})'),
         Text('Σε σχέση με ${trends.baseDays} προηγούμενες ${trends.weekend ? 'μέρες Σαββατοκύριακου' : 'καθημερινές'}.', style: TextStyle(fontSize: 13, color: t.muted)),
@@ -153,6 +156,50 @@ class _StatsScreenState extends State<StatsScreen> {
       Text('Μόνο πλήρεις μέρες (χωρίς κενά στις καταγραφές). Πηγή: καταγραφές θέσεων του ΟΑΣΑ από τον server μας.',
           style: TextStyle(fontSize: 12, color: t.muted)),
     ]);
+  }
+
+  // The worst lines of the last _period complete days: missed trips, then the slowest. A tap opens the line.
+  List<Widget> _worst(Tones t, List<DayStats> days) {
+    final last = days.length <= _period ? days : days.sublist(days.length - _period);
+    final w = worstOver(last);
+    Widget row(String line, String text, String note) => InkWell(
+          onTap: () {
+            Navigator.of(context).popUntil((r) => r.isFirst); // stats is a pushed page over the tabs
+            showOnMap(LineSel(line));
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(children: [
+              LineBadge(line),
+              const SizedBox(width: 12),
+              Expanded(child: Text(text)),
+              Text(note, style: TextStyle(fontSize: 12, color: t.muted)),
+            ]),
+          ),
+        );
+    return [
+      _title('Χειρότερες γραμμές'),
+      Wrap(spacing: 6, children: [
+        for (final p in const [7, 14, 28])
+          if (p == 7 || days.length > p ~/ 2)
+            ChoiceChip(label: Text('$p μέρες'), selected: _period == p, onSelected: (_) => setState(() => _period = p)),
+      ]),
+      Text('${_date(last.first.date)} – ${_date(last.last.date)} · ${last.length} ${last.length == 1 ? 'μέρα' : 'μέρες'}',
+          style: TextStyle(fontSize: 13, color: t.muted)),
+      const SizedBox(height: 8),
+      Text('Δρομολόγια που δεν έγιναν', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.muted)),
+      if (w.missed.isEmpty) Text('Καμία γραμμή με αρκετά δρομολόγια.', style: TextStyle(color: t.muted)),
+      for (final x in w.missed) row(x.line, '${x.missed} από ${x.measured} δεν έγιναν', '${(100 * x.missed / x.measured).round()}%'),
+      if (w.expiredDays > 0)
+        Text('${w.expiredDays} από τις ${last.length} μέρες μετρήθηκαν με ληγμένο πρόγραμμα (GTFS): κάποια «χαμένα» μπορεί να μην υπάρχουν πια.',
+            style: TextStyle(fontSize: 12, color: t.late)),
+      const SizedBox(height: 10),
+      Text('Πιο αργές', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.muted)),
+      for (final x in w.slow) row(x.line, '${_kmh(x.kmh)} χλμ/ώ', '${x.hours} ώρες'),
+      const SizedBox(height: 4),
+      Text('Καθυστέρηση ανά δρομολόγιο δεν καταγράφεται ακόμη· εδώ μετράνε τα χαμένα δρομολόγια και η ταχύτητα.',
+          style: TextStyle(fontSize: 12, color: t.muted)),
+    ];
   }
 
   Widget _hours(Tones t) => Padding(
