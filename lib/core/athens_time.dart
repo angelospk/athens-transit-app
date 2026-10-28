@@ -17,3 +17,11 @@ DateTime athensWall(DateTime utc) {
   final u = utc.toUtc();
   return u.add(Duration(hours: athensOffsetHours(u)));
 }
+
+/// A GTFS "HH:MM[:SS]" as the clock reads it: "24:30" (past midnight of its service day) is "00:30".
+String gtfsClock(String hm) {
+  final p = hm.split(':');
+  final h = p.length >= 2 ? int.tryParse(p[0]) : null;
+  if (h == null) return hm;
+  return '${(h % 24).toString().padLeft(2, '0')}:${p[1]}';
+}

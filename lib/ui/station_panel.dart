@@ -263,7 +263,7 @@ class _StationPanelState extends State<StationPanel> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(mins(((d['in_s'] as num?) ?? 0).toInt()), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                    Text('${d['t'] ?? ''}', style: TextStyle(fontSize: 12, color: t.muted)),
+                    Text(gtfsClock('${d['t'] ?? ''}'), style: TextStyle(fontSize: 12, color: t.muted)),
                   ],
                 ),
               ],

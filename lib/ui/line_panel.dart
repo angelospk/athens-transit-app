@@ -270,7 +270,7 @@ class _LinePanelState extends State<LinePanel> {
                       final hm = x['t'] as String? ?? '';
                       final past = minOf(hm) < nowMin;
                       final missed = past && x['seen'] == false;
-                      final shown = minOf(hm) >= 24 * 60 ? '${(minOf(hm) ~/ 60 - 24).toString().padLeft(2, '0')}:${hm.split(':')[1]}' : hm.substring(0, hm.length >= 5 ? 5 : hm.length);
+                      final shown = gtfsClock(hm);
                       return Text(shown,
                           style: TextStyle(
                             fontSize: 15,

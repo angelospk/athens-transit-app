@@ -1,3 +1,4 @@
+import 'package:athens_transit/core/athens_time.dart';
 import 'package:athens_transit/core/eta.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -26,5 +27,12 @@ void main() {
     expect(bigGap([4, 5, 14]), 2); // 14 is more than twice the median 5
     expect(bigGap([4, 5, 6]), isNull);
     expect(bigGap([12]), isNull); // one gap: nothing to compare
+  });
+
+  test('GTFS times past midnight read as the clock', () {
+    expect(gtfsClock('24:30'), '00:30');
+    expect(gtfsClock('25:05:00'), '01:05');
+    expect(gtfsClock('08:15'), '08:15');
+    expect(gtfsClock('x'), 'x');
   });
 }
