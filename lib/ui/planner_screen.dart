@@ -17,6 +17,7 @@ import '../core/nearby.dart';
 import '../core/trip.dart' as tp;
 import '../data/live.dart' show stopIdsNear;
 import '../data/locate.dart';
+import 'alert_sheet.dart';
 import 'map_sel.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
@@ -398,6 +399,16 @@ class _DirectCardState extends State<_DirectCard> {
                     ),
                   ),
                 ]),
+              if (next != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.notifications_active_outlined, size: 18),
+                    label: const Text('Ειδοποίησέ με πότε να φύγω'),
+                    onPressed: () => showAlertSheet(context,
+                        stop: StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)), arrival: next.a),
+                  ),
+                ),
             ],
           ]),
         ),

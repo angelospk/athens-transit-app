@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/athens_time.dart';
+import '../core/eta.dart';
 import '../core/models.dart';
 import '../core/nearby.dart';
 import 'map_sel.dart';
@@ -176,10 +177,23 @@ class _LinePanelState extends State<LinePanel> {
     final main = on.value.reduce((a, b) => s.variants[a]!.stops.length >= s.variants[b]!.stops.length ? a : b);
     final mine = vs.where((v) => on.value.contains(v.variant)).toList();
     final busAt = {for (final v in mine) ?v.nextStopId};
+    final order = s.variants[main]!.stops;
+    int at(Vehicle v) => v.nextStopId == null ? -1 : order.indexOf(v.nextStopId!);
+    mine.sort((a, b) => at(b).compareTo(at(a))); // the front bus first, as the gaps count
+    final gaps = busGaps([for (final v in mine) if (v.nextStopId case final id? when order.contains(id)) order.indexOf(id)]);
+    final big = bigGap(gaps);
     return [
       chips,
       const SizedBox(height: 8),
       ..._buses(t, s, mine),
+      if (gaps.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text(
+            'Κενά από το μπροστινό: ${gaps.join(' · ')} στάσεις${big == null ? '' : ' · μεγάλο κενό μετά το ${big + 1}ο λεωφορείο'}',
+            style: TextStyle(fontSize: 13, color: big == null ? t.muted : t.late),
+          ),
+        ),
       Padding(
         padding: const EdgeInsets.only(top: 14, bottom: 4),
         child: Text('Στάσεις', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),

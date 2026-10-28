@@ -18,5 +18,13 @@ void main() {
     expect(firstAlight([null, 30]), 1);
     expect(firstAlight([0]), 1); // at the last stop: none left
   });
-}
 
+  test('gaps between the buses of one direction, in stops, from the front bus back', () {
+    expect(busGaps([3, 20, 9]), [11, 6]); // 20 ahead, then 9, then 3
+    expect(busGaps([5]), isEmpty);
+    expect(busGaps([4, 4]), [0]);
+    expect(bigGap([4, 5, 14]), 2); // 14 is more than twice the median 5
+    expect(bigGap([4, 5, 6]), isNull);
+    expect(bigGap([12]), isNull); // one gap: nothing to compare
+  });
+}

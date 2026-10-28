@@ -148,3 +148,21 @@ int firstAlight(List<int?> etas) {
   final k = firstUpcoming(etas);
   return k < etas.length && etas[k] == 0 ? k + 1 : k;
 }
+
+/// Stops between the buses of one direction, from the front bus back; positions are the indexes of
+/// each bus's next stop in the variant.
+List<int> busGaps(List<int> positions) {
+  final p = [...positions]..sort((a, b) => b.compareTo(a));
+  return [for (var i = 1; i < p.length; i++) p[i - 1] - p[i]];
+}
+
+/// The index of a gap more than twice the median (buses bunched behind it), or null.
+int? bigGap(List<int> gaps) {
+  if (gaps.length < 2) return null;
+  final m = ([...gaps]..sort())[gaps.length ~/ 2];
+  var best = -1;
+  for (var i = 0; i < gaps.length; i++) {
+    if (gaps[i] > 2 * m && (best < 0 || gaps[i] > gaps[best])) best = i;
+  }
+  return best < 0 ? null : best;
+}
