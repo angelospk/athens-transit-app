@@ -59,6 +59,9 @@ void main() {
     expect(to(['ΝΕΑ ΣΜΥΡΝΗ', 'ΠΑΛΑΙΑ ΣΜΥΡΝΗ'], 'ΚΕΝΤΡΟ - Ν. ΣΜΥΡΝΗ'), isNull, reason: 'the last word fits both: unknown');
     expect(to(['ΝΕΑ ΣΜΥΡΝΗ'], 'ΝΕΑ ΣΜΥΡΝΗ - ΠΑΛΑΙΑ ΣΜΥΡΝΗ'), isNull, reason: 'the only direction is the start: not this one (Codex)');
     expect(to(['ΝΕΑ ΣΜΥΡΝΗ'], 'Ν. ΣΜΥΡΝΗ - ΠΑΛΑΙΑ ΣΜΥΡΝΗ'), isNull, reason: 'the start written short');
+    expect(to(['ΑΝΩ ΠΑΤΗΣΙΑ'], 'ΑΝΩ ΠΑΤΗΣΙΑ - ΠΑΤΗΣΙΑ'), isNull, reason: 'the end inside the start\'s name (CodeRabbit)');
+    expect(to(['ΑΚΑΔΗΜΙΑ (ΚΥΚΛΙΚΗ)'], 'ΑΚΑΔΗΜΙΑ - ΚΥΨΕΛΗ - ΑΚΑΔΗΜΙΑ'), '00:00', reason: 'a loop: start = end');
+    expect(to(['ΝΕΑ ΣΜΥΡΝΗ', 'ΠΑΛΑΙΑ ΣΜΥΡΝΗ'], 'ΝΕΑ ΣΜΥΡΝΗ - ΠΑΛΑΙΑ ΣΜΥΡΝΗ'), '01:00', reason: 'both ends share a word, both named in full');
   });
 
   test('two directions with the same times stay two directions (Codex)', () {

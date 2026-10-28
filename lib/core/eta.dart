@@ -183,8 +183,8 @@ int? slowAheadM(List<double?>? steps) {
 /// for sure. A GTFS headsign names both ends ("start - via - end"), and the timetable direction is named
 /// after its end. Names are folded and lose notes in brackets ("(Προσωρινή λόγω έργων)"). The only
 /// direction that matches that end (either contains the other), else the only one with its last word
-/// ("Α. ΠΑΤΗΣΙΑ" = "ΑΝΩ ΠΑΤΗΣΙΑ") that does not also fit the start, else the only one with the same
-/// whole name. Never by direction number:
+/// ("Α. ΠΑΤΗΣΙΑ" = "ΑΝΩ ΠΑΤΗΣΙΑ"), else the only one with the same whole name. A direction that also
+/// fits the start is never the end's (unless a loop starts where it ends). Never by direction number:
 /// every GTFS variant has 0.
 Map<String, dynamic>? directionFor(Map<String, dynamic> schedule, Variant v) {
   final dirs = [for (final d in schedule['directions'] as List? ?? const []) d as Map<String, dynamic>];
@@ -200,8 +200,10 @@ Map<String, dynamic>? directionFor(Map<String, dynamic> schedule, Variant v) {
   List<String> words(String s) => s.split(RegExp(r'[ .]'));
   bool near(String x, String place) =>
       place.isNotEmpty && (x.contains(place) || place.contains(x) || (words(place).last.length >= 4 && words(x).contains(words(place).last)));
-  return (end.isEmpty ? null : only((x) => x.contains(end) || end.contains(x))) ??
-      (parts.length < 2 ? null : only((x) => near(x, end) && !near(x, start))) ?? // the start shares the word: not it
+  final twoEnds = parts.length >= 2 && start != end; // a loop starts where it ends
+  bool isStart(String x) => twoEnds && (x.contains(start) || start.contains(x));
+  return (end.isEmpty ? null : only((x) => (x.contains(end) || end.contains(x)) && !isStart(x))) ??
+      only((x) => twoEnds && near(x, end) && !near(x, start)) ?? // the start shares the word: not it
       only((x) => x == plain(v.headsign));
 }
 
