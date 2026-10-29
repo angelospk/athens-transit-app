@@ -26,6 +26,18 @@ Future<Pt?> myPosition({bool fresh = false}) async {
   }
 }
 
+// The position only when the user already allowed location: never shows the system question. The map
+// asks with askPosition() after it says why.
+Future<Pt?> knownPosition() async {
+  try {
+    final p = await Geolocator.checkPermission();
+    if (p != LocationPermission.always && p != LocationPermission.whileInUse) return null;
+  } catch (_) {
+    return null;
+  }
+  return myPosition();
+}
+
 // One permission request at a time: the Android plugin keeps only the newest caller's callback, so the
 // map and the planner asking together at start left the map waiting for ever.
 Future<LocationPermission>? _asking;

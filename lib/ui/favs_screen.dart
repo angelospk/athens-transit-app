@@ -2,6 +2,7 @@
 // afternoon), each with its lines' next arrivals and, in small type, the next of the other lines there;
 // then the saved lines ("οι γραμμές μου"), each opening on the map.
 
+import 'add_stop_screen.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -16,7 +17,6 @@ import '../core/nearby.dart';
 import '../data/store.dart';
 import 'alert_sheet.dart' show dayClock, remindLast;
 import 'map_sel.dart';
-import 'onboard_screen.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -39,7 +39,7 @@ class FavsScreen extends StatelessWidget {
             : null;
         return Scaffold(
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OnboardScreen(adding: true))),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddStopScreen())),
             icon: const Icon(Icons.add),
             label: const Text('Στάση'),
           ),

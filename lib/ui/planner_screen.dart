@@ -112,9 +112,10 @@ class _PlannerScreenState extends State<PlannerScreen> {
     if (mounted && _from == null) _here();
   }
 
+  // At start: the position only if location is already allowed; the map asks for it, with a reason.
   Future<void> _here() async {
     setState(() => _locating = true);
-    final p = await myPosition();
+    final p = await knownPosition();
     if (!mounted) return;
     setState(() {
       _locating = false;

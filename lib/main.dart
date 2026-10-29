@@ -12,7 +12,6 @@ import 'ui/favs_screen.dart';
 import 'ui/island_nav.dart';
 import 'ui/map_screen.dart';
 import 'ui/map_sel.dart';
-import 'ui/onboard_screen.dart';
 import 'ui/planner_screen.dart';
 import 'ui/rules_screen.dart';
 import 'ui/settings_screen.dart';
@@ -60,7 +59,7 @@ class TransitApp extends StatelessWidget {
         locale: const Locale('el'),
         supportedLocales: const [Locale('el'), Locale('en')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: store.onboarded ? const Shell() : const OnboardScreen(),
+        home: const Shell(), // no first-run screen: the map asks for location with a reason
       ),
     );
   }

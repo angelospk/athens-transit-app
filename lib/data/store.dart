@@ -52,7 +52,6 @@ class AppStore extends ChangeNotifier {
 
   final SharedPreferences _prefs;
 
-  bool onboarded = false;
   List<FavStop> favs = [];
   List<String> myLines = [];
   Set<String> hiddenLines = {};
@@ -67,7 +66,6 @@ class AppStore extends ChangeNotifier {
   bool lastBusNudge = true; // Friday and Saturday evening: «το τελευταίο προς το σπίτι»
 
   void _load(Map<String, dynamic> j) {
-    onboarded = j['onboarded'] == true;
     favs = [for (final f in j['favs'] as List? ?? const []) FavStop.fromJson(f as Map<String, dynamic>)];
     myLines = [for (final l in j['myLines'] as List? ?? const []) l as String];
     hiddenLines = {for (final l in j['hidden'] as List? ?? const []) l as String};
@@ -87,7 +85,6 @@ class AppStore extends ChangeNotifier {
   }
 
   Map<String, dynamic> toJson() => {
-        'onboarded': onboarded,
         'favs': [for (final f in favs) f.toJson()],
         'myLines': myLines,
         'hidden': hiddenLines.toList(),
@@ -109,11 +106,6 @@ class AppStore extends ChangeNotifier {
   void _save() {
     _prefs.setString(stateKey, jsonEncode(toJson()));
     notifyListeners();
-  }
-
-  void finishOnboarding() {
-    onboarded = true;
-    _save();
   }
 
   bool isFav(String name, double lat, double lon) => favs.any((f) => f.name == name && distTo(f, lat, lon) < 200);

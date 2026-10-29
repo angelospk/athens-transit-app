@@ -92,7 +92,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     mapSel.addListener(_onSel);
     appTab.addListener(_onTab);
     WidgetsBinding.instance.addObserver(this);
-    myPosition().then((p) {
+    knownPosition().then((p) {
       if (!mounted) return;
       setState(() {
         _located = true;
@@ -1065,14 +1065,20 @@ class _NearSheet extends StatelessWidget {
             ]),
           )
         else
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(children: [
-              Icon(Icons.location_off_outlined, color: t.muted),
-              const SizedBox(width: 10),
-              Expanded(child: Text('Δεν ξέρω πού είσαι. Με την τοποθεσία βλέπεις εδώ τις στάσεις κοντά σου.', style: TextStyle(fontSize: 13.5, color: t.muted))),
-              const SizedBox(width: 8),
-              FilledButton.tonal(onPressed: onLocate, child: const Text('Τοποθεσία')),
+          // The reason first; the phone's question comes only after the button.
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(14)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Δες τι περνάει κοντά σου', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              Text('Με την τοποθεσία σου δείχνω τις πιο κοντινές στάσεις και πότε έρχεται το λεωφορείο. Η θέση μένει στο κινητό.',
+                  style: TextStyle(fontSize: 13.5, height: 1.35, color: t.muted)),
+              const SizedBox(height: 10),
+              FilledButton.icon(onPressed: onLocate, icon: const Icon(Icons.my_location), label: const Text('Χρήση της θέσης μου')),
+              const SizedBox(height: 4),
+              Text('Ή γράψε μια στάση ή γραμμή στην αναζήτηση.', style: TextStyle(fontSize: 12.5, color: t.muted)),
             ]),
           ),
         _SavedNear(ix: ix),

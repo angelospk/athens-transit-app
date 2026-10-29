@@ -1,4 +1,5 @@
-// Screen 5 · Πρώτη χρήση: the nearest stop and its lines in two taps. Also used by "+ Στάση".
+// «+ Στάση»: a stop near the user (or found by name) and its lines, saved in «Δικά μου». The app has
+// no first-run screen: the map opens first and asks for location with a reason.
 
 import 'package:flutter/material.dart';
 
@@ -8,20 +9,20 @@ import '../data/store.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-class OnboardScreen extends StatefulWidget {
-  const OnboardScreen({super.key, this.adding = false});
-  final bool adding; // from "+ Στάση": no skip, pops when done
+class AddStopScreen extends StatefulWidget {
+  const AddStopScreen({super.key});
 
   @override
-  State<OnboardScreen> createState() => _OnboardScreenState();
+  State<AddStopScreen> createState() => _AddStopScreenState();
 }
 
-class _OnboardScreenState extends State<OnboardScreen> {
+class _AddStopScreenState extends State<AddStopScreen> {
   List<NearbyStop>? stops;
   NearbyStop? picked;
   final sel = <String>{};
   bool noLocation = false;
   String query = '';
+  final _linesKey = GlobalKey(); // the lines question, scrolled into view once a stop is picked
 
   @override
   void didChangeDependencies() {
@@ -32,7 +33,7 @@ class _OnboardScreenState extends State<OnboardScreen> {
   Future<void> _load() async {
     final d = Deps.of(context);
     final ix = await d.api.trips();
-    final p = await myPosition();
+    final p = await knownPosition();
     if (!mounted) return;
     setState(() {
       noLocation = p == null;
@@ -65,14 +66,9 @@ class _OnboardScreenState extends State<OnboardScreen> {
         lat: p.lat,
         lon: p.lon,
         lines: sel.toList(),
-        place: d.store.favs.isEmpty ? Place.home : null,
       ));
     }
-    if (widget.adding) {
-      Navigator.pop(context);
-    } else {
-      d.store.finishOnboarding();
-    }
+    Navigator.pop(context);
   }
 
   @override
@@ -84,18 +80,16 @@ class _OnboardScreenState extends State<OnboardScreen> {
       appBar: AppBar(
         backgroundColor: t.ground,
         surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: widget.adding,
-        actions: [if (!widget.adding) TextButton(onPressed: _done, child: const Text('Παράλειψη'))],
       ),
       body: SafeArea(top: false, child: ListView(padding: const EdgeInsets.fromLTRB(20, 0, 20, 24), children: [
-        Text('Από ποια στάση παίρνεις λεωφορείο;', style: Theme.of(context).textTheme.headlineSmall),
+        Text('Ποια στάση θέλεις να κρατήσεις;', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 6),
-        Text('Διάλεξε μία. Θα τη βλέπεις πρώτη κάθε φορά που ανοίγεις την εφαρμογή.', style: TextStyle(color: t.muted)),
+        Text('Θα τη βρίσκεις στα αγαπημένα, με τις γραμμές που διαλέγεις.', style: TextStyle(color: t.muted)),
         const SizedBox(height: 12),
         TextField(
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.search),
-            hintText: noLocation ? 'Χωρίς τοποθεσία: γράψε το όνομα της στάσης' : 'Ή γράψε το όνομα της στάσης',
+            hintText: noLocation ? 'Γράψε το όνομα της στάσης' : 'Ή γράψε το όνομα της στάσης',
             filled: true,
             fillColor: t.surface,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(28), borderSide: BorderSide.none),
@@ -116,17 +110,25 @@ class _OnboardScreenState extends State<OnboardScreen> {
               leading: CircleAvatar(backgroundColor: t.ground, child: Text('${i + 1}')),
               title: Text('${titleCase(s.name)}${query.isEmpty ? ' · ${s.distM.round()} μ.' : ''}', style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(s.lines.join(', '), maxLines: 1, overflow: TextOverflow.ellipsis),
-              onTap: () => setState(() {
-                picked = s;
-                sel
-                  ..clear()
-                  ..addAll(s.lines.where(store.myLines.contains));
-              }),
+              onTap: () {
+                FocusScope.of(context).unfocus(); // the keyboard would cover the lines
+                setState(() {
+                  picked = s;
+                  sel
+                    ..clear()
+                    ..addAll(s.lines.where(store.myLines.contains));
+                });
+                // The second question is below the list: bring it into view, so it is not missed.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  final c = _linesKey.currentContext;
+                  if (c != null && c.mounted) Scrollable.ensureVisible(c, duration: const Duration(milliseconds: 300), alignment: .1);
+                });
+              },
             ),
           ),
         if (picked != null) ...[
           const SizedBox(height: 16),
-          Text('Ποιες γραμμές σε νοιάζουν εδώ;', style: Theme.of(context).textTheme.titleLarge),
+          Text('Ποιες γραμμές σε νοιάζουν εδώ;', key: _linesKey, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Wrap(spacing: 8, runSpacing: 8, children: [
             for (final l in picked!.lines)
@@ -142,7 +144,14 @@ class _OnboardScreenState extends State<OnboardScreen> {
           Text('Ως $maxLines γραμμές συνολικά.', style: TextStyle(fontSize: 12, color: t.muted)),
         ],
         const SizedBox(height: 20),
-        SizedBox(height: 52, child: FilledButton(onPressed: picked == null || sel.isEmpty ? null : _done, child: const Text('Έτοιμο'))),
+        // A disabled button says what is still missing.
+        SizedBox(
+          height: 52,
+          child: FilledButton(
+            onPressed: picked == null || sel.isEmpty ? null : _done,
+            child: Text(picked == null ? 'Διάλεξε στάση' : sel.isEmpty ? 'Διάλεξε τουλάχιστον μία γραμμή' : 'Αποθήκευση'),
+          ),
+        ),
       ])),
     );
   }
