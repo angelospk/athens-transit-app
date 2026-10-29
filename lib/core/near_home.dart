@@ -12,17 +12,21 @@ enum NearKind { bus, metro, tram, rail }
 
 /// A metro, ISAP or tram station (railId null), or a suburban station (railId: railway.gov.gr id).
 class Station {
-  const Station({required this.name, required this.lat, required this.lon, required this.lines, this.railId});
+  const Station({required this.name, required this.lat, required this.lon, required this.lines, this.railId, List<String>? names})
+      : names = names ?? const [];
   final String name;
+  final List<String> names; // every name of a merged station: the backend's timetable knows each one
   final double lat, lon;
   final List<String> lines; // metro/tram line ids, or suburban corridor ids
   final String? railId;
 }
 
 class NearPlace {
-  const NearPlace({required this.kind, required this.name, required this.lat, required this.lon, required this.distM, required this.lines, this.railId});
+  const NearPlace(
+      {required this.kind, required this.name, required this.lat, required this.lon, required this.distM, required this.lines, this.railId, this.names = const []});
   final NearKind kind;
   final String name;
+  final List<String> names; // a station's names (see Station.names); empty for a bus stop
   final double lat, lon, distM;
   final List<String> lines;
   final String? railId;
@@ -42,10 +46,10 @@ List<Station> metroStations(Map<String, dynamic> j) {
       return o.name == name && d <= 150 || d <= 100 && o.lines.toSet().containsAll(set) && set.containsAll(o.lines);
     });
     if (i < 0) {
-      out.add(Station(name: name, lat: lat, lon: lon, lines: set.toList()..sort()));
+      out.add(Station(name: name, lat: lat, lon: lon, lines: set.toList()..sort(), names: [name]));
     } else {
       final o = out[i];
-      out[i] = Station(name: o.name, lat: o.lat, lon: o.lon, lines: {...o.lines, ...lines}.toList()..sort());
+      out[i] = Station(name: o.name, lat: o.lat, lon: o.lon, lines: {...o.lines, ...lines}.toList()..sort(), names: {...o.names, name}.toList());
     }
   }
   return out;
@@ -53,7 +57,7 @@ List<Station> metroStations(Map<String, dynamic> j) {
 
 List<Station> suburbanStations(Suburban sub) => [
       for (final s in sub.stations.values)
-        Station(name: s.name, lat: s.lat, lon: s.lon, lines: s.corridors.toSet().toList(), railId: s.id),
+        Station(name: s.name, lat: s.lat, lon: s.lon, lines: s.corridors.toSet().toList(), railId: s.id, names: [s.name]),
     ];
 
 NearKind _kindOf(Station s) => s.railId != null
@@ -74,7 +78,7 @@ List<NearPlace> nearPlaces(TripIndex? ix, List<Station> stations, Pt me,
           NearPlace(kind: NearKind.bus, name: s.name, lat: s.lat, lon: s.lon, distM: s.distM, lines: s.lines),
       for (final s in stations)
         if (distM(me, (s.lat, s.lon)) case final d when d <= r)
-          NearPlace(kind: _kindOf(s), name: s.name, lat: s.lat, lon: s.lon, distM: d, lines: s.lines, railId: s.railId),
+          NearPlace(kind: _kindOf(s), name: s.name, lat: s.lat, lon: s.lon, distM: d, lines: s.lines, railId: s.railId, names: s.names),
     ]..sort((a, b) => a.distM.compareTo(b.distM));
     if (out.length >= enough) break;
   }
@@ -96,3 +100,36 @@ String distLabel(double m) {
   final r = (m / 10).round() * 10;
   return r < 1000 ? '$r μ.' : '${(m / 1000).toStringAsFixed(1).replaceAll('.', ',')} χλμ.';
 }
+
+class StationDep {
+  const StationDep({required this.line, required this.towards, required this.inS, this.color});
+  final String line, towards;
+  final int inS;
+  final String? color; // "#rrggbb" from the timetable
+}
+
+/// Metro/tram: the next departure of each line and direction, soonest first, from the backend's
+/// timetable answers for each name of a station; [elapsedS] since the fetch is taken off. A run that
+/// ends at the station itself (its headsign one of [here]) leaves nobody from it and is left out.
+List<StationDep> nextByDirection(List<List<Map<String, dynamic>>> answers, {required int elapsedS, int max = 6, Iterable<String> here = const []}) {
+  final first = <String, StationDep>{};
+  final ends = {for (final n in here) fold(n)};
+  for (final deps in answers) {
+    for (final d in deps) {
+      final inS = ((d['in_s'] as num?) ?? 0).toInt() - elapsedS;
+      if (inS < 0 || ends.contains(fold('${d['headsign'] ?? ''}'))) continue;
+      final dep = StationDep(line: '${d['line'] ?? ''}', towards: '${d['headsign'] ?? ''}', inS: inS, color: d['route_color'] as String?);
+      final k = '${dep.line}|${dep.towards}';
+      if (first[k] == null || inS < first[k]!.inS) first[k] = dep;
+    }
+  }
+  return (first.values.toList()..sort((a, b) => a.inS.compareTo(b.inS))).take(max).toList();
+}
+
+/// Suburban: the next trains that have not left and are not completed, soonest first.
+List<RailDeparture> nextTrains(List<RailDeparture> all, DateTime now, {int max = 2}) => (all
+        .where((d) => d.status != 'completed' && !d.expected.isBefore(now))
+        .toList()
+      ..sort((a, b) => a.expected.compareTo(b.expected)))
+    .take(max)
+    .toList();

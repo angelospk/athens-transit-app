@@ -90,6 +90,8 @@ void main() {
       });
       expect(got.map((s) => s.name), ['ΣΥΝΤΑΓΜΑ', 'ΑΚΡΟΠΟΛΗ']);
       expect(got.first.lines, ['M2', 'M3', 'T6']);
+      expect(got.first.names, ['ΣΥΝΤΑΓΜΑ', 'Σύνταγμα (Κέντρο)'], reason: 'the backend knows each name: departures are asked for both');
+      expect(got.last.names, ['ΑΚΡΟΠΟΛΗ']);
     });
 
     test('suburban: its id, corridors once each', () {
@@ -129,6 +131,48 @@ void main() {
       expect(distLabel(43), '40 μ.');
       expect(distLabel(996), '1,0 χλμ.');
       expect(distLabel(1260), '1,3 χλμ.');
+    });
+  });
+
+  group('station departures', () {
+    Map<String, dynamic> dep(String line, String to, int inS) => {'line': line, 'headsign': to, 'in_s': inS, 'route_color': '#e30613', 't': '18:00'};
+
+    test('metro/tram: the first of each line and direction, soonest first, from every name of the station', () {
+      final got = nextByDirection([
+        [dep('M2', 'ΕΛΛΗΝΙΚΟ', 56), dep('M3', 'ΔΗΜΟΤΙΚΟ ΘΕΑΤΡΟ', 26), dep('M2', 'ΕΛΛΗΝΙΚΟ', 360), dep('M2', 'ΑΝΘΟΥΠΟΛΗ', 63)],
+        [dep('T6', 'Πικροδάφνη', 400)],
+      ], elapsedS: 0);
+      expect(got.map((d) => '${d.line} ${d.towards} ${d.inS}'), ['M3 ΔΗΜΟΤΙΚΟ ΘΕΑΤΡΟ 26', 'M2 ΕΛΛΗΝΙΚΟ 56', 'M2 ΑΝΘΟΥΠΟΛΗ 63', 'T6 Πικροδάφνη 400']);
+      expect(got.first.color, '#e30613');
+    });
+
+    test('time since the fetch counts down; a train already gone gives way to the next one', () {
+      final got = nextByDirection([
+        [dep('M1', 'ΚΗΦΙΣΙΑ', 33), dep('M1', 'ΚΗΦΙΣΙΑ', 400)],
+      ], elapsedS: 60);
+      expect(got.single.inS, 340);
+    });
+
+    test('a run that ends at this station is no departure from it', () {
+      final got = nextByDirection([
+        [dep('T6', 'Σύνταγμα (Κέντρο)', 200), dep('T6', 'Πικροδάφνη', 300), dep('M2', 'ΣΥΝΤΑΓΜΑ', 50)],
+      ], elapsedS: 0, here: ['ΣΥΝΤΑΓΜΑ', 'Σύνταγμα (Κέντρο)']);
+      expect(got.map((d) => d.towards), ['Πικροδάφνη']);
+    });
+
+    test('at most max rows', () {
+      final got = nextByDirection([
+        [for (var i = 0; i < 9; i++) dep('M$i', 'X', i * 10)],
+      ], elapsedS: 0, max: 6);
+      expect(got.length, 6);
+    });
+
+    test('suburban: the next trains not gone and not completed, soonest first', () {
+      final now = DateTime.utc(2026, 10, 29, 16);
+      RailDeparture t(String no, int min, {String status = 'scheduled'}) => RailDeparture(
+          train: no, next: 'Χ', scheduled: now.add(Duration(minutes: min)), expected: now.add(Duration(minutes: min)), platform: null, status: status, delayMin: null);
+      final got = nextTrains([t('a', 20), t('b', -5), t('c', 7), t('d', 3, status: 'completed'), t('e', 40)], now, max: 2);
+      expect(got.map((d) => d.train), ['c', 'a']);
     });
   });
 }

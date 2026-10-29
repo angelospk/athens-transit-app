@@ -21,6 +21,7 @@ import '../core/models.dart';
 import '../core/motion.dart';
 import '../core/near_home.dart';
 import '../core/nearby.dart';
+import '../core/rail.dart';
 import '../data/basemap.dart';
 import '../data/locate.dart';
 import '../data/store.dart';
@@ -1107,7 +1108,8 @@ class _NearSheet extends StatelessWidget {
 }
 
 // One near stop or station: name, how far, and the saved lines there with their next bus (or the
-// other lines, small). A tap opens it, as a tap on the map does.
+// other lines, small); a station, the next departure of each of its lines. A tap opens it, as a tap on
+// the map does.
 class _NearRow extends StatelessWidget {
   const _NearRow({required this.place, required this.ix});
   final NearPlace place;
@@ -1172,10 +1174,140 @@ class _NearRow extends StatelessWidget {
               padding: const EdgeInsets.only(left: 34, top: 6),
               child: Text('${quiet.join(', ')}: κανένα λεωφορείο με GPS τώρα', style: TextStyle(fontSize: 13, color: t.muted)),
             ),
+          if (p.kind != NearKind.bus) _StationNext(key: ValueKey('${p.kind.name}|${p.name}'), place: p),
         ]),
       ),
     );
   }
+}
+
+// A near station's next departures, every line (a station has few): metro and tram from the STASY
+// timetable on our backend, suburban trains live from railway.gov.gr. Nothing while it loads or when
+// there is no data: the row keeps its lines.
+class _StationNext extends StatefulWidget {
+  const _StationNext({super.key, required this.place});
+  final NearPlace place;
+
+  @override
+  State<_StationNext> createState() => _StationNextState();
+}
+
+class _StationNextState extends State<_StationNext> {
+  List<List<Map<String, dynamic>>> _answers = const [];
+  int _at = 0; // Unix s of the metro answers
+  List<RailDeparture> _trains = const [];
+  Suburban? _sub;
+  Timer? _timer;
+  int _ticks = 0;
+
+  // Its own clock: the minutes count down every 10 s (the live buses may tick nothing), a new list
+  // every minute, none while the map is hidden or the app is in the background.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_timer == null) {
+      _load();
+      _timer = Timer.periodic(const Duration(seconds: 10), (_) {
+        if (appTab.value != 0 || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+        if (++_ticks % 6 == 0) _load();
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final api = Deps.of(context).api;
+    final p = widget.place;
+    try {
+      if (p.railId != null) {
+        _sub ??= await api.suburban();
+        final trains = await api.railDepartures(p.railId!);
+        if (mounted) setState(() => _trains = trains);
+      } else {
+        final names = p.names.isEmpty ? [p.name] : p.names;
+        int nowS() => DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        // Each answer with the time it came, so a slow one does not age the others; a failed one is null.
+        final got = await Future.wait(names.map((n) => api.stasyDepartures(n).then<(int, Map<String, dynamic>?)?>((j) => (nowS(), j)).catchError((Object _) => null)));
+        if (got.every((g) => g?.$2 == null)) return; // offline or not served now (503): the last list stays
+        final at = nowS();
+        final answers = [
+          for (final g in got)
+            if (g case (final t, final j?))
+              [
+                for (final d in j['departures'] as List? ?? const [])
+                  {...d as Map<String, dynamic>, 'in_s': ((d['in_s'] as num?) ?? 0).toInt() - (at - t)},
+              ],
+        ];
+        if (mounted) {
+          setState(() {
+            _answers = answers;
+            _at = at;
+          });
+        }
+      }
+    } catch (_) {/* offline: the last list stays */}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    final now = DateTime.now().toUtc();
+    final rows = <Widget>[];
+    if (widget.place.railId != null) {
+      for (final d in nextTrains(_trains, now)) {
+        final ends = _sub?.towards(widget.place.railId!, d.next) ?? const <String>{};
+        final late = (d.delayMin ?? 0) > 0 && !d.cancelled;
+        rows.add(_row(
+          t,
+          badge: const Icon(Icons.train_outlined, size: 18),
+          towards: ends.isNotEmpty ? ends.map(titleCase).join(' / ') : titleCase(d.next),
+          when: d.cancelled ? 'ακυρώθηκε' : mins(d.expected.difference(now).inSeconds),
+          note: late ? '+${d.delayMin}′' : null,
+        ));
+      }
+    } else {
+      final elapsed = now.millisecondsSinceEpoch ~/ 1000 - _at;
+      for (final d in nextByDirection(_answers, elapsedS: elapsed, here: widget.place.names.isEmpty ? [widget.place.name] : widget.place.names)) {
+        final c = int.tryParse((d.color ?? '').replaceFirst('#', ''), radix: 16);
+        rows.add(_row(
+          t,
+          badge: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(color: c == null ? t.ink : Color(0xFF000000 | c), borderRadius: BorderRadius.circular(6)),
+            child: Text(d.line, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
+          ),
+          towards: titleCase(d.towards),
+          when: mins(d.inS),
+        ));
+      }
+    }
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      ...rows,
+      Padding(
+        padding: const EdgeInsets.only(left: 34, top: 4),
+        child: Text(widget.place.railId != null ? 'live από railway.gov.gr' : 'πρόγραμμα ΣΤΑΣΥ, όχι live',
+            style: TextStyle(fontSize: 11.5, color: t.muted)),
+      ),
+    ]);
+  }
+
+  Widget _row(Tones t, {required Widget badge, required String towards, required String when, String? note}) => Padding(
+        padding: const EdgeInsets.only(left: 34, top: 6),
+        child: Row(children: [
+          badge,
+          const SizedBox(width: 8),
+          Expanded(child: Text('→ $towards', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13.5, color: t.muted))),
+          if (note != null) Text('$note ', style: TextStyle(fontSize: 12.5, color: t.late, fontWeight: FontWeight.w600)),
+          Text(when, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+        ]),
+      );
 }
 
 // Without the user's position: the saved stop for this time of day and its lines' next buses.

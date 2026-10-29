@@ -12,6 +12,9 @@ Detail per task and what was checked: [docs/PLAN-2026-10-28.md](docs/PLAN-2026-1
   with metres and minutes on foot. A saved line that stops there shows its next bus on the row. It
   replaces «Η στάση σου». Without location: a «Τοποθεσία» button, and the saved stop meanwhile.
 - Fixed: the map waited forever for the position when the planner asked for it at the same time.
+- New: a metro, tram or suburban station in «Κοντά σου» shows the next departure of each of its
+  lines and directions (metro and tram: STASY timetable; suburban: live from railway.gov.gr).
+- Fixed: turning «Παρασκευή και Σάββατο βράδυ» back on did not always set the evening alarm again.
 
 ## v0.2.0 (2026-10-28)
 
