@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../background/widget.dart' show pushHomeWidget;
 import '../core/eta.dart';
 import '../core/geo.dart';
 import '../core/go_home.dart';
@@ -78,7 +79,9 @@ class _GoHomeCardState extends State<GoHomeCard> {
       final sched = <String, Map<String, dynamic>>{
         for (final (k, l) in lines.indexed) l: ?got[k],
       };
-      if (mounted && identical(boards, _boards)) setState(() => _last = lastHome(boards, sched, d.live.statics));
+      if (!mounted || !identical(boards, _boards)) return;
+      setState(() => _last = lastHome(boards, sched, d.live.statics));
+      if (_last.isNotEmpty) pushHomeWidget(d.store, _last, from: boards.first.stop);
     } catch (_) {/* offline: the card shows the next bus only */}
   }
 

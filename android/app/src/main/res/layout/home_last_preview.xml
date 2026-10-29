@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The picker's preview of «Γυρνάς σπίτι»: sample runs, not live. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/hroot"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical"
+    android:background="@drawable/widget_bg" android:paddingHorizontal="14dp" android:paddingVertical="10dp">
+    <TextView android:id="@+id/htitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="@color/widget_ink" android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end"
+        android:text="Γυρνάς σπίτι · τα τελευταία" />
+    <TextView android:id="@+id/hsub" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="@color/widget_muted" android:textSize="12sp" android:maxLines="1" android:ellipsize="end"
+        android:text="από Σύνταγμα · πρώτα χάνεται το 040" />
+    <LinearLayout android:id="@+id/hrow0" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="5dp" android:visibility="visible">
+        <TextView android:id="@+id/hline0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:gravity="center" android:background="@drawable/badge_bg" android:backgroundTint="#5B5F66"
+            android:paddingHorizontal="6dp" android:paddingVertical="3dp" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:text="A2" />
+        <TextView android:id="@+id/hwhen0" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:maxLines="1" android:text="έφυγε" />
+        <TextView android:id="@+id/htime0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/widget_ink" android:textSize="18sp" android:textStyle="bold" android:text="22:50" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/hrow1" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="5dp" android:visibility="visible">
+        <TextView android:id="@+id/hline1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:gravity="center" android:background="@drawable/badge_bg" android:backgroundTint="#0A6EBD"
+            android:paddingHorizontal="6dp" android:paddingVertical="3dp" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:text="040" />
+        <TextView android:id="@+id/hwhen1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:maxLines="1" android:text="σε 18′" />
+        <TextView android:id="@+id/htime1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/widget_ink" android:textSize="18sp" android:textStyle="bold" android:text="23:10" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/hrow2" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="5dp" android:visibility="visible">
+        <TextView android:id="@+id/hline2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:gravity="center" android:background="@drawable/badge_bg" android:backgroundTint="#E2A100"
+            android:paddingHorizontal="6dp" android:paddingVertical="3dp" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:text="209" />
+        <TextView android:id="@+id/hwhen2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:maxLines="1" android:text="σε 48′" />
+        <TextView android:id="@+id/htime2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/widget_ink" android:textSize="18sp" android:textStyle="bold" android:text="23:40" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/hrow3" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="5dp" android:visibility="visible">
+        <TextView android:id="@+id/hline3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:gravity="center" android:background="@drawable/badge_bg" android:backgroundTint="#D6262B"
+            android:paddingHorizontal="6dp" android:paddingVertical="3dp" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:text="M2" />
+        <TextView android:id="@+id/hwhen3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:maxLines="1" android:text="σε 1ώ 23′" />
+        <TextView android:id="@+id/htime3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/widget_ink" android:textSize="18sp" android:textStyle="bold" android:text="00:15" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- «Γυρνάς σπίτι», 2×1 and 2×2 (W3b): the first last run home that has not gone. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/hroot"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical"
+    android:gravity="center_vertical" android:background="@drawable/widget_bg" android:paddingHorizontal="14dp" android:paddingVertical="8dp">
+    <TextView android:id="@+id/hkick" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="@color/widget_muted" android:textSize="11sp" android:maxLines="1" android:text="ΤΕΛΕΥΤΑΙΟ ΓΙΑ ΣΠΙΤΙ" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/hbig" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/widget_ink" android:textSize="24sp" android:textStyle="bold" android:text="—" />
+        <TextView android:id="@+id/hbigline" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="8dp" android:minWidth="40dp" android:gravity="center" android:background="@drawable/badge_bg"
+            android:paddingHorizontal="6dp" android:paddingVertical="2dp" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" android:visibility="gone" />
+    </LinearLayout>
+    <TextView android:id="@+id/hbigsub" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="@color/widget_muted" android:textSize="12sp" android:maxLines="2" android:ellipsize="end"
+        android:text="Άνοιξε την εφαρμογή μακριά από το σπίτι" />
+</LinearLayout>

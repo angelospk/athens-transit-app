@@ -4,6 +4,7 @@
 
 import 'athens_time.dart';
 import 'eta.dart';
+import 'last_bus.dart' show athensDayUtc;
 import 'geo.dart';
 import 'models.dart';
 import 'trip.dart';
@@ -50,4 +51,11 @@ List<HomeLast> lastHome(List<HomeBoard> boards, Map<String, Map<String, dynamic>
     if (r != null) out.add((line: b.line, stop: b.stop, atS: r.atStopS));
   }
   return out..sort((a, b) => a.atS.compareTo(b.atS));
+}
+
+/// [atS] of the timetable day that [nowUtc] is in, as a moment: «24:40» on the evening of the 29th is
+/// 00:40 on the 30th, also when asked at 00:10 on the 30th.
+DateTime serviceMoment(int atS, DateTime nowUtc) {
+  final d = serviceDay(nowUtc);
+  return athensDayUtc(DateTime.utc(d.year, d.month, d.day, 12), atS);
 }

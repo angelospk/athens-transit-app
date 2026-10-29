@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 
+import '../core/go_home.dart';
 import '../data/live.dart';
 import '../data/store.dart';
 import '../ui/theme.dart';
@@ -53,5 +54,37 @@ Future<void> pushWidget(AppStore store, LiveHub live, {bool force = false}) asyn
     );
   } catch (e) {
     debugPrint('widget: $e'); // no widget on the home screen, or iOS without the extension
+  }
+}
+
+const _homeProvider = 'HomeLastWidgetProvider';
+
+/// Widget «Γυρνάς σπίτι»: today's last runs home from where the app last was (no location in the
+/// background), the one that goes first on top, as clock times; the widget strikes the ones gone.
+Future<void> pushHomeWidget(AppStore store, List<HomeLast> last, {required String from}) async {
+  try {
+    final now = DateTime.now().toUtc();
+    await HomeWidget.saveWidgetData('h_from', titleCase(from));
+    await HomeWidget.saveWidgetData('h_at', now.millisecondsSinceEpoch ~/ 1000);
+    await HomeWidget.saveWidgetData(
+      'h_rows',
+      jsonEncode([
+        for (final x in last.take(4))
+          {
+            'line': x.line,
+            'bg': hex(lineColor(store, x.line).bg),
+            'fg': hex(lineColor(store, x.line).fg),
+            't': serviceMoment(x.atS, now).millisecondsSinceEpoch ~/ 1000,
+          }
+      ]),
+    );
+    await HomeWidget.updateWidget(androidName: _homeProvider);
+    // «σε 18′» and the struck runs move on without the app: a redraw every 5′ for 2 hours.
+    await HomeWidget.scheduleWidgetUpdates(
+      [for (var m = 5; m <= 120; m += 5) DateTime.now().add(Duration(minutes: m))],
+      androidName: _homeProvider,
+    );
+  } catch (e) {
+    debugPrint('home widget: $e');
   }
 }

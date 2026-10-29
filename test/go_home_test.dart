@@ -64,4 +64,10 @@ void main() {
     expect(serviceDay(DateTime.utc(2026, 10, 29, 22, 50)), DateTime.utc(2026, 10, 29));
     expect(serviceDay(DateTime.utc(2026, 10, 30, 2, 10)), DateTime.utc(2026, 10, 30));
   });
+
+  test('a last run as a moment for the widget: «24:40» is 00:40 the next morning, asked before or after midnight', () {
+    final want = DateTime.utc(2026, 10, 29, 22, 40); // 00:40 Athens on the 30th (EET)
+    expect(serviceMoment(24 * 3600 + 40 * 60, DateTime.utc(2026, 10, 29, 19)), want); // asked at 21:00
+    expect(serviceMoment(24 * 3600 + 40 * 60, DateTime.utc(2026, 10, 29, 22, 10)), want); // at 00:10
+  });
 }
