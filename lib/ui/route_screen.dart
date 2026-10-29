@@ -299,6 +299,7 @@ class _NextBusState extends State<_NextBus> {
                 context,
                 stop: StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)),
                 arrival: next.a,
+                leave: true,
               ),
             ),
           TextButton.icon(

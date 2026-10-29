@@ -557,6 +557,7 @@ class _DirectCardState extends State<_DirectCard> {
                           context,
                           stop: StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)),
                           arrival: next.a,
+                          leave: true,
                         ),
                       ),
                     TextButton.icon(
