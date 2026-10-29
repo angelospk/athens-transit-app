@@ -72,8 +72,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   int _routesGen = 0; // the newest route draw; an older one stops before writing
   String? _routesPending; // the key being drawn: the same draw is not started twice
   Pt? _followedAt; // where "follow" last centred the bus
-  final _menu = MenuController(); // the filter's menu: back closes it before anything else
-  bool _menuOpen = false;
   (bool, bool, bool)? _rail; // metro, tram and suburban rail visibility applied to the map
   Map<String, dynamic>? _metroJson; // metro.json: a tapped station is found by its index
   double _h = 700; // the map's height: the sheet's sizes are fractions of it
@@ -717,14 +715,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     // The tab at build time: the shell's own back handler may switch to the map first on this press.
     final onMap = appTab.value == 0;
     return PopScope(
-      canPop: !onMap || (sel == null && !_menuOpen),
+      canPop: !onMap || sel == null,
       onPopInvokedWithResult: (popped, _) {
         if (popped || !onMap) return;
-        if (_menuOpen) {
-          _menu.close();
-        } else {
-          mapBack();
-        }
+        mapBack();
       },
       child: ListenableBuilder(
         listenable: Listenable.merge([d.store, d.live]),
@@ -766,15 +760,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 right: 16,
                 bottom: h * _extent + 12,
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  FloatingActionButton.small(
-                    heroTag: 'layers',
-                    tooltip: 'Στρώματα χάρτη',
-                    backgroundColor: t.ground,
-                    foregroundColor: t.ink,
-                    onPressed: () => _layers(context, d.store),
-                    child: const Icon(Icons.layers_outlined),
-                  ),
-                  const SizedBox(height: 8),
                   FloatingActionButton.small(
                     heroTag: 'locate',
                     tooltip: 'Η θέση μου',
@@ -841,7 +826,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  SearchField(ix: _ix, trailing: _linesMenu(context, d.store, t)),
+                  SearchField(ix: _ix, trailing: _mapButton(context, d.store, t)),
                   if (d.live.isOffline) ...[const SizedBox(height: 4), _OfflineBanner(at: d.live.lastOkAt, now: d.live.nowS)],
                 ]),
               ),
@@ -853,150 +838,135 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     );
   }
 
-  // "Τι δείχνει ο χάρτης", as on the web: what the other buses do while one is open, the filters, the
-  // ages, rail, and the colours' legend; the ? explains every symbol.
-  Future<void> _layers(BuildContext context, AppStore store) => showModalBottomSheet<void>(
+  // One «Χάρτης» sheet for everything the map shows: what buses (all, or my lines and which), metro,
+  // tram and rail, the colours' strip; the rarer view settings fold under «Για προχωρημένους».
+  Future<void> _mapSheet(BuildContext context, AppStore store) => showModalBottomSheet<void>(
         context: context,
         showDragHandle: true,
         isScrollControlled: true,
         builder: (c) => ListenableBuilder(
           listenable: store,
-          builder: (c, _) => SafeArea(
-            child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 12, 8),
-                child: Row(children: [
-                  const Expanded(child: Text('Τι δείχνει ο χάρτης', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
-                  IconButton(tooltip: 'Τι σημαίνει κάθε σύμβολο', icon: const Icon(Icons.help_outline), onPressed: () => showMapHelp(c)),
+          builder: (c, _) {
+            void only(bool v) {
+              store.setOnlyMine(v);
+              if (!v) _loadTiles(force: true);
+            }
+
+            return SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    const Expanded(child: Text('Χάρτης', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
+                    IconButton(tooltip: 'Τι σημαίνει κάθε σύμβολο', icon: const Icon(Icons.help_outline), onPressed: () => showMapHelp(c)),
+                  ]),
+                  const SizedBox(height: 4),
+                  if (store.myLines.isEmpty)
+                    Text('Λεωφορεία: όλα. Βάλε αστέρι σε μια γραμμή για να βλέπεις μόνο τις δικές σου.', style: TextStyle(fontSize: 13, color: c.tones.muted))
+                  else ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<bool>(
+                        segments: const [
+                          ButtonSegment(value: false, label: Text('Όλα τα λεωφορεία')),
+                          ButtonSegment(value: true, label: Text('Οι γραμμές μου')),
+                        ],
+                        selected: {store.onlyMine},
+                        onSelectionChanged: (v) => only(v.first),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(spacing: 6, runSpacing: 6, children: [
+                      for (final l in store.myLines)
+                        FilterChip(
+                          label: Text(l, style: const TextStyle(fontWeight: FontWeight.w700)),
+                          selected: store.onlyMine && !store.hiddenLines.contains(l),
+                          onSelected: (show) {
+                            if (!store.onlyMine) only(true); // picking a line means: show only my lines
+                            if (store.hiddenLines.contains(l) == show) store.toggleHidden(l);
+                          },
+                        ),
+                    ]),
+                  ],
+                  const SizedBox(height: 12),
+                  Wrap(spacing: 8, runSpacing: 8, children: [
+                    FilterChip(avatar: const Icon(Icons.subway_outlined, size: 18), label: const Text('Μετρό'), selected: store.showMetro, onSelected: (v) => store.setRail(metro: v)),
+                    FilterChip(avatar: const Icon(Icons.tram_outlined, size: 18), label: const Text('Τραμ'), selected: store.showTram, onSelected: (v) => store.setRail(tram: v)),
+                    FilterChip(avatar: const Icon(Icons.train_outlined, size: 18), label: const Text('Προαστιακός'), selected: store.showRail, onSelected: (v) => store.setRail(rail: v)),
+                  ]),
+                  const SizedBox(height: 12),
+                  const DelayLegend(),
+                  Theme(
+                    data: Theme.of(c).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      title: const Text('Για προχωρημένους', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                      children: [
+                        const Align(alignment: Alignment.centerLeft, child: Text('Όταν πατάς ένα λεωφορείο ή μια γραμμή, τα άλλα:')),
+                        const SizedBox(height: 6),
+                        SizedBox(
+                          width: double.infinity,
+                          child: SegmentedButton<Others>(
+                            segments: const [
+                              ButtonSegment(value: Others.normal, label: Text('Φαίνονται')),
+                              ButtonSegment(value: Others.dim, label: Text('Αχνά')),
+                              ButtonSegment(value: Others.hide, label: Text('Κρύβονται')),
+                            ],
+                            selected: {store.others},
+                            onSelectionChanged: (v) => store.setMapView(others: v.first),
+                          ),
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Μόνο με πρόσφατη θέση'),
+                          subtitle: const Text('Έστειλαν θέση τα τελευταία 1½ λεπτά.'),
+                          value: store.onlyFresh,
+                          onChanged: (v) => store.setMapView(fresh: v),
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Μόνο στην ώρα τους'),
+                          subtitle: const Text('Έως 5 λεπτά καθυστέρηση.'),
+                          value: store.onlyOnTime,
+                          onChanged: (v) => store.setMapView(onTime: v),
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Πόσο παλιά είναι η θέση'),
+                          subtitle: const Text('Δίπλα σε κάθε λεωφορείο. Οι παλιές φαίνονται πάντα.'),
+                          value: store.showAges,
+                          onChanged: (v) => store.setMapView(ages: v),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text('Χάρτης: © OpenStreetMap contributors · OpenFreeMap', style: TextStyle(fontSize: 12, color: c.tones.muted)),
                 ]),
               ),
-              const Padding(padding: EdgeInsets.fromLTRB(24, 4, 24, 8), child: Text('Όταν πατάς ένα λεωφορείο ή μια γραμμή, τα άλλα:')),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<Others>(
-                    segments: const [
-                      ButtonSegment(value: Others.normal, label: Text('Κανονικά')),
-                      ButtonSegment(value: Others.dim, label: Text('Αχνά')),
-                      ButtonSegment(value: Others.hide, label: Text('Κρυφά')),
-                    ],
-                    selected: {store.others},
-                    onSelectionChanged: (v) => store.setMapView(others: v.first),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                secondary: const Icon(Icons.update),
-                title: const Text('Μόνο με πρόσφατη θέση'),
-                subtitle: const Text('Έστειλαν θέση τα τελευταία 1½ λεπτά.'),
-                value: store.onlyFresh,
-                onChanged: (v) => store.setMapView(fresh: v),
-              ),
-              SwitchListTile(
-                secondary: const Icon(Icons.schedule),
-                title: const Text('Μόνο στην ώρα τους'),
-                subtitle: const Text('Έως 5 λεπτά καθυστέρηση.'),
-                value: store.onlyOnTime,
-                onChanged: (v) => store.setMapView(onTime: v),
-              ),
-              SwitchListTile(
-                secondary: const Icon(Icons.timer_outlined),
-                title: const Text('Ηλικία θέσης'),
-                subtitle: const Text('Πόσο πριν ήρθε η θέση, δίπλα σε κάθε λεωφορείο. Οι παλιές φαίνονται πάντα.'),
-                value: store.showAges,
-                onChanged: (v) => store.setMapView(ages: v),
-              ),
-              SwitchListTile(
-                secondary: const Icon(Icons.subway_outlined),
-                title: const Text('Μετρό και ΗΣΑΠ'),
-                subtitle: const Text('γραμμές και σταθμοί'),
-                value: store.showMetro,
-                onChanged: (v) => store.setRail(metro: v),
-              ),
-              SwitchListTile(
-                secondary: const Icon(Icons.tram_outlined),
-                title: const Text('Τραμ'),
-                subtitle: const Text('γραμμές και στάσεις'),
-                value: store.showTram,
-                onChanged: (v) => store.setRail(tram: v),
-              ),
-              SwitchListTile(
-                secondary: const Icon(Icons.train_outlined),
-                title: const Text('Προαστιακός'),
-                subtitle: const Text('γραμμές και σταθμοί, αναχωρήσεις live'),
-                value: store.showRail,
-                onChanged: (v) => store.setRail(rail: v),
-              ),
-              const Padding(padding: EdgeInsets.fromLTRB(24, 8, 24, 0), child: DelayLegend()),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-                child: Text('Χάρτης: © OpenStreetMap contributors · OpenFreeMap', style: TextStyle(fontSize: 12, color: c.tones.muted)),
-              ),
-            ]),
-            ),
-          ),
+            );
+          },
         ),
       );
 
-  // A filter button beside the search that says what the map shows: "Όλα" or "Οι γραμμές μου". Its
-  // menu switches between the two and picks which of my lines show.
-  Widget _linesMenu(BuildContext context, AppStore store, Tones t) {
-    void only(bool v) {
-      store.setOnlyMine(v);
-      if (!v) _loadTiles(force: true);
-    }
-
-    return MenuAnchor(
-      controller: _menu,
-      onOpen: () => setState(() => _menuOpen = true),
-      onClose: () => setState(() => _menuOpen = false),
-      alignmentOffset: const Offset(0, 6),
-      menuChildren: [
-        if (store.myLines.isEmpty)
-          const Padding(padding: EdgeInsets.all(16), child: Text('Βάλε αστέρι σε μια γραμμή\nγια να τη βλέπεις εδώ.'))
-        else ...[
-          RadioMenuButton<bool>(
-              value: false, groupValue: store.onlyMine, closeOnActivate: false, onChanged: (_) => only(false), child: const Text('Όλα τα λεωφορεία')),
-          RadioMenuButton<bool>(
-              value: true, groupValue: store.onlyMine, closeOnActivate: false, onChanged: (_) => only(true), child: const Text('Μόνο οι γραμμές μου')),
-          const Divider(height: 8),
-          for (final l in store.myLines)
-            CheckboxMenuButton(
-              value: !store.hiddenLines.contains(l),
-              closeOnActivate: false,
-              onChanged: (v) {
-                final show = v ?? false;
-                if (!store.onlyMine) only(true); // picking a line means: show only my lines (all of them)
-                if (store.hiddenLines.contains(l) == show) store.toggleHidden(l);
-              },
-              child: LineBadge(l),
-            ),
-        ],
-      ],
-      builder: (context, c, _) => Material(
+  // The «Χάρτης» button beside the search; it says when the map shows only my lines.
+  Widget _mapButton(BuildContext context, AppStore store, Tones t) => Material(
         color: store.onlyMine ? t.indicator : t.ground,
         elevation: 3,
         shadowColor: const Color(0x33000000),
         borderRadius: BorderRadius.circular(28),
         child: InkWell(
           borderRadius: BorderRadius.circular(28),
-          onTap: () => c.isOpen ? c.close() : c.open(),
+          onTap: () => _mapSheet(context, store),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 13, 8, 13),
+            padding: const EdgeInsets.fromLTRB(12, 13, 14, 13),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.directions_bus_outlined, size: 20),
+              const Icon(Icons.layers_outlined, size: 20),
               const SizedBox(width: 6),
-              Text(store.onlyMine ? 'Οι γραμμές μου' : 'Όλα', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-              const Icon(Icons.arrow_drop_down),
+              Text(store.onlyMine ? 'Οι γραμμές μου' : 'Χάρτης', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             ]),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 // Screen 15: no network. The times below are estimates from the last data.
