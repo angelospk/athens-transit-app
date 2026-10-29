@@ -58,11 +58,11 @@ String delayWords(int delayS) => delayS >= 90
         ? 'νωρίτερα ${(-delayS / 60).round()}′'
         : 'στην ώρα του';
 
-// "+2′ καθυστέρηση", "στην ώρα του", or null when unmatched.
+// "αργεί 2′", "στην ώρα του", or null when unmatched.
 (String, Color)? delayNote(BuildContext c, int? delayS) {
   final t = c.tones;
   if (delayS == null) return null;
-  if (delayS >= 90) return ('+${(delayS / 60).round()}′ καθυστέρηση', t.late);
+  if (delayS >= 90) return (delayWords(delayS), t.late);
   return ('στην ώρα του', t.onTime);
 }
 
@@ -82,10 +82,16 @@ class ArrivalRow extends StatelessWidget {
     final t = context.tones;
     final note = delayNote(context, first.delayS);
     final left = first.stopsLeft;
-    final parts = [
-      if (left != null) left == 1 ? 'επόμενη στάση του' : '$left στάσεις πριν',
-      if (estimate) 'εκτίμηση' else if (note != null) note.$1,
-    ];
+    // One fact under the headsign: an estimate, or a delay, or how far the bus is.
+    final late = !estimate && (first.delayS ?? 0) >= 90;
+    final far = !estimate && !late && left != null;
+    final fact = estimate
+        ? 'εκτίμηση'
+        : late
+            ? note!.$1
+            : far
+                ? (left == 1 ? '1 στάση μακριά' : '$left στάσεις μακριά')
+                : note?.$1 ?? '';
     final tilde = estimate ? '~' : '';
     return InkWell(
       onTap: onTap,
@@ -99,11 +105,11 @@ class ArrivalRow extends StatelessWidget {
               Text('→ ${titleCase(first.headsign)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
               const SizedBox(height: 3),
               Row(children: [
-                if (left != null) ...[StopsDots(left, color: lineColor(Deps.of(context).store, first.line).bg), const SizedBox(width: 6)],
+                if (far) ...[StopsDots(left, color: lineColor(Deps.of(context).store, first.line).bg), const SizedBox(width: 6)],
                 Flexible(
-                  child: Text(parts.join(' · '),
+                  child: Text(fact,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: estimate ? t.muted : note?.$2 ?? t.muted)),
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: late ? t.late : t.muted)),
                 ),
               ]),
             ]),
@@ -118,6 +124,17 @@ class ArrivalRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The rows of a stop card: the starred lines on top (all of them), then the others by arrival, up to
+/// [cap] rows in all unless [all]; [hidden] is how many «Όλες οι γραμμές» would add.
+({List<(Arrival, List<Arrival>)> mine, List<(Arrival, List<Arrival>)> others, int hidden}) stopRows(
+    List<(Arrival, List<Arrival>)> groups, Set<String> starred,
+    {bool all = false, int cap = 6}) {
+  final mine = groups.where((x) => starred.contains(x.$1.line)).toList();
+  final rest = groups.where((x) => !starred.contains(x.$1.line)).toList();
+  final room = all ? rest.length : (cap - mine.length).clamp(0, rest.length);
+  return (mine: mine, others: rest.take(room).toList(), hidden: rest.length - room);
 }
 
 // Groups arrivals by line and direction: first, then the next ones.

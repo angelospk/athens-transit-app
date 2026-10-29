@@ -176,16 +176,29 @@ class _StopPanelState extends State<StopPanel> {
     return ListenableBuilder(
       listenable: Listenable.merge([d.store, d.live]),
       builder: (context, _) {
-        final mine = s.lines.where(d.store.myLines.contains).toList();
-        final showAll = all || mine.isEmpty;
         final fav = d.store.favNear(s.name, s.lat, s.lon);
-        final groups = groupArrivals(_arrivals(showAll));
+        final arrivals = _arrivals(true);
+        final groups = groupArrivals(arrivals);
+        // One list: the starred lines pinned on top, the others by arrival, 6 rows until «Όλες».
+        final rows = stopRows(groups, d.store.myLines.toSet(), all: all);
         final estimate = d.live.isOffline;
         final quiet = s.lines.where((l) => !groups.any((g) => g.$1.line == l)).toList();
-        // With "my lines", the other lines come below in short rows: "Περνούν επίσης".
-        final also = showAll ? const <(Arrival, List<Arrival>)>[] : groupArrivals(_arrivals(true)).where((g) => !mine.contains(g.$1.line)).take(4).toList();
         final missed = <_Missed>[];
-        final planned = _planned(showAll ? s.lines : mine, _arrivals(true), missed).take(6).toList();
+        final planned = _planned(s.lines, arrivals, missed).take(6).toList();
+        Widget row((Arrival, List<Arrival>) g) => DecoratedBox(
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: t.rule))),
+              child: ArrivalRow(
+                first: g.$1,
+                then: g.$2,
+                estimate: estimate,
+                onTap: () => mapSel.value = BusSel(g.$1.line, g.$1.vehicleId, stop: s),
+                trailing: _bell(context, s, g.$1),
+              ),
+            );
+        Widget head(String x) => Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 2),
+              child: Text(x, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+            );
         return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
             const SheetHandle(),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -207,16 +220,6 @@ class _StopPanelState extends State<StopPanel> {
               ),
               const CloseSel(),
             ]),
-            const SizedBox(height: 12),
-            if (mine.isNotEmpty)
-              SegmentedButton<bool>(
-                segments: [
-                  ButtonSegment(value: false, label: Text('Οι γραμμές μου · ${mine.length}')),
-                  ButtonSegment(value: true, label: Text('Όλες · ${s.lines.length}')),
-                ],
-                selected: {all},
-                onSelectionChanged: (v) => setState(() => all = v.first),
-              ),
             const SizedBox(height: 4),
             if (estimate && groups.isNotEmpty)
               Container(
@@ -231,44 +234,17 @@ class _StopPanelState extends State<StopPanel> {
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Text('Κανένα λεωφορείο με GPS δεν έρχεται τώρα.', style: TextStyle(color: t.muted)),
               ),
-            for (final (first, then) in groups)
-              DecoratedBox(
-                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: t.rule))),
-                child: ArrivalRow(
-                  first: first,
-                  then: then,
-                  estimate: estimate,
-                  onTap: () => mapSel.value = BusSel(first.line, first.vehicleId, stop: s),
-                  trailing: _bell(context, s, first),
-                ),
-              ),
-            if (also.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.only(top: 16, bottom: 4),
-                child: Text('Περνούν επίσης', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
-              ),
-              for (final (a, _) in also)
-                InkWell(
-                  onTap: () => mapSel.value = BusSel(a.line, a.vehicleId, stop: s),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(children: [
-                      LineBadge(a.line),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          ['→ ${titleCase(a.headsign)}', if (a.stopsLeft != null) a.stopsLeft == 1 ? 'επόμενη στάση' : '${a.stopsLeft} στάσεις'].join(' · '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 14, color: t.muted),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text('${estimate ? '~' : ''}${mins(a.etaS)}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-                    ]),
-                  ),
-                ),
+            if (rows.mine.isNotEmpty) ...[
+              head('Οι γραμμές σου'),
+              for (final g in rows.mine) row(g),
+              if (rows.others.isNotEmpty) head('Περνούν επίσης'),
             ],
+            for (final g in rows.others) row(g),
+            if (rows.hidden > 0)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(onPressed: () => setState(() => all = true), child: Text('Όλες οι γραμμές · +${rows.hidden} ›')),
+              ),
             if (missed.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 16, bottom: 4),
@@ -310,7 +286,7 @@ class _StopPanelState extends State<StopPanel> {
                 ),
               Text('Ώρα αναχώρησης από την αφετηρία + η διαδρομή ως εδώ με μέση ταχύτητα. Όχι live.', style: TextStyle(fontSize: 12, color: t.muted)),
             ],
-            if (quiet.isNotEmpty && showAll) ...[
+            if (quiet.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text('Χωρίς λεωφορείο κοντά τώρα: ${quiet.join(', ')}', style: TextStyle(fontSize: 13, color: t.muted)),
             ],
