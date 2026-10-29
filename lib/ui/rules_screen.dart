@@ -121,6 +121,10 @@ class _RulesScreenState extends State<RulesScreen> with WidgetsBindingObserver {
                     d.store.putRule(r.copyWith(enabled: on));
                     await AlertService.sync(d.store);
                   },
+                  onDelete: () async {
+                    d.store.removeRule(r.id);
+                    await AlertService.sync(d.store);
+                  },
                 ),
             ]),
           ),

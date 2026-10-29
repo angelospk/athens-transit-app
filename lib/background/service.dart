@@ -159,8 +159,22 @@ class AlertService {
     var p = await FlutterForegroundTask.checkNotificationPermission();
     if (p != NotificationPermission.granted) p = await FlutterForegroundTask.requestNotificationPermission();
     final android = _notes.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    if (weekly && android != null && await android.canScheduleExactNotifications() == false) {
-      await android.requestExactAlarmsPermission();
+    // Exact alarms open a settings page, not a question: say why first, and let the user skip it (the
+    // rule still starts, maybe some minutes late).
+    if (weekly && android != null && await android.canScheduleExactNotifications() == false && context.mounted) {
+      final go = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Να ξεκινά ακριβώς στην ώρα του;'),
+          content: const Text('Το Android θέλει την άδεια «Ξυπνητήρια και υπενθυμίσεις» για αυτό. Θα ανοίξουν οι ρυθμίσεις: '
+              'άνοιξε τον διακόπτη και γύρνα πίσω. Χωρίς αυτήν, ο κανόνας ξεκινά, αλλά ίσως λίγα λεπτά αργότερα.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Όχι τώρα')),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Άνοιξε τις ρυθμίσεις')),
+          ],
+        ),
+      );
+      if (go == true) await android.requestExactAlarmsPermission();
     }
     return p == NotificationPermission.granted;
   }
