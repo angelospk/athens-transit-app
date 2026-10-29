@@ -32,4 +32,13 @@ void main() {
     s.setHome(const HomePlace(label: 'Παγκράτι', lat: 37.968, lon: 23.744, approx: true));
     expect(s.homePt, (37.968, 23.744)); // the place wins
   });
+
+  test('removing the last line of mine shows all buses again: the map has no switch without lines', () async {
+    SharedPreferences.setMockInitialValues({});
+    final s = AppStore(await SharedPreferences.getInstance());
+    s.toggleMyLine('040');
+    s.setOnlyMine(true);
+    s.toggleMyLine('040');
+    expect(s.onlyMine, isFalse);
+  });
 }

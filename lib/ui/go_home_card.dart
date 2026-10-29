@@ -6,7 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../background/widget.dart' show pushHomeWidget;
+import '../background/widget.dart' show clearHomeWidget, pushHomeWidget;
 import '../core/eta.dart';
 import '../core/geo.dart';
 import '../core/go_home.dart';
@@ -65,6 +65,7 @@ class _GoHomeCardState extends State<GoHomeCard> {
     _boards = homeBoards(ix, widget.me, home);
     _last = [];
     _next = null;
+    if (_boards.isEmpty) clearHomeWidget();
     _loadLast();
     _loadNext();
   }

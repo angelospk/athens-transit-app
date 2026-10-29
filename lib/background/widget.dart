@@ -61,6 +61,17 @@ const _homeProvider = 'HomeLastWidgetProvider';
 
 /// Widget «Γυρνάς σπίτι»: today's last runs home from where the app last was (no location in the
 /// background), the one that goes first on top, as clock times; the widget strikes the ones gone.
+/// No direct way home from where the app is now: the runs of the place before must not stay.
+Future<void> clearHomeWidget() async {
+  try {
+    await HomeWidget.saveWidgetData<String>('h_from', null);
+    await HomeWidget.saveWidgetData<String>('h_rows', null);
+    await HomeWidget.updateWidget(androidName: _homeProvider);
+  } catch (e) {
+    debugPrint('home widget: $e');
+  }
+}
+
 Future<void> pushHomeWidget(AppStore store, List<HomeLast> last, {required String from}) async {
   try {
     final now = DateTime.now().toUtc();

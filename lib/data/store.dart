@@ -179,6 +179,7 @@ class AppStore extends ChangeNotifier {
     if (myLines.contains(l)) {
       myLines = myLines.where((x) => x != l).toList();
       favs = [for (final f in favs) f.copyWith(lines: f.lines.where((x) => x != l).toList())];
+      if (myLines.isEmpty) onlyMine = false; // the map hides its switch without lines
     } else {
       if (myLines.length >= maxLines) return false;
       _addLine(l);

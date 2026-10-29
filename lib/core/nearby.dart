@@ -109,7 +109,7 @@ const _plain = {'ά': 'α', 'έ': 'ε', 'ή': 'η', 'ί': 'ι', 'ϊ': 'ι', 'ΐ'
 /// For search: lower case, no Greek accents, final sigma as σ.
 String fold(String s) => s.toLowerCase().split('').map((c) => _plain[c] ?? c).join();
 
-// Greek to the Latin letters people type for it, loosely: the i sounds, o and ω, ch/h are one each.
+// Greek to the Latin letters people type for it, loosely: the i sounds, o and ω, ch/h are one each; ου is ou.
 const _latin = {
   'α': 'a', 'β': 'v', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'ζ': 'z', 'η': 'i', 'θ': 'th', 'ι': 'i', 'κ': 'k', 'λ': 'l', 'μ': 'm',
   'ν': 'n', 'ξ': 'x', 'ο': 'o', 'π': 'p', 'ρ': 'r', 'σ': 's', 'τ': 't', 'υ': 'i', 'φ': 'f', 'χ': 'h', 'ψ': 'ps', 'ω': 'o',
@@ -117,6 +117,7 @@ const _latin = {
 final _latinLetter = RegExp('[a-z]');
 
 String _loose(String s) => fold(s)
+    .replaceAll('ου', 'ou') // «Μαρούσι» is «marousi»
     .split('')
     .map((c) => _latin[c] ?? c)
     .join()

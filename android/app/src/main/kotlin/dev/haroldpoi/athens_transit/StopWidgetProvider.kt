@@ -17,7 +17,8 @@ import org.json.JSONArray
 // "Η στάση μου": the app saves each line's next arrivals as clock times (Unix s); every redraw (the
 // app's scheduled updates, once a minute for half an hour) turns them into minutes from now, so the
 // widget counts down without the app running. From Android 12 the launcher picks one layout per
-// size: 2×1 one line, 4×1 two, 4×2 three, 4×3 four.
+// size: 2×1 one line, 4×1 two, 4×2 three, 4×3 four. The heights are what the rows need (a Pixel
+// row of cells is ~105dp), so a launcher with lower cells gets fewer rows instead of clipped ones.
 class StopWidgetProvider : HomeWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray, widgetData: SharedPreferences) {
         for (id in appWidgetIds) {
@@ -25,9 +26,9 @@ class StopWidgetProvider : HomeWidgetProvider() {
                 RemoteViews(
                     mapOf(
                         SizeF(110f, 40f) to views(context, widgetData, 1, false),
-                        SizeF(250f, 40f) to views(context, widgetData, 2, false),
-                        SizeF(250f, 110f) to views(context, widgetData, 3, true),
-                        SizeF(250f, 180f) to views(context, widgetData, 4, true),
+                        SizeF(250f, 80f) to views(context, widgetData, 2, false),
+                        SizeF(250f, 150f) to views(context, widgetData, 3, true),
+                        SizeF(250f, 260f) to views(context, widgetData, 4, true),
                     )
                 )
             } else {

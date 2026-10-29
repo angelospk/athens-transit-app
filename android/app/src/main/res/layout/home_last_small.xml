@@ -13,6 +13,6 @@
             android:paddingHorizontal="6dp" android:paddingVertical="2dp" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" android:visibility="gone" />
     </LinearLayout>
     <TextView android:id="@+id/hbigsub" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:textColor="@color/widget_muted" android:textSize="12sp" android:maxLines="2" android:ellipsize="end"
+        android:textColor="@color/widget_muted" android:textSize="12sp" android:maxLines="1" android:ellipsize="end"
         android:text="Άνοιξε την εφαρμογή μακριά από το σπίτι" />
 </LinearLayout>

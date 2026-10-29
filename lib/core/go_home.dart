@@ -30,8 +30,8 @@ typedef HomeLast = ({String line, String stop, int atS});
 /// The timetable's day: the Athens date, before 04:00 still the day before. When it changes, the
 /// last runs found are yesterday's.
 DateTime serviceDay(DateTime utc) {
-  final w = athensWall(utc.subtract(const Duration(hours: 4)));
-  return DateTime.utc(w.year, w.month, w.day);
+  final w = athensWall(utc); // the wall clock: the night the clocks change, 04:00 is still 04:00
+  return DateTime.utc(w.year, w.month, w.hour < 4 ? w.day - 1 : w.day);
 }
 
 int serviceNowS(DateTime utc) {

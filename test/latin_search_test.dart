@@ -11,6 +11,10 @@ void main() {
     expect(nameMatches('ΧΑΛΑΝΔΡΙ', 'halandri'), isTrue);
     expect(nameMatches('ΘΗΣΕΙΟ', 'thiseio'), isTrue);
     expect(nameMatches('ΑΚΡΟΠΟΛΗ', 'syntagma'), isFalse);
+    // ου is «ou», not «oi».
+    expect(nameMatches('ΜΑΡΟΥΣΙ', 'marousi'), isTrue);
+    expect(nameMatches('ΒΟΥΛΑ', 'voula'), isTrue);
+    expect(nameMatches('ΗΛΙΟΥΠΟΛΗ', 'ilioupoli'), isTrue);
   });
 
   test('Greek still matches as before: no accents, any case', () {

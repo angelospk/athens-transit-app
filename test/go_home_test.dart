@@ -63,6 +63,11 @@ void main() {
     // 00:50 Athens on the 30th is still the 29th's day; 04:10 is the 30th's.
     expect(serviceDay(DateTime.utc(2026, 10, 29, 22, 50)), DateTime.utc(2026, 10, 29));
     expect(serviceDay(DateTime.utc(2026, 10, 30, 2, 10)), DateTime.utc(2026, 10, 30));
+    // The night the clocks go forward: 01:10 UTC is 04:10 Athens (EEST), already the 29th's day.
+    expect(serviceDay(DateTime.utc(2026, 3, 29, 1, 10)), DateTime.utc(2026, 3, 29));
+    // The night they go back, 03:10 Athens comes twice (00:10 and 01:10 UTC): both the 24th's day.
+    expect(serviceDay(DateTime.utc(2026, 10, 25, 0, 10)), DateTime.utc(2026, 10, 24));
+    expect(serviceDay(DateTime.utc(2026, 10, 25, 1, 10)), DateTime.utc(2026, 10, 24));
   });
 
   test('a last run as a moment for the widget: «24:40» is 00:40 the next morning, asked before or after midnight', () {
