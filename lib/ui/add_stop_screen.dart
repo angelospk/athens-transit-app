@@ -46,12 +46,11 @@ class _AddStopScreenState extends State<AddStopScreen> {
     query = q;
     final ix = await d.api.trips();
     if (q.trim().length < 2) return _load();
-    final f = fold(q);
     final hits = <NearbyStop>[];
     final seen = <String>{};
     for (var i = 0; i < ix.s.length && hits.length < 8; i++) {
       final s = ix.s[i];
-      if (!fold(s.$1).contains(f) || !seen.add(s.$1)) continue;
+      if (!nameMatches(s.$1, q) || !seen.add(s.$1)) continue;
       hits.addAll(nearbyStops(ix, (s.$2, s.$3), radiusM: 50, max: 1));
     }
     if (mounted && query == q) setState(() => stops = hits);

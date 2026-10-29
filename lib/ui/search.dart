@@ -4,7 +4,6 @@
 // and show or hide that mode on the map. A query whose only hits are in a hidden mode says so.
 
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 
@@ -129,14 +128,14 @@ class _SearchFieldState extends State<SearchField> {
         } catch (_) {/* offline: lines and stops still work */}
       });
     }
-    final lines = _lines.where((l) => fold(l.id).startsWith(f) || (f.length > 2 && fold(l.name).contains(f))).take(5).toList();
-    final stations = f.length > 1 ? _stations.where((st) => fold(st.name).contains(f)).toList() : <_Station>[];
+    final lines = _lines.where((l) => fold(l.id).startsWith(f) || (f.length > 2 && nameMatches(l.name, q))).take(5).toList();
+    final stations = f.length > 1 ? _stations.where((st) => nameMatches(st.name, q)).toList() : <_Station>[];
     final stops = <NearbyStop>[];
     if (ix != null && f.length > 2) {
       final seen = <String>{};
       for (var i = 0; i < ix.s.length && stops.length < 6; i++) {
         final s = ix.s[i];
-        if (fold(s.$1).contains(f) && seen.add(s.$1)) stops.addAll(nearbyStops(ix, (s.$2, s.$3), radiusM: 50, max: 1));
+        if (nameMatches(s.$1, q) && seen.add(s.$1)) stops.addAll(nearbyStops(ix, (s.$2, s.$3), radiusM: 50, max: 1));
       }
     }
     final shownStations = [for (final st in stations) if (_on(st.mode)) st];
@@ -171,13 +170,13 @@ class _SearchFieldState extends State<SearchField> {
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.search),
             suffixIcon: _c.text.isEmpty ? null : IconButton(tooltip: 'Καθαρισμός', icon: const Icon(Icons.close), onPressed: _clear),
-            hintText: 'Αναζήτηση',
+            hintText: 'Στάση, γραμμή ή μέρος',
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(vertical: 13),
           ),
         ),
       );
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+    return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Row(children: [Expanded(child: field), if (widget.trailing != null) ...[const SizedBox(width: 8), widget.trailing!]]),
       const SizedBox(height: 6),
       if (_focus.hasFocus || _c.text.isNotEmpty)
@@ -210,15 +209,15 @@ class _SearchFieldState extends State<SearchField> {
           ),
         ),
       if (_lineHits.isNotEmpty || _stopHits.isNotEmpty || _placeHits.isNotEmpty || _stationHits.isNotEmpty)
-        Material(
+        // Above the keyboard, and scrolls when lines, stops and places do not fit: the room left in the
+        // map's body, which the Scaffold already shrinks for the keyboard (viewInsets read 0 here).
+        Flexible(
+          child: Material(
           color: t.ground,
           elevation: 3,
           borderRadius: BorderRadius.circular(20),
           clipBehavior: Clip.antiAlias,
-          // Above the keyboard, and scrolls when lines, stops and places do not fit.
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: max(0.0, MediaQuery.sizeOf(context).height - MediaQuery.viewInsetsOf(context).bottom - 160)),
-            child: ListView(shrinkWrap: true, padding: const EdgeInsets.symmetric(vertical: 6), children: [
+          child: ListView(shrinkWrap: true, padding: const EdgeInsets.symmetric(vertical: 6), children: [
               for (final l in _lineHits)
                 ListTile(
                   leading: LineBadge(l.id),
@@ -260,8 +259,7 @@ class _SearchFieldState extends State<SearchField> {
                   },
                 ),
             ]),
-          ),
-        ),
+        )),
     ]);
   }
 }

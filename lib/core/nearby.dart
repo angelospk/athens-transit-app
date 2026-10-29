@@ -109,6 +109,31 @@ const _plain = {'ά': 'α', 'έ': 'ε', 'ή': 'η', 'ί': 'ι', 'ϊ': 'ι', 'ΐ'
 /// For search: lower case, no Greek accents, final sigma as σ.
 String fold(String s) => s.toLowerCase().split('').map((c) => _plain[c] ?? c).join();
 
+// Greek to the Latin letters people type for it, loosely: the i sounds, o and ω, ch/h are one each.
+const _latin = {
+  'α': 'a', 'β': 'v', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'ζ': 'z', 'η': 'i', 'θ': 'th', 'ι': 'i', 'κ': 'k', 'λ': 'l', 'μ': 'm',
+  'ν': 'n', 'ξ': 'x', 'ο': 'o', 'π': 'p', 'ρ': 'r', 'σ': 's', 'τ': 't', 'υ': 'i', 'φ': 'f', 'χ': 'h', 'ψ': 'ps', 'ω': 'o',
+};
+final _latinLetter = RegExp('[a-z]');
+
+String _loose(String s) => fold(s)
+    .split('')
+    .map((c) => _latin[c] ?? c)
+    .join()
+    .replaceAll('ch', 'h')
+    .replaceAll('y', 'i')
+    .replaceAll('w', 'o');
+
+/// For search: [query] is in [name] without accents and case; a query in Latin letters («syntagma»)
+/// also matches the Greek name.
+bool nameMatches(String name, String query) => fold(name).contains(fold(query.trim())) || latinMatches(name, query);
+
+/// A query in Latin letters («syntagma») in a Greek name; false for a Greek query.
+bool latinMatches(String name, String query) {
+  final q = fold(query.trim());
+  return _latinLetter.hasMatch(q) && _loose(name).contains(_loose(q));
+}
+
 /// Every line that stops at a stop named [name] within 200 m of the point (both sides of the street,
 /// and same-name stops the 150 m merge keeps apart).
 List<String> linesAt(TripIndex ix, String name, double lat, double lon) {

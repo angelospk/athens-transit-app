@@ -825,8 +825,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  SearchField(ix: _ix, trailing: _mapButton(context, d.store, t)),
+                child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Flexible(child: SearchField(ix: _ix, trailing: _mapButton(context, d.store, t))),
                   if (d.live.isOffline) ...[const SizedBox(height: 4), _OfflineBanner(at: d.live.lastOkAt, now: d.live.nowS)],
                 ]),
               ),

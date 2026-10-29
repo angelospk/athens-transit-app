@@ -6,7 +6,7 @@ import 'dart:math';
 
 import 'geo.dart';
 import 'models.dart';
-import 'nearby.dart' show fold;
+import 'nearby.dart' show fold, latinMatches;
 
 /// Metres from the start to the first stop, and from the last stop to the end.
 const double walkM = 500;
@@ -236,7 +236,7 @@ List<Place> searchPlaces(List<Place> list, String query, [int max = 6]) {
       if (at == 0) return 1;
       if (!_isWordChar(f[at - 1])) return 2;
     }
-    return -1;
+    return latinMatches(p.label, query) ? 3 : -1; // «syntagma»: Latin letters, after the Greek hits
   }
 
   final ranked = <(int, Place)>[];
