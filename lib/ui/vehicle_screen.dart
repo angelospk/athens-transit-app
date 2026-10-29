@@ -128,6 +128,12 @@ class _VehiclePanelState extends State<VehiclePanel> {
     final etas = nextK < 0 ? const <int?>[] : [for (var k = nextK; k < stops.length; k++) etaSeconds(s, v, k, now)];
     final from = nextK < 0 ? 0 : nextK + firstUpcoming(etas);
     final variants = v.variant == null ? null : {v.variant!};
+    // The big number: minutes to the user's stop if the bus still reaches it, else to its next stop.
+    final mineK = nextK < 0 ? -1 : [for (var k = from; k < stops.length; k++) k].firstWhere((k) => myIds.contains(stops[k]), orElse: () => -1);
+    final headK = mineK >= 0 ? mineK : (nextK < 0 || from >= stops.length ? -1 : from);
+    final headEta = headK < 0 ? null : etas[headK - nextK];
+    final headName = headK < 0 ? '' : titleCase(s.stops[stops[headK]]?.name ?? stops[headK]);
+    final late = delay != null && delay >= 90;
     return ListView(controller: widget.scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), children: [
       const SheetHandle(),
       Row(children: [
@@ -135,41 +141,25 @@ class _VehiclePanelState extends State<VehiclePanel> {
         LineButton(widget.line, variants: variants),
         const SizedBox(width: 12),
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('→ ${titleCase(variant?.headsign ?? '')}', maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleLarge),
-            if (v.tripLabel != null) Text('δρομολόγιο ${v.tripLabel}', style: TextStyle(fontSize: 13, color: t.muted)),
-          ]),
+          child: Text('→ ${titleCase(variant?.headsign ?? '')}', maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleLarge),
         ),
-        if (delay != null)
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text(delay.abs() < 60 ? '0′' : '${delay > 0 ? '+' : '−'}${(delay.abs() / 60).round()}′',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: delay >= 90 ? t.late : t.onTime)),
-            Text('από πρόγραμμα', style: TextStyle(fontSize: 12, color: t.muted)),
-          ]),
         const CloseSel(),
       ]),
       const SizedBox(height: 8),
-      // Speed, GPS age and the vehicle in one line; the usual speed opens the line's speeds.
-      Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 6, runSpacing: 2, children: [
-        Text(v.speed == null ? '— χλμ/ώ' : '${kmh(v.speed!)} χλμ/ώ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: slow ? t.late : t.ink)),
-        InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () => showLineSpeed(context, line: widget.line, vehicle: v),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Text(usual == null ? 'ταχύτητες γραμμής' : 'συνήθως ${kmh(usual)}',
-                  style: TextStyle(fontSize: 13.5, color: t.ink, decoration: TextDecoration.underline, decorationColor: t.muted)),
-              Icon(Icons.chevron_right, size: 16, color: t.muted),
+      if (headEta != null)
+        Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text(mins(headEta), style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()])),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(mineK >= 0 ? 'στη στάση σου · $headName' : 'στην επόμενη στάση · $headName',
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              if (delay != null)
+                Text(delayWords(delay), style: TextStyle(fontSize: 14, fontWeight: late ? FontWeight.w700 : FontWeight.w400, color: late ? t.late : t.onTime)),
             ]),
           ),
-        ),
-        Text('·', style: muted),
-        Text('GPS πριν ${ago(age)}', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: age <= 90 ? t.onTime : t.late)),
-        Text('·', style: muted),
-        Text('#${v.id}', style: muted),
-      ]),
-      const SizedBox(height: 10),
+        ]),
+      const SizedBox(height: 12),
       Row(children: [
         Expanded(
           child: FilledButton.icon(
@@ -183,22 +173,42 @@ class _VehiclePanelState extends State<VehiclePanel> {
         Expanded(
           child: OutlinedButton.icon(
             style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
-            icon: const Icon(Icons.airline_seat_recline_normal),
-            label: const Text('Είμαι μέσα'),
+            icon: const Icon(Icons.flag_outlined),
+            label: const Text('Πού κατεβαίνω;'),
             onPressed: nextK < 0 ? null : () => showRide(context, line: widget.line, st: s, vehicle: v),
           ),
         ),
       ]),
-      // The map keeps this bus in the middle while the sheet shows it.
-      ValueListenableBuilder(
-        valueListenable: followBus,
-        builder: (context, on, _) => SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          secondary: const Icon(Icons.lock_outline),
-          title: const Text('Κλείδωσε στο λεωφορείο', maxLines: 1, style: TextStyle(fontSize: 15)),
-          value: on,
-          onChanged: (x) => followBus.value = x,
+      // Speed, position age, the vehicle and its timetable run: folded, they are for the curious.
+      Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(bottom: 8),
+          expandedAlignment: Alignment.centerLeft,
+          title: Text('Λεπτομέρειες', style: TextStyle(fontSize: 14, color: t.muted)),
+          children: [
+            Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 6, runSpacing: 2, children: [
+              Text(v.speed == null ? '— χλμ/ώ' : '${kmh(v.speed!)} χλμ/ώ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: slow ? t.late : t.ink)),
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => showLineSpeed(context, line: widget.line, vehicle: v),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Text(usual == null ? 'ταχύτητες γραμμής' : 'συνήθως ${kmh(usual)}',
+                        style: TextStyle(fontSize: 13.5, color: t.ink, decoration: TextDecoration.underline, decorationColor: t.muted)),
+                    Icon(Icons.chevron_right, size: 16, color: t.muted),
+                  ]),
+                ),
+              ),
+              Text('·', style: muted),
+              Text('θέση πριν ${ago(age)}', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: age <= 90 ? t.onTime : t.late)),
+              Text('·', style: muted),
+              Text('όχημα ${v.id}', style: muted),
+            ]),
+            if (v.tripLabel != null) Text('δρομολόγιο ${v.tripLabel}', style: muted),
+          ],
         ),
       ),
       Text('Επόμενες στάσεις', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),

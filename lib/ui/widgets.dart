@@ -51,6 +51,13 @@ String ago(int s) => s < 60 ? '$s″' : '${s ~/ 60}′';
 
 String mins(int s) => s < 45 ? 'τώρα' : '${(s / 60).round()}′';
 
+// A delay as words under the minutes: "αργεί 20′", "νωρίτερα 3′", "στην ώρα του" within 90 s.
+String delayWords(int delayS) => delayS >= 90
+    ? 'αργεί ${(delayS / 60).round()}′'
+    : delayS <= -90
+        ? 'νωρίτερα ${(-delayS / 60).round()}′'
+        : 'στην ώρα του';
+
 // "+2′ καθυστέρηση", "στην ώρα του", or null when unmatched.
 (String, Color)? delayNote(BuildContext c, int? delayS) {
   final t = c.tones;

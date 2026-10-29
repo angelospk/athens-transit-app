@@ -10,6 +10,15 @@ enum AlertMode { minutes, stops }
 /// and n.
 enum RuleKind { arrive, leave, ride, board }
 
+/// The bell of a line at a stop is filled while an alert for it is set: a weekly rule that is on, or a
+/// one-off that has not run out. A ride («Πού κατεβαίνω;») or a followed trip is not a bell.
+bool hasAlert(Iterable<Rule> rules, String line, String stopName, int nowS) => rules.any((r) =>
+    r.line == line &&
+    r.stopName == stopName &&
+    r.enabled &&
+    (r.kind == RuleKind.arrive || r.kind == RuleKind.leave) &&
+    (r.untilS == null || nowS <= r.untilS!));
+
 class Rule {
   final String id, line, variant, stopId, stopName;
   final int stopIndex, n;

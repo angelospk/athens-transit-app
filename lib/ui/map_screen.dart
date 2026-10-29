@@ -144,7 +144,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     setState(() {});
     final s = mapSel.value;
-    followBus.value = false;
+    followBus.value = s is BusSel; // the map follows an open bus until the user moves the map
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_sheet.isAttached) _sheet.animateTo(s == null ? _rest : _half, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
     });
@@ -158,7 +158,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       case BusSel(:final line, :final vehicleId, :final at):
         final v = _vehicles(Deps.of(context).store).where((x) => x.id == vehicleId && x.line == line).firstOrNull;
         final p = v == null ? at : _glidePos(v, DateTime.now().millisecondsSinceEpoch / 1000); // where it is drawn
-        if (p != null) _focus(p.$1, p.$2, max(_map?.cameraPosition?.zoom ?? 15, 15));
+        if (p != null) {
+          _followedAt = p; // this focus is the first follow step
+          _focus(p.$1, p.$2, max(_map?.cameraPosition?.zoom ?? 15, 15));
+        }
       case PlaceSel(:final at):
         _focus(at.$1, at.$2, 16);
       case StationSel(:final at):
@@ -443,7 +446,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   // With the map open and location already allowed: a bus that moved with the phone for a minute
-  // is offered once ("Είσαι στο 040;"), and its sheet has «Είμαι μέσα».
+  // is offered once ("Είσαι στο 040;"), and its sheet has «Πού κατεβαίνω;».
   Future<void> _sampleBoard() async {
     bool shown() => mounted && appTab.value == 0 && WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     if (!shown()) {
@@ -729,7 +732,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           return LayoutBuilder(builder: (context, box) {
           final h = _h = box.maxHeight;
           return Stack(children: [
-            MapLibreMap(
+            // A drag or pinch on the map stops following the bus, as in every map app.
+            Listener(
+              onPointerMove: (_) => followBus.value = false,
+              child: MapLibreMap(
               styleString: style,
               initialCameraPosition: CameraPosition(target: LatLng(start.$1, start.$2), zoom: 14),
               myLocationEnabled: _me != null,
@@ -752,7 +758,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               },
               onStyleLoadedCallback: _onStyle,
               onCameraIdle: _loadTiles,
-            ),
+            )),
             // Map buttons ride on the sheet's edge and hide when it is nearly full.
             if (_extent < .7)
               Positioned(

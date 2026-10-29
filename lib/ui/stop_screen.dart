@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../core/athens_time.dart';
 import '../core/eta.dart';
 import '../core/models.dart';
+import '../core/rules.dart';
 import '../data/live.dart';
 import '../data/store.dart';
 import 'alert_sheet.dart';
@@ -155,6 +156,19 @@ class _StopPanelState extends State<StopPanel> {
     return out;
   }
 
+  // The bell of a line: filled while an alert for it at this stop is set.
+  Widget _bell(BuildContext context, StopRef s, Arrival a) {
+    final t = context.tones;
+    final d = Deps.of(context);
+    final set = hasAlert(d.store.rules, a.line, s.name, d.live.nowS);
+    return IconButton.filled(
+      tooltip: set ? 'Ειδοποίηση για το ${a.line}: ενεργή' : 'Ειδοποίησέ με για το ${a.line}',
+      style: IconButton.styleFrom(backgroundColor: set ? t.ink : t.surface, foregroundColor: set ? t.ground : t.ink),
+      icon: Icon(set ? Icons.notifications_active : Icons.notifications_outlined),
+      onPressed: () => showAlertSheet(context, stop: s, arrival: a),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final d = Deps.of(context);
@@ -225,12 +239,7 @@ class _StopPanelState extends State<StopPanel> {
                   then: then,
                   estimate: estimate,
                   onTap: () => mapSel.value = BusSel(first.line, first.vehicleId, stop: s),
-                  trailing: IconButton.filled(
-                    tooltip: 'Ειδοποίηση για το ${first.line}',
-                    style: IconButton.styleFrom(backgroundColor: t.surface, foregroundColor: t.ink),
-                    icon: const Icon(Icons.notifications_outlined),
-                    onPressed: () => showAlertSheet(context, stop: s, arrival: first),
-                  ),
+                  trailing: _bell(context, s, first),
                 ),
               ),
             if (also.isNotEmpty) ...[

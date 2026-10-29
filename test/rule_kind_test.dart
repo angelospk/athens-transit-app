@@ -40,4 +40,15 @@ void main() {
     final one = r.copyWith(vehicle: 'mine');
     expect(Rule.fromJson(one.toJson()).vehicle, 'mine');
   });
+
+  test('a bell is filled while a rule for the line at the stop is set', () {
+    expect(hasAlert([r], '040', 'ΣΥΝΤΑΓΜΑ', 9), isTrue); // one-off, not yet over
+    expect(hasAlert([r], '040', 'ΣΥΝΤΑΓΜΑ', 10), isFalse); // over
+    expect(hasAlert([r], '209', 'ΣΥΝΤΑΓΜΑ', 9), isFalse); // another line
+    expect(hasAlert([r], '040', 'ΑΚΡΟΠΟΛΗ', 9), isFalse); // another stop
+    const weekly = Rule(id: '2', line: '040', variant: 'a', stopIndex: 3, stopId: 's', stopName: 'ΣΥΝΤΑΓΜΑ', mode: AlertMode.minutes, n: 5, days: 1, startMin: 480, endMin: 520);
+    expect(hasAlert([weekly], '040', 'ΣΥΝΤΑΓΜΑ', 1 << 40), isTrue); // weekly: set at any hour
+    expect(hasAlert([r.copyWith(enabled: false)], '040', 'ΣΥΝΤΑΓΜΑ', 9), isFalse);
+    expect(hasAlert([r.copyWith(kind: RuleKind.ride)], '040', 'ΣΥΝΤΑΓΜΑ', 9), isFalse); // getting off is not a bell
+  });
 }

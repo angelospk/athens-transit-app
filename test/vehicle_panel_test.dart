@@ -50,6 +50,20 @@ void main() {
     await t.pump(const Duration(seconds: 15)); // the retry timer, in fake time
     await settle(t);
     expect(find.textContaining('χωρίς σύνδεση'), findsNothing);
-    expect(find.text('#44548'), findsOneWidget); // the vehicle, in the info line
+    // One default per screen: the two actions, no follow switch; the vehicle number sits folded.
+    expect(find.text('Πού κατεβαίνω;'), findsOneWidget);
+    expect(find.text('Κλείδωσε στο λεωφορείο'), findsNothing);
+    expect(find.text('Λεπτομέρειες'), findsOneWidget);
+    expect(find.text('όχημα 44548'), findsNothing);
+    await t.tap(find.text('Λεπτομέρειες'));
+    await t.pumpAndSettle();
+    expect(find.text('όχημα 44548'), findsOneWidget);
+  });
+
+  test('the delay reads as words, not as a signed number', () {
+    expect(delayWords(30), 'στην ώρα του');
+    expect(delayWords(-60), 'στην ώρα του');
+    expect(delayWords(20 * 60), 'αργεί 20′');
+    expect(delayWords(-3 * 60), 'νωρίτερα 3′');
   });
 }

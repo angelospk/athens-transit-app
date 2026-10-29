@@ -285,7 +285,7 @@ class _AlertSheetState extends State<AlertSheet> {
             segments: const [
               ButtonSegment(value: 0, label: Text('Λεπτά πριν')),
               ButtonSegment(value: 1, label: Text('Στάσεις πριν')),
-              ButtonSegment(value: 2, label: Text('Πότε να φύγω')),
+              ButtonSegment(value: 2, label: Text('Φύγε εγκαίρως')),
             ],
             selected: {leave ? 2 : mode.index},
             onSelectionChanged: (s) => setState(() {

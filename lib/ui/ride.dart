@@ -1,4 +1,4 @@
-// Screen 17 · Είμαι μέσα: on a bus, pick where you get off; the phone vibrates one stop before
+// Screen 17 · Πού κατεβαίνω;: on a bus, pick where you get off; the phone vibrates one stop before
 // ("Κατέβα στην επόμενη"). A one-off rule for this bus only, watched by the background service as any
 // alert, so it works with the screen off and without a network for a while (offline estimate).
 
@@ -15,7 +15,7 @@ import 'map_sel.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-/// «Ανέβηκα» on a planned trip: a ride alert for the stop to get off at ([alight], by name). The bus
+/// «Πού κατεβαίνω;» on a planned trip: a ride alert for the stop to get off at ([alight], by name). The bus
 /// is the one of this direction nearest the phone now (the one counted on has usually left the stop
 /// by then); none or two of them: the line on the map, to pick it there.
 Future<void> rideFromHere(BuildContext context, {required String line, required String variant, required String alight}) async {
@@ -39,7 +39,7 @@ Future<void> rideFromHere(BuildContext context, {required String line, required 
   final st = d.live.statics[line];
   if (!context.mounted) return;
   if (st == null || bus == null) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρήκα το λεωφορείο δίπλα σου. Διάλεξέ το στον χάρτη και πάτα «Είμαι μέσα».')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρήκα το λεωφορείο δίπλα σου. Διάλεξέ το στον χάρτη και πάτα «Πού κατεβαίνω;».')));
     showOnMap(LineSel(line, variants: {variant}));
     return;
   }

@@ -2,7 +2,7 @@
 // planner (core/tp.dart, the web's planner) finds the bus lines with no change or one; each result
 // shows walking, riding and, when leaving now, the next bus live at the stop to board, so "leave in N′"
 // is real. With "Με μετρό" a metro or tram line between the two ends comes first. A result opens the
-// trip step by step (route_screen.dart), with «Πότε να φύγω», «Ανέβηκα» and «Ακολούθησέ με».
+// trip step by step (route_screen.dart), with «Φύγε εγκαίρως», «Πού κατεβαίνω;» and «Ακολούθησέ με».
 
 import 'dart:async';
 import 'dart:math';
@@ -552,7 +552,7 @@ class _DirectCardState extends State<_DirectCard> {
                     if (next != null)
                       TextButton.icon(
                         icon: const Icon(Icons.notifications_active_outlined, size: 18),
-                        label: const Text('Πότε να φύγω'),
+                        label: const Text('Φύγε εγκαίρως'),
                         onPressed: () => showAlertSheet(
                           context,
                           stop: StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)),
@@ -560,8 +560,8 @@ class _DirectCardState extends State<_DirectCard> {
                         ),
                       ),
                     TextButton.icon(
-                      icon: const Icon(Icons.airline_seat_recline_normal, size: 18),
-                      label: const Text('Ανέβηκα'),
+                      icon: const Icon(Icons.flag_outlined, size: 18),
+                      label: const Text('Πού κατεβαίνω;'),
                       onPressed: () => rideFromHere(context, line: r.line, variant: v.id, alight: off.$1),
                     ),
                   ],

@@ -1,7 +1,7 @@
 // «Ακολούθησέ με» on a planned trip: a one-off rule for its first bus. The background service samples
 // the phone (location while the app was in use is enough: the service starts from here) and the buses
 // of that direction; once the phone rides one, it alerts one stop before the stop to get off at, as
-// «Είμαι μέσα» does. It works with the app closed and the screen off.
+// «Πού κατεβαίνω;» does. It works with the app closed and the screen off.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';

@@ -1,6 +1,6 @@
 // A planned trip step by step (screen 28): walk to the stop, which bus and where to get off, the
 // change, the metro, the walk to the end. Leaving now, each bus step shows the next bus live that
-// there is time to reach, the first one also «φύγε σε N′»; «Πότε να φύγω», «Ανέβηκα» and
+// there is time to reach, the first one also «φύγε σε N′»; «Φύγε εγκαίρως», «Πού κατεβαίνω;» and
 // «Ακολούθησέ με» follow the trip from there. A step opens its stop or station on the map.
 
 import 'dart:async';
@@ -195,8 +195,8 @@ class _StepTile extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: TextButton.icon(
-                          icon: const Icon(Icons.airline_seat_recline_normal, size: 18),
-                          label: const Text('Ανέβηκα'),
+                          icon: const Icon(Icons.flag_outlined, size: 18),
+                          label: const Text('Πού κατεβαίνω;'),
                           onPressed: () => rideFromHere(context, line: s.line!, variant: s.variant!, alight: s.to),
                         ),
                       ),
@@ -217,7 +217,7 @@ class _NextBus extends StatefulWidget {
   final TripIndex ix;
   final RouteStep step;
   final int reachMin; // minutes until the user is at the stop
-  final bool first; // the first bus: «φύγε σε N′» and «Πότε να φύγω»
+  final bool first; // the first bus: «φύγε σε N′» and «Φύγε εγκαίρως»
 
   @override
   State<_NextBus> createState() => _NextBusState();
@@ -294,7 +294,7 @@ class _NextBusState extends State<_NextBus> {
           if (widget.first && next != null)
             TextButton.icon(
               icon: const Icon(Icons.notifications_active_outlined, size: 18),
-              label: const Text('Πότε να φύγω'),
+              label: const Text('Φύγε εγκαίρως'),
               onPressed: () => showAlertSheet(
                 context,
                 stop: StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)),
@@ -302,8 +302,8 @@ class _NextBusState extends State<_NextBus> {
               ),
             ),
           TextButton.icon(
-            icon: const Icon(Icons.airline_seat_recline_normal, size: 18),
-            label: const Text('Ανέβηκα'),
+            icon: const Icon(Icons.flag_outlined, size: 18),
+            label: const Text('Πού κατεβαίνω;'),
             onPressed: () => rideFromHere(context, line: s.line!, variant: s.variant!, alight: s.to),
           ),
         ]),
