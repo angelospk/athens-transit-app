@@ -26,7 +26,6 @@ import '../data/basemap.dart';
 import '../data/locate.dart';
 import '../data/store.dart';
 import 'help.dart';
-import 'island_nav.dart';
 import 'line_panel.dart';
 import 'map_sel.dart';
 import 'rules_screen.dart';
@@ -79,7 +78,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   double _h = 700; // the map's height: the sheet's sizes are fractions of it
   LineStatic? _routeSt; // the line whose stops are drawn on its route: a tap on one opens it
   String? _dark; // the lightened dark style (JSON); the plain URL until it loads
-  Timer? _calm; // the island grows back a moment after the map stops
+  final _near = NearMemo(); // the home sheet's nearest stops, searched again only when they can change
 
   @override
   void initState() {
@@ -112,7 +111,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _refresh?.cancel();
     _glide?.cancel();
     _boardTimer?.cancel();
-    _calm?.cancel();
     _sheet.dispose();
     super.dispose();
   }
@@ -139,18 +137,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   void _onTab() {
     if (appTab.value != 0) _forgetTracks();
     if (mounted) setState(() {}); // back on the map tab walks the sheet back
-    navCompact.value = false;
-  }
-
-  // The island shrinks while the map moves or its sheet is up, and grows back a moment after.
-  void _busy(bool moving) {
-    if (appTab.value != 0) return;
-    _calm?.cancel();
-    if (moving || _extent > .5) {
-      navCompact.value = true;
-      if (!moving) return;
-    }
-    _calm = Timer(const Duration(milliseconds: 1500), () => navCompact.value = _extent > .5);
   }
 
   // A new selection: the sheet opens to half and the map moves to it.
@@ -755,11 +741,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               onMapCreated: (c) {
                 _map = c;
                 c.onFeatureTapped.add(_tap);
-                var was = false;
-                c.addListener(() {
-                  if (c.isCameraMoving && !was) _busy(true);
-                  was = c.isCameraMoving;
-                });
               },
               // An empty spot closes what is open, as on the web.
               onMapClick: (_, _) {
@@ -770,10 +751,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 }
               },
               onStyleLoadedCallback: _onStyle,
-              onCameraIdle: () {
-                _busy(false);
-                _loadTiles();
-              },
+              onCameraIdle: _loadTiles,
             ),
             // Map buttons ride on the sheet's edge and hide when it is nearly full.
             if (_extent < .7)
@@ -807,10 +785,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               ),
             NotificationListener<DraggableScrollableNotification>(
               onNotification: (n) {
-                if ((n.extent - _extent).abs() > .01) {
-                  setState(() => _extent = n.extent);
-                  _busy(false);
-                }
+                if ((n.extent - _extent).abs() > .01) setState(() => _extent = n.extent);
                 return false;
               },
               child: DraggableScrollableSheet(
@@ -837,6 +812,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         ? _MyLinesSheet(scroll: scroll)
                         : _NearSheet(
                             me: _me,
+                            memo: _near,
                             located: _located,
                             ix: _ix,
                             stations: [..._metroSt, ..._railSt],
@@ -1047,8 +1023,9 @@ class _OfflineBanner extends StatelessWidget {
 // shows on its row with its next bus. Without the user's position (no permission, location off, still
 // looking) a way to allow it, and meanwhile the saved stop for this time of day.
 class _NearSheet extends StatelessWidget {
-  const _NearSheet({required this.me, required this.located, required this.ix, required this.stations, required this.scroll, required this.onLocate});
+  const _NearSheet({required this.me, required this.memo, required this.located, required this.ix, required this.stations, required this.scroll, required this.onLocate});
   final Pt? me;
+  final NearMemo memo;
   final bool located;
   final TripIndex? ix;
   final List<Station> stations;
@@ -1064,7 +1041,7 @@ class _NearSheet extends StatelessWidget {
       for (final s in stations)
         if (s.railId != null ? d.store.showRail : s.lines.every((l) => l.startsWith('T')) ? d.store.showTram : d.store.showMetro) s,
     ];
-    final places = here == null ? const <NearPlace>[] : nearPlaces(ix, shown, here);
+    final places = here == null ? const <NearPlace>[] : memo.places(ix, shown, here);
     return ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), children: [
       const SheetHandle(),
       Row(children: [

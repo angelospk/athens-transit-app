@@ -15,6 +15,10 @@ Detail per task and what was checked: [docs/PLAN-2026-10-28.md](docs/PLAN-2026-1
 - New: a metro, tram or suburban station in «Κοντά σου» shows the next departure of each of its
   lines and directions (metro and tram: STASY timetable; suburban: live from railway.gov.gr).
 - Fixed: turning «Παρασκευή και Σάββατο βράδυ» back on did not always set the evening alarm again.
+- Changed: the bottom bar keeps its size. It no longer shrinks while the map moves or the sheet is up:
+  that resized the map under it every frame and made the map stutter.
+- Faster: «Κοντά σου» searches the nearest stops again only when the position or the data change, not
+  on every frame of a sheet drag.
 
 ## v0.2.0 (2026-10-28)
 

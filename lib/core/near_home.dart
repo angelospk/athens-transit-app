@@ -133,3 +133,27 @@ List<RailDeparture> nextTrains(List<RailDeparture> all, DateTime now, {int max =
       ..sort((a, b) => a.expected.compareTo(b.expected)))
     .take(max)
     .toList();
+
+/// nearPlaces for the home sheet, searched again only when the position, the trip index or the stations
+/// change: the sheet is built every frame while it is dragged.
+class NearMemo {
+  TripIndex? _ix;
+  List<Station> _stations = const [];
+  Pt? _me;
+  List<NearPlace>? _out;
+
+  List<NearPlace> places(TripIndex? ix, List<Station> stations, Pt me) {
+    final same = _out != null &&
+        identical(ix, _ix) &&
+        me == _me &&
+        stations.length == _stations.length &&
+        Iterable<int>.generate(stations.length).every((i) => identical(stations[i], _stations[i]));
+    if (!same) {
+      _ix = ix;
+      _stations = List.of(stations);
+      _me = me;
+      _out = nearPlaces(ix, stations, me);
+    }
+    return _out!;
+  }
+}

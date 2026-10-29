@@ -175,4 +175,27 @@ void main() {
       expect(got.map((d) => d.train), ['c', 'a']);
     });
   });
+
+  group('NearMemo', () {
+    final ix = ixOf([('Α', 100), ('Β', 200)], {'1': [0, 1]});
+    final st = [station('ΣΥΝΤΑΓΜΑ', 150, ['M2'])];
+
+    test('the same inputs give the same list without a new search (a sheet drag rebuilds every frame)', () {
+      final m = NearMemo();
+      final a = m.places(ix, st, me), b = m.places(ix, [...st], me);
+      expect(identical(a, b), isTrue, reason: 'a new list of the same stations is the same input');
+      expect(a.map((p) => p.name), ['Α', 'ΣΥΝΤΑΓΜΑ', 'Β']);
+    });
+
+    test('a new position, trip index or set of stations searches again', () {
+      final m = NearMemo();
+      final a = m.places(ix, st, me);
+      expect(identical(a, m.places(ix, st, north(50))), isFalse);
+      final b = m.places(ix, st, me);
+      expect(identical(b, m.places(ixOf([('Γ', 10)], {'1': [0]}), st, me)), isFalse);
+      final c = m.places(ix, st, me);
+      expect(m.places(ix, const [], me).map((p) => p.name), ['Α', 'Β']);
+      expect(identical(c, m.places(ix, st, me)), isFalse);
+    });
+  });
 }
