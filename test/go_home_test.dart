@@ -58,4 +58,10 @@ void main() {
     // 12:00 UTC = 14:00 Athens.
     expect(serviceNowS(DateTime.utc(2026, 10, 30, 12)), 14 * 3600);
   });
+
+  test('the timetable day turns at 04:00 Athens, not at midnight', () {
+    // 00:50 Athens on the 30th is still the 29th's day; 04:10 is the 30th's.
+    expect(serviceDay(DateTime.utc(2026, 10, 29, 22, 50)), DateTime.utc(2026, 10, 29));
+    expect(serviceDay(DateTime.utc(2026, 10, 30, 2, 10)), DateTime.utc(2026, 10, 30));
+  });
 }

@@ -41,8 +41,9 @@ class _GoHomeCardState extends State<GoHomeCard> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (_last.isEmpty) _loadLast(); // a timetable that failed (offline) is asked again
+    // Every 5′ the timetables again (cached): one that failed offline comes back.
+    _timer = Timer.periodic(const Duration(seconds: 30), (t) {
+      if (_last.isEmpty || t.tick % 10 == 0) _loadLast();
       _loadNext();
     });
   }
@@ -56,7 +57,8 @@ class _GoHomeCardState extends State<GoHomeCard> {
   void _refresh(Pt home) {
     final ix = widget.ix;
     if (ix == null) return;
-    final key = ((widget.me.$1 * 1000).round(), (widget.me.$2 * 1000).round(), home, ix);
+    // A new timetable day (04:00) finds the ways and their last runs again.
+    final key = ((widget.me.$1 * 1000).round(), (widget.me.$2 * 1000).round(), home, ix, serviceDay(DateTime.now().toUtc()));
     if (key == _key) return;
     _key = key;
     _boards = homeBoards(ix, widget.me, home);

@@ -26,6 +26,13 @@ typedef HomeLast = ({String line, String stop, int atS});
 
 /// Now in the timetable's day: seconds since Athens midnight, and past 24 h until 04:00, when the
 /// night's last runs ("24:40") still belong to the day before.
+/// The timetable's day: the Athens date, before 04:00 still the day before. When it changes, the
+/// last runs found are yesterday's.
+DateTime serviceDay(DateTime utc) {
+  final w = athensWall(utc.subtract(const Duration(hours: 4)));
+  return DateTime.utc(w.year, w.month, w.day);
+}
+
 int serviceNowS(DateTime utc) {
   final w = athensWall(utc);
   final s = w.hour * 3600 + w.minute * 60 + w.second;
