@@ -5,6 +5,14 @@ Backend and API changes: [athens-transit-rt CHANGELOG](https://github.com/angelo
 Detail per task and what was checked: [docs/PLAN-2026-10-28.md](docs/PLAN-2026-10-28.md),
 [docs/QA-2026-10-28.md](docs/QA-2026-10-28.md). Manual test list: [docs/TEST-CHECKLIST.md](docs/TEST-CHECKLIST.md).
 
+## Unreleased
+
+### Χάρτης
+- New: «Κοντά σου» on the map's sheet: the nearest bus stops and metro, tram and suburban stations,
+  with metres and minutes on foot. A saved line that stops there shows its next bus on the row. It
+  replaces «Η στάση σου». Without location: a «Τοποθεσία» button, and the saved stop meanwhile.
+- Fixed: the map waited forever for the position when the planner asked for it at the same time.
+
 ## v0.2.0 (2026-10-28)
 
 ### Διαδρομή (journey planner, new tab)

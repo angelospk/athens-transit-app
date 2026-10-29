@@ -2,8 +2,8 @@
 // (contract rev 5), or only the user's lines from /v1/lines; buses glide along their `path` between
 // updates. A stop, a bus or a line opens in the sheet over the map (a drag moves it between peek, half
 // and full), not on a new page; its route is drawn with arrows in travel direction, as on the web.
-// With nothing open the sheet shows the nearest saved stop, or, with "only my lines", where those
-// lines are now.
+// With nothing open the sheet shows the stops and stations nearest the user (the saved lines there with
+// their next bus), or, with "only my lines", where those lines are now.
 
 import 'dart:async';
 import 'dart:math';
@@ -13,11 +13,13 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../core/athens_time.dart';
 import '../core/board.dart';
+import '../core/eta.dart';
 import '../core/geo.dart';
 import '../core/map_geo.dart';
 import '../core/marker.dart';
 import '../core/models.dart';
 import '../core/motion.dart';
+import '../core/near_home.dart';
 import '../core/nearby.dart';
 import '../data/basemap.dart';
 import '../data/locate.dart';
@@ -37,7 +39,7 @@ import 'widgets.dart';
 const _style = 'https://tiles.openfreemap.org/styles/';
 const _box = (s: 37.5, w: 22.9, n: 38.5, e: 24.5); // tiles exist only here
 const _lanePx = 3.0; // each direction drawn to the right of its travel direction (two lanes), as on the web
-const _peek = .14, _rest = .18, _half = .45, _full = .92; // _rest: nothing open, one compact row shows
+const _peek = .14, _rest = .30, _half = .45, _full = .92; // _rest: nothing open, the nearest stops show
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -59,6 +61,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   final _busTrack = <String, List<Fix>>{};
   String? _offered;
   Pt? _me;
+  bool _located = false; // the first position request has answered (with a place or without)
+  List<Station> _metroSt = const [], _railSt = const []; // for the nearest stops
   TripIndex? _ix;
   String? _styleFor;
   final _sheet = DraggableScrollableController();
@@ -89,8 +93,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     appTab.addListener(_onTab);
     WidgetsBinding.instance.addObserver(this);
     myPosition().then((p) {
-      if (!mounted || p == null) return;
-      setState(() => _me = p);
+      if (!mounted) return;
+      setState(() {
+        _located = true;
+        _me = p ?? _me;
+      });
+      if (p == null) return;
       if (mapSel.value == null) _map?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(p.$1, p.$2), 15));
     });
   }
@@ -111,7 +119,15 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Paused, or another tab: the boarding check starts its minute again.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) _forgetTracks();
+    if (state != AppLifecycleState.resumed) {
+      _forgetTracks();
+    } else {
+      // Back in the app, maybe elsewhere or from the location settings: the nearest stops from a new
+      // fix (never asks).
+      quietPosition().then((p) {
+        if (mounted && p != null) setState(() => _me = p);
+      });
+    }
   }
 
   void _forgetTracks() {
@@ -360,9 +376,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _styled = true;
     api.metro().then((j) {
       _metroJson = j;
+      if (mounted) setState(() => _metroSt = metroStations(j));
       return m.setGeoJsonSource('metro', metroGeo(j, name: titleCase));
     }).catchError((_) {});
-    api.suburban().then((sub) => m.setGeoJsonSource('rail', railGeo(sub, name: titleCase))).catchError((_) {});
+    api.suburban().then((sub) {
+      if (mounted) setState(() => _railSt = suburbanStations(sub));
+      return m.setGeoJsonSource('rail', railGeo(sub, name: titleCase));
+    }).catchError((_) {});
     _ix ??= await api.trips();
     if (mounted) setState(() {}); // the search can look up stops now
     await m.setGeoJsonSource('stops', {
@@ -812,7 +832,21 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     LineSel(:final line, :final variants) => LinePanel(key: ValueKey(line), line: line, variants: variants, scroll: scroll),
                     PlaceSel(:final name, :final at) => _PlacePanel(name: name, at: at, ix: _ix, scroll: scroll),
                     StationSel() => StationPanel(key: ObjectKey(sel), sel: sel, ix: _ix, scroll: scroll),
-                    null => d.store.onlyMine ? _MyLinesSheet(scroll: scroll) : _NearSheet(me: _me, ix: _ix, scroll: scroll),
+                    null => d.store.onlyMine
+                        ? _MyLinesSheet(scroll: scroll)
+                        : _NearSheet(
+                            me: _me,
+                            located: _located,
+                            ix: _ix,
+                            stations: [..._metroSt, ..._railSt],
+                            scroll: scroll,
+                            onLocate: () async {
+                              final p = await askPosition();
+                              if (!mounted || p == null) return;
+                              setState(() => _me = p);
+                              _map?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(p.$1, p.$2), 15));
+                            },
+                          ),
                   },
                 ),
               ),
@@ -1008,64 +1042,175 @@ class _OfflineBanner extends StatelessWidget {
   }
 }
 
-// The nearest saved stop (or the nearest stop) with the user's lines there.
+// Nothing open: the stops and stations nearest the user, nearest first. A saved line that stops at one
+// shows on its row with its next bus. Without the user's position (no permission, location off, still
+// looking) a way to allow it, and meanwhile the saved stop for this time of day.
 class _NearSheet extends StatelessWidget {
-  const _NearSheet({required this.me, required this.ix, required this.scroll});
+  const _NearSheet({required this.me, required this.located, required this.ix, required this.stations, required this.scroll, required this.onLocate});
   final Pt? me;
+  final bool located;
   final TripIndex? ix;
+  final List<Station> stations;
   final ScrollController scroll;
+  final VoidCallback onLocate;
 
   @override
   Widget build(BuildContext context) {
     final d = Deps.of(context);
     final t = context.tones;
     final here = me;
-    FavStop? fav;
-    if (d.store.favs.isNotEmpty) {
-      final byTime = d.store.favsByTime(DateTime.now().toUtc());
-      fav = here == null ? byTime.first : (byTime..sort((a, b) => distTo(a, here.$1, here.$2).compareTo(distTo(b, here.$1, here.$2)))).first;
-    }
-    NearbyStop? near;
-    if (fav == null && here != null && ix != null) near = nearbyStops(ix!, here, radiusM: 500, max: 1).firstOrNull;
-    final name = fav?.name ?? near?.name;
-    final lat = fav?.lat ?? near?.lat, lon = fav?.lon ?? near?.lon;
-    final lines = fav?.lines ?? near?.lines.where(d.store.myLines.contains).toList() ?? const <String>[];
-    final groups = name == null ? const [] : groupArrivals(d.live.arrivalsNear(name, lat!, lon!, only: lines)).take(3).toList();
-    final dist = here == null || lat == null ? null : distM(here, (lat, lon!));
+    final shown = [
+      for (final s in stations)
+        if (s.railId != null ? d.store.showRail : s.lines.every((l) => l.startsWith('T')) ? d.store.showTram : d.store.showMetro) s,
+    ];
+    final places = here == null ? const <NearPlace>[] : nearPlaces(ix, shown, here);
     return ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), children: [
       const SheetHandle(),
-      // One compact row while the sheet rests low: the stop and its next two buses; drag up for more.
-      InkWell(
-        onTap: name == null
-            ? null
-            : () async {
-                final ixx = ix ?? await d.api.trips();
-                final all = linesAt(ixx, name, lat!, lon!);
-                mapSel.value = StopSel(StopRef(name: name, lat: lat, lon: lon, lines: all.isEmpty ? lines : all));
-              },
-        child: Row(children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(dist == null ? (fav?.place == Place.work ? 'Δουλειά' : 'Η στάση σου') : 'Κοντά σου · ${dist.round()} μ.',
-                  style: TextStyle(fontSize: 12, color: t.muted, fontWeight: FontWeight.w500)),
-              Text(name == null ? 'Πάτα μια στάση στον χάρτη' : titleCase(name),
-                  maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+      Row(children: [
+        const Expanded(child: Text('Κοντά σου', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
+        if (places.isNotEmpty) const LiveNote(),
+      ]),
+      if (here == null) ...[
+        if (!located)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(children: [
+              const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+              const SizedBox(width: 10),
+              Text('Βρίσκω τη θέση σου…', style: TextStyle(color: t.muted)),
+            ]),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(children: [
+              Icon(Icons.location_off_outlined, color: t.muted),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Δεν ξέρω πού είσαι. Με την τοποθεσία βλέπεις εδώ τις στάσεις κοντά σου.', style: TextStyle(fontSize: 13.5, color: t.muted))),
+              const SizedBox(width: 8),
+              FilledButton.tonal(onPressed: onLocate, child: const Text('Τοποθεσία')),
             ]),
           ),
-          for (final (first, _) in groups.take(2)) ...[
+        _SavedNear(ix: ix),
+      ] else if (places.isEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(ix == null ? 'Φορτώνω τις στάσεις…' : 'Καμία στάση σε 2,5 χλμ.', style: TextStyle(color: t.muted)),
+        )
+      else
+        for (final (i, p) in places.indexed) ...[
+          if (i > 0) Divider(height: 1, color: t.rule),
+          _NearRow(place: p, ix: ix),
+        ],
+    ]);
+  }
+}
+
+// One near stop or station: name, how far, and the saved lines there with their next bus (or the
+// other lines, small). A tap opens it, as a tap on the map does.
+class _NearRow extends StatelessWidget {
+  const _NearRow({required this.place, required this.ix});
+  final NearPlace place;
+  final TripIndex? ix;
+
+  void _open() {
+    final p = place;
+    if (p.kind == NearKind.bus) {
+      final all = ix == null ? const <String>[] : linesAt(ix!, p.name, p.lat, p.lon);
+      mapSel.value = StopSel(StopRef(name: p.name, lat: p.lat, lon: p.lon, lines: all.isEmpty ? p.lines : all));
+    } else {
+      mapSel.value = StationSel(p.name, (p.lat, p.lon), lines: p.lines, railId: p.railId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final d = Deps.of(context);
+    final t = context.tones;
+    final p = place;
+    final mine = myLinesHere(p, d.store.myLines);
+    final groups = mine.isEmpty ? const <(Arrival, List<Arrival>)>[] : groupArrivals(d.live.arrivalsNear(p.name, p.lat, p.lon, only: mine));
+    final quiet = [for (final l in mine) if (!groups.any((g) => g.$1.line == l)) l];
+    final (icon, what) = switch (p.kind) {
+      NearKind.bus => (Icons.directions_bus_outlined, p.lines.take(8).join(', ')),
+      NearKind.metro => (Icons.subway_outlined, 'Μετρό · ${p.lines.join(', ')}'),
+      NearKind.tram => (Icons.tram_outlined, 'Τραμ · ${p.lines.join(', ')}'),
+      NearKind.rail => (Icons.train_outlined, 'Προαστιακός'),
+    };
+    return InkWell(
+      onTap: _open,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Icon(icon, size: 22, color: t.muted),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(titleCase(p.name), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                if (mine.isEmpty) Text(what, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: t.muted)),
+              ]),
+            ),
             const SizedBox(width: 8),
-            LineBadge(first.line),
-            const SizedBox(width: 4),
-            Text('${d.live.isOffline ? '~' : ''}${mins(first.etaS)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-          ],
+            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              Text(distLabel(p.distM), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              Text('${walkMin(p.distM)}′ με τα πόδια', style: TextStyle(fontSize: 12, color: t.muted)),
+            ]),
+          ]),
+          for (final (first, _) in groups)
+            Padding(
+              padding: const EdgeInsets.only(left: 34, top: 6),
+              child: Row(children: [
+                LineBadge(first.line),
+                const SizedBox(width: 8),
+                Expanded(child: Text('→ ${titleCase(first.headsign)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13.5, color: t.muted))),
+                Text('${d.live.isOffline ? '~' : ''}${mins(first.etaS)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              ]),
+            ),
+          if (quiet.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 34, top: 6),
+              child: Text('${quiet.join(', ')}: κανένα λεωφορείο με GPS τώρα', style: TextStyle(fontSize: 13, color: t.muted)),
+            ),
         ]),
       ),
-      const SizedBox(height: 8),
-      const LiveNote(),
+    );
+  }
+}
+
+// Without the user's position: the saved stop for this time of day and its lines' next buses.
+class _SavedNear extends StatelessWidget {
+  const _SavedNear({required this.ix});
+  final TripIndex? ix;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = Deps.of(context);
+    final t = context.tones;
+    if (d.store.favs.isEmpty) {
+      return Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text('Ή πάτα μια στάση στον χάρτη.', style: TextStyle(color: t.muted)));
+    }
+    final fav = d.store.favsByTime(DateTime.now().toUtc()).first;
+    final groups = groupArrivals(d.live.arrivalsNear(fav.name, fav.lat, fav.lon, only: fav.lines)).take(3).toList();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      InkWell(
+        onTap: () async {
+          final ixx = ix ?? await d.api.trips();
+          final all = linesAt(ixx, fav.name, fav.lat, fav.lon);
+          mapSel.value = StopSel(StopRef(name: fav.name, lat: fav.lat, lon: fav.lon, lines: all.isEmpty ? fav.lines : all));
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(fav.place == Place.work ? 'Δουλειά' : 'Η στάση σου', style: TextStyle(fontSize: 12, color: t.muted, fontWeight: FontWeight.w500)),
+            Text(titleCase(fav.name), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+          ]),
+        ),
+      ),
       for (final (first, then) in groups)
         ArrivalRow(first: first, then: then, estimate: d.live.isOffline, onTap: () => mapSel.value = BusSel(first.line, first.vehicleId)),
-      if (name != null && groups.isEmpty && lines.isNotEmpty)
-        Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Text('Κανένα από ${lines.join(', ')} δεν έρχεται τώρα.', style: TextStyle(color: t.muted))),
+      if (groups.isEmpty && fav.lines.isNotEmpty)
+        Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Text('Κανένα από ${fav.lines.join(', ')} δεν έρχεται τώρα.', style: TextStyle(color: t.muted))),
     ]);
   }
 }
