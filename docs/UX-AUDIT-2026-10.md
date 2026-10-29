@@ -243,7 +243,7 @@ not verified.
 | D2 | Onboarding | keep (fix the hidden step) / **remove** (map first, ask location with a reason, ask home only when needed) | **Remove**. The fastest path to value; fixes P0 #1 and #2 together. |
 | D3 | «Σπίτι» | a stop (today) / **a place** (address or pin, with a default stop) | **A place**. Needed for «Γυρνάς σπίτι» via metro or another stop. |
 | D4 | Alert sheet default | all options visible (today) / **one button + «Περισσότερες επιλογές»** | **One button**. Keep the preview line. |
-| D5 | Stop names | as in GTFS / **restore accents** (a dictionary built once from OSM/Wikipedia names, reviewed) and cut «(προσωρινη Λογω Εργων)» to a badge | **Restore**, backend-side if possible so the web gets it too (would be an `rt` issue). |
+| D5 | Stop names | as in GTFS / **restore accents** (a dictionary built once from OSM/Wikipedia names, reviewed) and cut «(προσωρινη Λογω Εργων)» to a badge | ~~Restore, backend-side~~ **Rejected by Harold (2026-10-29): too risky.** Stop names stay as in GTFS, in the backend and everywhere else. |
 | D6 | Widget priority | W1 sizes first / **W3b + W3c first** (the go-home idea, timetable only) | **W1 fix, then W3b/W3c.** W1 is in users' hands already. |
 | D7 | Widget origin for «Γυρνάς σπίτι» | **last saved position** / background location / fixed stop only | **Last saved position + a «Από» choice**; no background location (Play policy, a second permission). |
 | D8 | Statistics screen | keep in Ρυθμίσεις › Για προχωρημένους / move to web only | **Keep, hidden**. Fix the expired-GTFS message wording either way. |
