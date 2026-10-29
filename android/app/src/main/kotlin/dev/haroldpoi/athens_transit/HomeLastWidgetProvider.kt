@@ -27,12 +27,13 @@ class HomeLastWidgetProvider : HomeWidgetProvider() {
             val v = if (Build.VERSION.SDK_INT >= 31) {
                 RemoteViews(
                     mapOf(
-                        SizeF(110f, 40f) to small(context, widgetData),
-                        SizeF(250f, 150f) to list(context, widgetData), // the head and three runs fit
+                        SizeF(110f, 80f) to small(context, widgetData),
+                        SizeF(250f, 150f) to list(context, widgetData, 3), // the head and three runs fit
+                        SizeF(250f, 190f) to list(context, widgetData, 4),
                     )
                 )
             } else {
-                list(context, widgetData)
+                list(context, widgetData, 4)
             }
             appWidgetManager.updateAppWidget(id, v)
         }
@@ -55,7 +56,7 @@ class HomeLastWidgetProvider : HomeWidgetProvider() {
         return "από $f · πριν ${inWords(now - at)}"
     }
 
-    private fun list(context: Context, widgetData: SharedPreferences): RemoteViews {
+    private fun list(context: Context, widgetData: SharedPreferences, maxRows: Int): RemoteViews {
         val now = System.currentTimeMillis() / 1000
         val v = RemoteViews(context.packageName, R.layout.home_last_widget)
         v.setOnClickPendingIntent(R.id.hroot, HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java))
@@ -65,7 +66,7 @@ class HomeLastWidgetProvider : HomeWidgetProvider() {
         // Every text set each time: the launcher keeps the old view and applies only what is set.
         v.setTextViewText(R.id.hsub, if (f == null) EMPTY else if (first == null) "$f · τα τελευταία έφυγαν" else "$f · πρώτα χάνεται το ${first.line}")
         for (k in ROW.indices) {
-            val r = runs.getOrNull(k)
+            val r = if (k < maxRows) runs.getOrNull(k) else null
             if (r == null) {
                 v.setViewVisibility(ROW[k], View.GONE)
                 continue

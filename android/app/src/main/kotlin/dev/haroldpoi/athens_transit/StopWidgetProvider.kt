@@ -25,7 +25,7 @@ class StopWidgetProvider : HomeWidgetProvider() {
             val v = if (Build.VERSION.SDK_INT >= 31) {
                 RemoteViews(
                     mapOf(
-                        SizeF(110f, 40f) to views(context, widgetData, 1, false),
+                        SizeF(110f, 60f) to views(context, widgetData, 1, false),
                         SizeF(250f, 80f) to views(context, widgetData, 2, false),
                         SizeF(250f, 150f) to views(context, widgetData, 3, true),
                         SizeF(250f, 260f) to views(context, widgetData, 4, true),
