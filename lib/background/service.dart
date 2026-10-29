@@ -130,14 +130,21 @@ class AlertService {
     await takeOpen(onOpen);
     await sync(store);
     await syncNudge(store);
-    // A home stop added or removed later moves the evening alarm too.
-    var home = _hasHome(store);
-    store.addListener(() {
-      if (_hasHome(store) == home) return;
-      home = !home;
-      syncNudge(store);
-    });
+    // The setting turned on or off, or a home stop added or removed later, moves the evening alarm too.
+    store.addListener(nudgeListener(store, () => syncNudge(store)));
   }
+
+  /// A store listener that calls [rearm] each time the evening alarm becomes wanted or not wanted.
+  static VoidCallback nudgeListener(AppStore store, void Function() rearm) {
+    var wanted = _wantsNudge(store);
+    return () {
+      if (_wantsNudge(store) == wanted) return;
+      wanted = !wanted;
+      rearm();
+    };
+  }
+
+  static bool _wantsNudge(AppStore store) => store.lastBusNudge && _hasHome(store);
 
   static bool _hasHome(AppStore store) => store.favs.any((f) => f.place == Place.home && f.lines.isNotEmpty);
 
@@ -240,7 +247,7 @@ class AlertService {
   static Future<void> syncNudge(AppStore store) async {
     if (!Platform.isAndroid) return;
     await AndroidAlarmManager.cancel(_nudgeAlarmId);
-    if (!store.lastBusNudge || !_hasHome(store)) return;
+    if (!_wantsNudge(store)) return;
     await AndroidAlarmManager.oneShotAt(nextNudgeUtc(DateTime.now().toUtc()).toLocal(), _nudgeAlarmId, nudgeFired,
         exact: false, wakeup: false, allowWhileIdle: true, rescheduleOnReboot: true);
   }

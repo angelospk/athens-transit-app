@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../background/service.dart';
 import '../background/widget.dart';
 import 'help.dart';
 import 'stats_screen.dart';
@@ -78,10 +77,7 @@ class SettingsScreen extends StatelessWidget {
             title: const Text('Παρασκευή και Σάββατο βράδυ: το τελευταίο για το σπίτι'),
             subtitle: const Text('Στις 21:00 μια ειδοποίηση με το τελευταίο λεωφορείο της στάσης «Σπίτι»'),
             value: store.lastBusNudge,
-            onChanged: (x) async {
-              store.setLastBusNudge(x);
-              await AlertService.syncNudge(store);
-            },
+            onChanged: store.setLastBusNudge, // the store listener moves the alarm (AlertService.init)
           ),
           Divider(color: t.rule),
           ListTile(
