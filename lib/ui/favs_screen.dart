@@ -20,6 +20,7 @@ import 'map_sel.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import 'planner_screen.dart';
 
 class FavsScreen extends StatelessWidget {
   const FavsScreen({super.key});
@@ -49,14 +50,32 @@ class FavsScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
                 child: Text('Αγαπημένα', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 28)),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-                child: Row(children: [
-                  Dot(t.onTime),
-                  const SizedBox(width: 6),
-                  Text(morning ? 'Πρωί: πρώτα η στάση του σπιτιού' : 'Απόγευμα: πρώτα η στάση της δουλειάς', style: TextStyle(fontSize: 13, color: t.muted)),
-                ]),
+              // «Σπίτι» is a place (an address or an area), set here or from «Γυρνάς σπίτι».
+              Card(
+                elevation: 0,
+                color: t.surface,
+                margin: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+                child: ListTile(
+                  leading: const Icon(Icons.home_outlined),
+                  title: Text(d.store.home == null ? 'Πού είναι το σπίτι σου;' : 'Σπίτι · ${d.store.home!.label}'),
+                  subtitle: Text(d.store.home?.approx ?? false ? 'περίπου · μένει μόνο στο κινητό' : 'Ανώνυμο: μένει μόνο στο κινητό',
+                      style: TextStyle(fontSize: 12.5, color: t.muted)),
+                  trailing: d.store.home == null
+                      ? const Icon(Icons.chevron_right)
+                      : IconButton(tooltip: 'Διαγραφή σπιτιού', icon: const Icon(Icons.close), onPressed: () => d.store.setHome(null)),
+                  onTap: () => askHome(context),
+                ),
               ),
+              // The time-of-day order only matters once a stop is marked «Σπίτι» or «Δουλειά».
+              if (d.store.favs.any((f) => f.place != null))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                  child: Row(children: [
+                    Dot(t.onTime),
+                    const SizedBox(width: 6),
+                    Text(morning ? 'Πρωί: πρώτα η στάση του σπιτιού' : 'Απόγευμα: πρώτα η στάση της δουλειάς', style: TextStyle(fontSize: 13, color: t.muted)),
+                  ]),
+                ),
               if (home != null) _LastHome(key: ValueKey('last-${home.key}'), fav: home),
               if (favs.isEmpty)
                 Padding(

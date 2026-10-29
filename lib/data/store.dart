@@ -40,6 +40,27 @@ class FavStop {
       );
 }
 
+/// «Σπίτι» as a place: an address, an area, or a point near home snapped to a ~250 m grid ([approx]),
+/// so nobody has to give the exact address. It stays on the phone.
+class HomePlace {
+  const HomePlace({required this.label, required this.lat, required this.lon, this.approx = false});
+  final String label;
+  final double lat, lon;
+  final bool approx;
+
+  Map<String, dynamic> toJson() => {'label': label, 'lat': lat, 'lon': lon, if (approx) 'approx': true};
+  factory HomePlace.fromJson(Map<String, dynamic> j) =>
+      HomePlace(label: j['label'] as String, lat: (j['lat'] as num).toDouble(), lon: (j['lon'] as num).toDouble(), approx: j['approx'] == true);
+}
+
+const _grid = .0025; // degrees: ~280 m north-south, ~220 m east-west in Athens
+
+/// A point near [p], the same for every point in its grid cell (the cell's middle).
+Pt approxPoint(Pt p) {
+  double snap(double x) => double.parse((((x / _grid).floor() + .5) * _grid).toStringAsFixed(5));
+  return (snap(p.$1), snap(p.$2));
+}
+
 class AppStore extends ChangeNotifier {
   AppStore(this._prefs) {
     final raw = _prefs.getString(stateKey);
@@ -53,6 +74,7 @@ class AppStore extends ChangeNotifier {
   final SharedPreferences _prefs;
 
   List<FavStop> favs = [];
+  HomePlace? home;
   List<String> myLines = [];
   Set<String> hiddenLines = {};
   bool onlyMine = false;
@@ -67,6 +89,7 @@ class AppStore extends ChangeNotifier {
 
   void _load(Map<String, dynamic> j) {
     favs = [for (final f in j['favs'] as List? ?? const []) FavStop.fromJson(f as Map<String, dynamic>)];
+    home = j['home'] == null ? null : HomePlace.fromJson(j['home'] as Map<String, dynamic>);
     myLines = [for (final l in j['myLines'] as List? ?? const []) l as String];
     hiddenLines = {for (final l in j['hidden'] as List? ?? const []) l as String};
     onlyMine = j['onlyMine'] == true;
@@ -86,6 +109,7 @@ class AppStore extends ChangeNotifier {
 
   Map<String, dynamic> toJson() => {
         'favs': [for (final f in favs) f.toJson()],
+        if (home != null) 'home': home!.toJson(),
         'myLines': myLines,
         'hidden': hiddenLines.toList(),
         'onlyMine': onlyMine,
@@ -112,6 +136,18 @@ class AppStore extends ChangeNotifier {
 
   FavStop? favNear(String name, double lat, double lon) =>
       favs.where((f) => f.name == name && distTo(f, lat, lon) < 200).firstOrNull;
+
+  void setHome(HomePlace? h) {
+    home = h;
+    _save();
+  }
+
+  /// Where «Σπίτι» is: the place, or else the saved stop marked «Σπίτι» (before places existed).
+  Pt? get homePt {
+    if (home case final h?) return (h.lat, h.lon);
+    final f = favs.where((f) => f.place == Place.home).firstOrNull;
+    return f == null ? null : (f.lat, f.lon);
+  }
 
   void addFav(FavStop f) {
     favs = [...favs.where((x) => x.key != f.key), f];

@@ -18,6 +18,7 @@ import '../core/route_steps.dart';
 import '../core/trip.dart' as tp;
 import '../data/live.dart' show nextArrivalsAt;
 import '../data/locate.dart';
+import '../data/store.dart';
 import 'alert_sheet.dart';
 import 'map_sel.dart';
 import 'ride.dart';
@@ -578,11 +579,41 @@ class _DirectCardState extends State<_DirectCard> {
 }
 
 // Where to: the user's place, stops and areas of the network, metro stations, and places from OSM.
+/// «Πού είναι το σπίτι σου;»: an address or an area, or a point near the user's position snapped to a
+/// grid (approxPoint). Saves it in the store and returns it; null when the user backs out.
+Future<HomePlace?> askHome(BuildContext context) async {
+  final d = Deps.of(context);
+  TripIndex? ix;
+  try {
+    ix = await d.api.trips();
+  } catch (_) {/* offline: the address search still has the cached places */}
+  if (!context.mounted) return null;
+  final got = await showModalBottomSheet<_End>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (_) => _PlacePicker(ix: ix, stations: const [], from: false, home: true),
+  );
+  if (got == null || got.pts.isEmpty) return null;
+  final approx = got.label == _nearMe;
+  final lat = got.pts.map((p) => p.$1).reduce((a, b) => a + b) / got.pts.length;
+  final lon = got.pts.map((p) => p.$2).reduce((a, b) => a + b) / got.pts.length;
+  // A point near home is named after the nearest stop, so «Σπίτι · κοντά σε Υμηττό» still reads later.
+  final near = approx && ix != null ? nearbyStops(ix, (lat, lon), radiusM: 600, max: 1).firstOrNull : null;
+  final label = !approx ? got.label : near == null ? 'κοντά στη θέση σου' : 'κοντά σε ${titleCase(near.name)}';
+  final h = HomePlace(label: label, lat: lat, lon: lon, approx: approx);
+  d.store.setHome(h);
+  return h;
+}
+
+const _nearMe = 'Κοντά στη θέση μου (περίπου)';
+
 class _PlacePicker extends StatefulWidget {
-  const _PlacePicker({required this.ix, required this.stations, required this.from});
+  const _PlacePicker({required this.ix, required this.stations, required this.from, this.home = false});
   final TripIndex? ix;
   final List<tp.MetroStation> stations;
   final bool from;
+  final bool home; // «Σπίτι»: an area is enough; the position is snapped, not exact
 
   @override
   State<_PlacePicker> createState() => _PlacePickerState();
@@ -645,7 +676,11 @@ class _PlacePickerState extends State<_PlacePicker> {
                 onChanged: _search,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
-                  hintText: widget.from ? 'Από: στάση, περιοχή, διεύθυνση' : 'Προς: στάση, περιοχή, κατάστημα, διεύθυνση',
+                  hintText: widget.home
+                      ? 'Σπίτι: διεύθυνση ή περιοχή'
+                      : widget.from
+                          ? 'Από: στάση, περιοχή, διεύθυνση'
+                          : 'Προς: στάση, περιοχή, κατάστημα, διεύθυνση',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(28)),
                 ),
               ),
@@ -653,9 +688,14 @@ class _PlacePickerState extends State<_PlacePicker> {
             Expanded(
               child: ListView(
                 children: [
+                  if (widget.home)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                      child: Text('Αρκεί μια περιοχή κοντά στο σπίτι. Ανώνυμο: μένει μόνο στο κινητό.', style: TextStyle(fontSize: 13, color: t.muted)),
+                    ),
                   ListTile(
                     leading: const Icon(Icons.my_location),
-                    title: const Text('Η θέση μου'),
+                    title: Text(widget.home ? _nearMe : 'Η θέση μου'),
                     onTap: () async {
                       final p = await myPosition();
                       if (!context.mounted) return;
@@ -664,7 +704,7 @@ class _PlacePickerState extends State<_PlacePicker> {
                             .showSnackBar(const SnackBar(content: Text('Δεν βρήκα τη θέση σου. Άνοιξε την τοποθεσία ή διάλεξε ένα μέρος.')));
                         return;
                       }
-                      Navigator.pop(context, (label: 'Η θέση μου', pts: [p]));
+                      Navigator.pop(context, widget.home ? (label: _nearMe, pts: [approxPoint(p)]) : (label: 'Η θέση μου', pts: [p]));
                     },
                   ),
                   for (final p in _hits)
