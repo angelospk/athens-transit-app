@@ -51,4 +51,11 @@ void main() {
   test('already home: no ways', () {
     expect(homeBoards(ix, home, home), isEmpty);
   });
+
+  test('after midnight the night\'s last runs are still today\'s: now runs past 24 h until 04:00', () {
+    // 2026-10-29 22:50 UTC = 00:50 Athens (EET, +2) on the 30th.
+    expect(serviceNowS(DateTime.utc(2026, 10, 29, 22, 50)), 24 * 3600 + 50 * 60);
+    // 12:00 UTC = 14:00 Athens.
+    expect(serviceNowS(DateTime.utc(2026, 10, 30, 12)), 14 * 3600);
+  });
 }

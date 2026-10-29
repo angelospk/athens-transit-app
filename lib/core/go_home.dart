@@ -2,6 +2,7 @@
 // search), where to board each, and the last run of each past that stop today. Sorted, the first one
 // is when the options start to vanish («το πρώτο από τα τελευταία»).
 
+import 'athens_time.dart';
 import 'eta.dart';
 import 'geo.dart';
 import 'models.dart';
@@ -22,6 +23,14 @@ List<HomeBoard> homeBoards(TripIndex ix, Pt from, Pt home, {Set<String>? known, 
     ];
 
 typedef HomeLast = ({String line, String stop, int atS});
+
+/// Now in the timetable's day: seconds since Athens midnight, and past 24 h until 04:00, when the
+/// night's last runs ("24:40") still belong to the day before.
+int serviceNowS(DateTime utc) {
+  final w = athensWall(utc);
+  final s = w.hour * 3600 + w.minute * 60 + w.second;
+  return w.hour < 4 ? s + 86400 : s;
+}
 
 /// The last run of today's timetable of each way home, when it passes the boarding stop (s since
 /// Athens midnight, past 24 h after it); the earliest first. A line without a timetable is left out.

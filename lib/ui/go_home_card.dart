@@ -6,7 +6,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../core/athens_time.dart';
 import '../core/eta.dart';
 import '../core/geo.dart';
 import '../core/go_home.dart';
@@ -36,12 +35,16 @@ class _GoHomeCardState extends State<GoHomeCard> {
   List<HomeBoard> _boards = [];
   List<HomeLast> _last = [];
   ({HomeBoard b, Arrival a, int leaveS})? _next;
+  int _asked = 0; // the newest next-bus poll: an older, slower one must not overwrite it
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 30), (_) => _loadNext());
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (_last.isEmpty) _loadLast(); // a timetable that failed (offline) is asked again
+      _loadNext();
+    });
   }
 
   @override
@@ -82,6 +85,7 @@ class _GoHomeCardState extends State<GoHomeCard> {
     if (!mounted || _boards.isEmpty) return;
     final d = Deps.of(context);
     final boards = _boards;
+    final n = ++_asked;
     try {
       await d.live.loadStatics({for (final b in boards) b.line});
       ({HomeBoard b, Arrival a, int leaveS})? best;
@@ -93,7 +97,7 @@ class _GoHomeCardState extends State<GoHomeCard> {
           break;
         }
       }
-      if (mounted && identical(boards, _boards)) setState(() => _next = best);
+      if (mounted && n == _asked && identical(boards, _boards)) setState(() => _next = best);
     } catch (_) {/* offline */}
   }
 
@@ -116,8 +120,7 @@ class _GoHomeCardState extends State<GoHomeCard> {
     }
     if (distM(widget.me, home) < _homeNearM) return const SizedBox.shrink();
     _refresh(home);
-    final w = athensWall(DateTime.now().toUtc());
-    final nowS = w.hour * 3600 + w.minute * 60 + w.second;
+    final nowS = serviceNowS(DateTime.now().toUtc());
     final last = _last.where((x) => x.atS > nowS).take(3).toList();
     final soon = last.isNotEmpty && last.first.atS - nowS <= _lastSoonS;
     final n = _next;
@@ -128,7 +131,7 @@ class _GoHomeCardState extends State<GoHomeCard> {
             : 'Με το ${_boards.first.line} από ${titleCase(_boards.first.stop)}';
     return _shell(
       t,
-      onTap: () => showPlanner(to: (label: 'Σπίτι', pts: [home])),
+      onTap: () => showPlanner(from: (label: 'Η θέση μου', pts: [widget.me]), to: (label: 'Σπίτι', pts: [home])),
       children: [
         _kicker('ΓΥΡΝΑΣ ΣΠΙΤΙ'),
         const SizedBox(height: 2),
