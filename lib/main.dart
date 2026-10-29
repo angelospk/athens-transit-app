@@ -8,13 +8,9 @@ import 'core/nearby.dart';
 import 'data/api.dart';
 import 'data/live.dart';
 import 'data/store.dart';
-import 'ui/favs_screen.dart';
-import 'ui/island_nav.dart';
 import 'ui/map_screen.dart';
 import 'ui/map_sel.dart';
-import 'ui/planner_screen.dart';
-import 'ui/rules_screen.dart';
-import 'ui/settings_screen.dart';
+import 'ui/menu.dart';
 import 'ui/stop_screen.dart';
 import 'ui/theme.dart';
 import 'ui/widgets.dart';
@@ -52,6 +48,7 @@ class TransitApp extends StatelessWidget {
       listenable: store,
       builder: (context, _) => MaterialApp(
         title: 'Athens Transit',
+        navigatorKey: navKey,
         debugShowCheckedModeBanner: false,
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),
@@ -65,9 +62,9 @@ class TransitApp extends StatelessWidget {
   }
 }
 
+// One screen (docs/DESIGN-home.md): the map with its sheet, and the menu from the left. No bottom bar.
 class Shell extends StatefulWidget {
   const Shell({super.key});
-  static final tab = appTab;
 
   @override
   State<Shell> createState() => _ShellState();
@@ -102,30 +99,11 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     final store = Deps.of(context).store;
     final live = Deps.of(context).live;
     return ListenableBuilder(
-      listenable: Listenable.merge([Shell.tab, store]),
+      listenable: store,
       builder: (context, _) {
         live.watch(store.myLines);
-        // Back on another tab goes to the map first; on the map it walks back through the sheet.
-        return PopScope(
-          canPop: Shell.tab.value == 0,
-          onPopInvokedWithResult: (popped, _) {
-            if (!popped && Shell.tab.value != 0) Shell.tab.value = 0;
-          },
-          child: Scaffold(
-          body: IndexedStack(index: Shell.tab.value, children: const [MapScreen(), FavsScreen(), PlannerScreen(), RulesScreen(), SettingsScreen()]),
-          bottomNavigationBar: IslandNav(
-            index: Shell.tab.value,
-            onTap: (i) => Shell.tab.value = i,
-            items: const [
-              IslandItem(Icons.map_outlined, 'Χάρτης'),
-              IslandItem(Icons.star_outline, 'Αγαπημένα'),
-              IslandItem(Icons.directions, 'Διαδρομή', raised: true),
-              IslandItem(Icons.notifications_outlined, 'Ειδοποιήσεις'),
-              IslandItem(Icons.menu, 'Περισσότερα'),
-            ],
-          ),
-        ),
-        );
+        // Back walks back through the sheet (MapScreen); from the home sheet it leaves the app.
+        return const Scaffold(drawer: AppMenu(), body: MapScreen());
       },
     );
   }

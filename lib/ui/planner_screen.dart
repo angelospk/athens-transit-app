@@ -143,8 +143,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
         children: [
-          Text('Διαδρομή', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 28)),
-          const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(20)),
             child: Row(
@@ -580,8 +578,11 @@ class _DirectCardState extends State<_DirectCard> {
 
 // Where to: the user's place, stops and areas of the network, metro stations, and places from OSM.
 /// «Πού είναι το σπίτι σου;»: an address or an area, or a point near the user's position snapped to a
-/// grid (approxPoint). Saves it in the store and returns it; null when the user backs out.
-Future<HomePlace?> askHome(BuildContext context) async {
+/// grid (approxPoint). Saves it in the store as the place [name] of «Μέρη» and returns it; null when
+/// the user backs out.
+Future<SavedPlace?> askHome(BuildContext context) => askPlace(context, homeName);
+
+Future<SavedPlace?> askPlace(BuildContext context, String name) async {
   final d = Deps.of(context);
   TripIndex? ix;
   try {
@@ -592,7 +593,7 @@ Future<HomePlace?> askHome(BuildContext context) async {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _PlacePicker(ix: ix, stations: const [], from: false, home: true),
+    builder: (_) => _PlacePicker(ix: ix, stations: const [], from: false, home: true, name: name),
   );
   if (got == null || got.pts.isEmpty) return null;
   final approx = got.label == _nearMe;
@@ -601,19 +602,20 @@ Future<HomePlace?> askHome(BuildContext context) async {
   // A point near home is named after the nearest stop, so «Σπίτι · κοντά σε Υμηττό» still reads later.
   final near = approx && ix != null ? nearbyStops(ix, (lat, lon), radiusM: 600, max: 1).firstOrNull : null;
   final label = !approx ? got.label : near == null ? 'κοντά στη θέση σου' : 'κοντά σε ${titleCase(near.name)}';
-  final h = HomePlace(label: label, lat: lat, lon: lon, approx: approx);
-  d.store.setHome(h);
+  final h = SavedPlace(name: name, label: label, lat: lat, lon: lon, approx: approx);
+  d.store.putPlace(h);
   return h;
 }
 
 const _nearMe = 'Κοντά στη θέση μου (περίπου)';
 
 class _PlacePicker extends StatefulWidget {
-  const _PlacePicker({required this.ix, required this.stations, required this.from, this.home = false});
+  const _PlacePicker({required this.ix, required this.stations, required this.from, this.home = false, this.name = homeName});
   final TripIndex? ix;
   final List<tp.MetroStation> stations;
   final bool from;
-  final bool home; // «Σπίτι»: an area is enough; the position is snapped, not exact
+  final bool home; // a place of «Μέρη»: an area is enough; the position is snapped, not exact
+  final String name; // which place
 
   @override
   State<_PlacePicker> createState() => _PlacePickerState();
@@ -677,7 +679,7 @@ class _PlacePickerState extends State<_PlacePicker> {
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
                   hintText: widget.home
-                      ? 'Σπίτι: διεύθυνση ή περιοχή'
+                      ? '${widget.name}: διεύθυνση ή περιοχή'
                       : widget.from
                           ? 'Από: στάση, περιοχή, διεύθυνση'
                           : 'Προς: στάση, περιοχή, κατάστημα, διεύθυνση',
@@ -691,7 +693,7 @@ class _PlacePickerState extends State<_PlacePicker> {
                   if (widget.home)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                      child: Text('Αρκεί μια περιοχή κοντά στο σπίτι. Ανώνυμο: μένει μόνο στο κινητό.', style: TextStyle(fontSize: 13, color: t.muted)),
+                      child: Text('Αρκεί μια περιοχή κοντά. Ανώνυμο: μένει μόνο στο κινητό.', style: TextStyle(fontSize: 13, color: t.muted)),
                     ),
                   ListTile(
                     leading: const Icon(Icons.my_location),

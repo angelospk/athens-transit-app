@@ -1,20 +1,22 @@
-// Screens 1 and 3 · Χάρτης / Μόνο οι γραμμές μου. Every vehicle from the snapshot tiles of the view
-// (contract rev 5), or only the user's lines from /v1/lines; buses glide along their `path` between
-// updates. A stop, a bus or a line opens in the sheet over the map (a drag moves it between peek, half
-// and full), not on a new page; its route is drawn with arrows in travel direction, as on the web.
-// With nothing open the sheet shows the stops and stations nearest the user (the saved lines there with
-// their next bus), or, with "only my lines", where those lines are now.
+// The home screen (docs/DESIGN-home.md): the map and one sheet, half open. Every vehicle from the
+// snapshot tiles of the view (contract rev 5), or only the user's lines from /v1/lines; buses glide
+// along their `path` between updates. A stop, a bus or a line opens in the sheet (one level at a time,
+// «‹ Πίσω» and ✕), not on a new page; its route is drawn with arrows in travel direction, as on the
+// web. With nothing open the sheet has two tabs: «Κοντά σου» (the smart card, then the nearest stops
+// grouped by stop) and «Αγαπημένα». The layers and «πού είμαι» buttons show only with the sheet down.
 
 import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/athens_time.dart';
 import '../core/board.dart';
 import '../core/eta.dart';
 import '../core/geo.dart';
+import '../core/home_sheet.dart';
 import '../core/map_geo.dart';
 import '../core/marker.dart';
 import '../core/models.dart';
@@ -27,9 +29,10 @@ import '../data/locate.dart';
 import '../data/store.dart';
 import 'go_home_card.dart';
 import 'help.dart';
+import 'favs_screen.dart';
 import 'line_panel.dart';
 import 'map_sel.dart';
-import 'rules_screen.dart';
+import 'rules_screen.dart' show hm;
 import 'search.dart';
 import 'station_panel.dart';
 import 'stop_screen.dart';
@@ -40,7 +43,7 @@ import 'widgets.dart';
 const _style = 'https://tiles.openfreemap.org/styles/';
 const _box = (s: 37.5, w: 22.9, n: 38.5, e: 24.5); // tiles exist only here
 const _lanePx = 3.0; // each direction drawn to the right of its travel direction (two lanes), as on the web
-const _peek = .14, _rest = .30, _half = .45, _full = .92; // _rest: nothing open, the nearest stops show
+const _peek = .24, _half = .5, _full = .92; // _peek: the sheet down, its smart card still shows
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -67,7 +70,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   TripIndex? _ix;
   String? _styleFor;
   final _sheet = DraggableScrollableController();
-  double _extent = _rest;
+  double _extent = _half;
   String _routesKey = ''; // what the route layers show now: redrawn only when it changes
   int _routesGen = 0; // the newest route draw; an older one stops before writing
   String? _routesPending; // the key being drawn: the same draw is not started twice
@@ -89,7 +92,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       if (mounted && j != null) setState(() => _dark = j);
     });
     mapSel.addListener(_onSel);
-    appTab.addListener(_onTab);
     WidgetsBinding.instance.addObserver(this);
     knownPosition().then((p) {
       if (!mounted) return;
@@ -105,7 +107,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     mapSel.removeListener(_onSel);
-    appTab.removeListener(_onTab);
     WidgetsBinding.instance.removeObserver(this);
     _refresh?.cancel();
     _glide?.cancel();
@@ -114,7 +115,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // Paused, or another tab: the boarding check starts its minute again.
+  // Paused: the boarding check starts its minute again.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
@@ -133,11 +134,6 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _busTrack.clear();
   }
 
-  void _onTab() {
-    if (appTab.value != 0) _forgetTracks();
-    if (mounted) setState(() {}); // back on the map tab walks the sheet back
-  }
-
   // A new selection: the sheet opens to half and the map moves to it.
   void _onSel() {
     if (!mounted) return;
@@ -145,7 +141,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final s = mapSel.value;
     followBus.value = s is BusSel; // the map follows an open bus until the user moves the map
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_sheet.isAttached) _sheet.animateTo(s == null ? _rest : _half, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+      if (_sheet.isAttached) _sheet.animateTo(_half, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
     });
     _routesKey = '';
     _routesPending = null;
@@ -447,7 +443,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // With the map open and location already allowed: a bus that moved with the phone for a minute
   // is offered once ("Είσαι στο 040;"), and its sheet has «Πού κατεβαίνω;».
   Future<void> _sampleBoard() async {
-    bool shown() => mounted && appTab.value == 0 && WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+    bool shown() => mounted && mapShown(context);
     if (!shown()) {
       _myTrack.clear(); // a gap: the minute together starts again
       _busTrack.clear();
@@ -465,7 +461,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       return;
     }
     final t = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    // A gap (the app was paused, another tab): the minute together starts again.
+    // A gap (the app was paused, a page over the map): the minute together starts again.
     if (_myTrack.isNotEmpty && t - _myTrack.last.t > 25) {
       _myTrack.clear();
       _busTrack.clear();
@@ -712,12 +708,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _styleFor = style;
     final start = _me ?? athensCentre;
     final sel = mapSel.value;
-    // The tab at build time: the shell's own back handler may switch to the map first on this press.
-    final onMap = appTab.value == 0;
+    // Back pops one sheet level; from the home sheet it leaves the app.
     return PopScope(
-      canPop: !onMap || sel == null,
+      canPop: sel == null,
       onPopInvokedWithResult: (popped, _) {
-        if (popped || !onMap) return;
+        if (popped) return;
+        final menu = Scaffold.maybeOf(context);
+        if (menu != null && menu.isDrawerOpen) return menu.closeDrawer(); // back closes the menu first
         mapBack();
       },
       child: ListenableBuilder(
@@ -754,27 +751,29 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               onStyleLoadedCallback: _onStyle,
               onCameraIdle: _loadTiles,
             )),
-            // Map buttons ride on the sheet's edge and hide when it is nearly full.
-            if (_extent < .7)
-              Positioned(
-                right: 16,
-                bottom: h * _extent + 12,
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  FloatingActionButton.small(
-                    heroTag: 'locate',
-                    tooltip: 'Η θέση μου',
-                    backgroundColor: t.ground,
-                    foregroundColor: const Color(0xFF1A73E8),
-                    onPressed: () async {
+            // Layers and «πού είμαι» only with the sheet down: they ride on its edge and fade in.
+            Positioned(
+              right: 16,
+              bottom: h * _extent + 12,
+              child: IgnorePointer(
+                ignoring: _extent > _peek + .03,
+                child: AnimatedOpacity(
+                  opacity: _extent > _peek + .03 ? 0 : 1,
+                  duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 150),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    _fab(t, 'layers', d.store.onlyMine ? 'Χάρτης: οι γραμμές μου' : 'Τι δείχνει ο χάρτης', Icons.layers_outlined,
+                        on: d.store.onlyMine, () => _mapSheet(context, d.store)),
+                    const SizedBox(height: 12),
+                    _fab(t, 'locate', 'Πού είμαι', Icons.my_location, () async {
                       final p = await myPosition();
                       if (p == null) return;
                       setState(() => _me = p);
                       _map?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(p.$1, p.$2), 15));
-                    },
-                    child: const Icon(Icons.my_location),
-                  ),
-                ]),
+                    }),
+                  ]),
+                ),
               ),
+            ),
             NotificationListener<DraggableScrollableNotification>(
               onNotification: (n) {
                 if ((n.extent - _extent).abs() > .01) setState(() => _extent = n.extent);
@@ -782,16 +781,16 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               },
               child: DraggableScrollableSheet(
                 controller: _sheet,
-                initialChildSize: _rest,
+                initialChildSize: _half,
                 minChildSize: _peek,
                 maxChildSize: _full,
                 snap: true,
-                snapSizes: const [_rest, _half],
+                snapSizes: const [_half],
                 builder: (context, scroll) => Material(
                   color: t.ground,
                   elevation: 8,
                   shadowColor: const Color(0x33000000),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                   clipBehavior: Clip.antiAlias,
                   child: switch (sel) {
                     StopSel(:final stop) => StopPanel(key: ObjectKey(stop), stop: stop, scroll: scroll),
@@ -800,22 +799,20 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     LineSel(:final line, :final variants) => LinePanel(key: ValueKey(line), line: line, variants: variants, scroll: scroll),
                     PlaceSel(:final name, :final at) => _PlacePanel(name: name, at: at, ix: _ix, scroll: scroll),
                     StationSel() => StationPanel(key: ObjectKey(sel), sel: sel, ix: _ix, scroll: scroll),
-                    null => d.store.onlyMine
-                        ? _MyLinesSheet(scroll: scroll)
-                        : _NearSheet(
-                            me: _me,
-                            memo: _near,
-                            located: _located,
-                            ix: _ix,
-                            stations: [..._metroSt, ..._railSt],
-                            scroll: scroll,
-                            onLocate: () async {
-                              final p = await askPosition();
-                              if (!mounted || p == null) return;
-                              setState(() => _me = p);
-                              _map?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(p.$1, p.$2), 15));
-                            },
-                          ),
+                    null => _HomeSheet(
+                        me: _me,
+                        memo: _near,
+                        located: _located,
+                        ix: _ix,
+                        stations: [..._metroSt, ..._railSt],
+                        scroll: scroll,
+                        onLocate: () async {
+                          final p = await askPosition();
+                          if (!mounted || p == null) return;
+                          setState(() => _me = p);
+                          _map?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(p.$1, p.$2), 15));
+                        },
+                      ),
                   },
                 ),
               ),
@@ -826,7 +823,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Flexible(child: SearchField(ix: _ix, trailing: _mapButton(context, d.store, t))),
+                  Flexible(
+                    child: SearchField(
+                      ix: _ix,
+                      leading: IconButton(tooltip: 'Μενού', icon: const Icon(Icons.menu), onPressed: () => Scaffold.of(context).openDrawer()),
+                    ),
+                  ),
                   if (d.live.isOffline) ...[const SizedBox(height: 4), _OfflineBanner(at: d.live.lastOkAt, now: d.live.nowS)],
                 ]),
               ),
@@ -948,26 +950,22 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         ),
       );
 
-  // The «Χάρτης» button beside the search; it says when the map shows only my lines.
-  Widget _mapButton(BuildContext context, AppStore store, Tones t) => Material(
-        color: store.onlyMine ? t.indicator : t.ground,
-        elevation: 3,
-        shadowColor: const Color(0x33000000),
-        borderRadius: BorderRadius.circular(28),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(28),
-          onTap: () => _mapSheet(context, store),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 13, 14, 13),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.layers_outlined, size: 20),
-              const SizedBox(width: 6),
-              Text(store.onlyMine ? 'Οι γραμμές μου' : 'Χάρτης', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-            ]),
-          ),
-        ),
+  // A round map button over the map; [on]: the map shows only my lines.
+  Widget _fab(Tones t, String tag, String tip, IconData icon, VoidCallback onTap, {bool on = false}) => FloatingActionButton(
+        heroTag: tag,
+        tooltip: tip,
+        mini: true,
+        shape: const CircleBorder(),
+        backgroundColor: on ? t.indicator : t.ground,
+        foregroundColor: tag == 'locate' ? const Color(0xFF1A73E8) : t.ink,
+        onPressed: onTap,
+        child: Icon(icon),
       );
 }
+
+/// The map is the page on top (no menu page over it) and the app is in front.
+bool mapShown(BuildContext context) =>
+    (ModalRoute.of(context)?.isCurrent ?? true) && WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
 
 // Screen 15: no network. The times below are estimates from the last data.
 class _OfflineBanner extends StatelessWidget {
@@ -996,11 +994,12 @@ class _OfflineBanner extends StatelessWidget {
   }
 }
 
-// Nothing open: the stops and stations nearest the user, nearest first. A saved line that stops at one
-// shows on its row with its next bus. Without the user's position (no permission, location off, still
-// looking) a way to allow it, and meanwhile the saved stop for this time of day.
-class _NearSheet extends StatelessWidget {
-  const _NearSheet({required this.me, required this.memo, required this.located, required this.ix, required this.stations, required this.scroll, required this.onLocate});
+// Nothing open: two tabs, «Κοντά σου» and «Αγαπημένα», then the smart card. «Κοντά σου»: the nearest
+// bus stop with my lines, the nearest rail station, then the rest, each grouped by stop (or, with "only
+// my lines", where those lines are now). Without the user's position (no permission, location off,
+// still looking) a way to allow it.
+class _HomeSheet extends StatelessWidget {
+  const _HomeSheet({required this.me, required this.memo, required this.located, required this.ix, required this.stations, required this.scroll, required this.onLocate});
   final Pt? me;
   final NearMemo memo;
   final bool located;
@@ -1010,23 +1009,24 @@ class _NearSheet extends StatelessWidget {
   final VoidCallback onLocate;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ValueListenableBuilder(
+        valueListenable: homeTab,
+        builder: (context, tab, _) => ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), children: [
+          const SheetHandle(),
+          _Tabs(tab: tab),
+          const SizedBox(height: 8),
+          SmartCard(me: me, ix: ix),
+          ...tab == 0 ? _near(context) : _favs(context),
+        ]),
+      );
+
+  List<Widget> _near(BuildContext context) {
     final d = Deps.of(context);
     final t = context.tones;
+    if (d.store.onlyMine) return [const _MyLines()];
     final here = me;
-    final shown = [
-      for (final s in stations)
-        if (s.railId != null ? d.store.showRail : s.lines.every((l) => l.startsWith('T')) ? d.store.showTram : d.store.showMetro) s,
-    ];
-    final places = here == null ? const <NearPlace>[] : memo.places(ix, shown, here);
-    return ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), children: [
-      const SheetHandle(),
-      Row(children: [
-        const Expanded(child: Text('Κοντά σου', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
-        if (places.isNotEmpty) const LiveNote(),
-      ]),
-      if (here != null) GoHomeCard(me: here, ix: ix),
-      if (here == null) ...[
+    if (here == null) {
+      return [
         if (!located)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -1053,28 +1053,119 @@ class _NearSheet extends StatelessWidget {
               Text('Ή γράψε μια στάση ή γραμμή στην αναζήτηση.', style: TextStyle(fontSize: 12.5, color: t.muted)),
             ]),
           ),
-        _SavedNear(ix: ix),
-      ] else if (places.isEmpty)
+      ];
+    }
+    final shown = [
+      for (final s in stations)
+        if (s.railId != null ? d.store.showRail : s.lines.every((l) => l.startsWith('T')) ? d.store.showTram : d.store.showMetro) s,
+    ];
+    final groups = homeGroups(memo.places(ix, shown, here), d.store.myLines);
+    if (groups.isEmpty) {
+      return [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Text(ix == null ? 'Φορτώνω τις στάσεις…' : 'Καμία στάση σε 2,5 χλμ.', style: TextStyle(color: t.muted)),
-        )
-      else
-        for (final (i, p) in places.indexed) ...[
-          if (i > 0) Divider(height: 1, color: t.rule),
-          _NearRow(place: p, ix: ix),
-        ],
-    ]);
+        ),
+      ];
+    }
+    return [
+      for (final (i, p) in groups.indexed) ...[
+        if (i > 0) Divider(height: 1, color: t.rule),
+        _StopGroup(place: p, ix: ix, mine: myLinesHere(p, d.store.myLines), others: true),
+        if (i == 1 && groups.length > 2)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Center(child: Text('σύρε για περισσότερες στάσεις', style: TextStyle(fontSize: 12.5, color: t.muted))),
+          ),
+      ],
+      const Padding(padding: EdgeInsets.only(top: 8), child: LiveNote()),
+    ];
+  }
+
+  // The saved stops, each with its lines' next bus, and the saved lines; the full page manages them.
+  List<Widget> _favs(BuildContext context) {
+    final d = Deps.of(context);
+    final t = context.tones;
+    final favs = d.store.favsByTime(DateTime.now().toUtc());
+    return [
+      if (favs.isEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text('Καμία αποθηκευμένη στάση ακόμη. Άνοιξε μια στάση και πάτα το αστέρι.', style: TextStyle(color: t.muted)),
+        ),
+      for (final (i, f) in favs.indexed) ...[
+        if (i > 0) Divider(height: 1, color: t.rule),
+        _StopGroup(
+          place: NearPlace(kind: NearKind.bus, name: f.name, lat: f.lat, lon: f.lon, distM: me == null ? -1 : distM(me!, (f.lat, f.lon)), lines: f.lines),
+          ix: ix,
+          mine: f.lines,
+          others: false,
+        ),
+      ],
+      if (d.store.myLines.isNotEmpty) ...[
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 8),
+          child: Text('Οι γραμμές μου', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: t.muted)),
+        ),
+        Wrap(spacing: 6, runSpacing: 6, children: [for (final l in d.store.myLines) LineButton(l)]),
+      ],
+      const SizedBox(height: 8),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          onPressed: () => openPage('Αγαπημένα', const FavsScreen()),
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: const Text('Όλα τα αγαπημένα · προσθήκη, σπίτι, δουλειά'),
+        ),
+      ),
+    ];
   }
 }
 
-// One near stop or station: name, how far, and the saved lines there with their next bus (or the
-// other lines, small); a station, the next departure of each of its lines. A tap opens it, as a tap on
+// «Κοντά σου» / «Αγαπημένα» as two text tabs; the open one dark and underlined.
+class _Tabs extends StatelessWidget {
+  const _Tabs({required this.tab});
+  final int tab;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    Widget one(int i, String label, {IconData? icon}) {
+      final on = tab == i;
+      final c = on ? t.ink : t.muted;
+      return Semantics(
+        selected: on,
+        button: true,
+        child: InkWell(
+          onTap: () => homeTab.value = i,
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            margin: const EdgeInsets.only(right: 20),
+            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: on ? t.ink : Colors.transparent, width: 2))),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              if (icon != null) ...[Icon(icon, size: 18, color: c), const SizedBox(width: 4)],
+              Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: c)),
+            ]),
+          ),
+        ),
+      );
+    }
+
+    return Row(children: [one(0, 'Κοντά σου'), one(1, 'Αγαπημένα', icon: Icons.star_outline)]);
+  }
+}
+
+// One stop or station: its name and kind (and how far), the walk button, then its lines as pills
+// (badge + minutes) that wrap. A bus stop: [mine] with their next bus, then, if [others], the other
+// lines there; a station, the next departure of each line and direction. A tap opens it, as a tap on
 // the map does.
-class _NearRow extends StatelessWidget {
-  const _NearRow({required this.place, required this.ix});
+class _StopGroup extends StatelessWidget {
+  const _StopGroup({required this.place, required this.ix, required this.mine, required this.others});
   final NearPlace place;
   final TripIndex? ix;
+  final List<String> mine;
+  final bool others;
 
   void _open() {
     final p = place;
@@ -1091,53 +1182,139 @@ class _NearRow extends StatelessWidget {
     final d = Deps.of(context);
     final t = context.tones;
     final p = place;
-    final mine = myLinesHere(p, d.store.myLines);
     final groups = mine.isEmpty ? const <(Arrival, List<Arrival>)>[] : groupArrivals(d.live.arrivalsNear(p.name, p.lat, p.lon, only: mine));
-    final quiet = [for (final l in mine) if (!groups.any((g) => g.$1.line == l)) l];
-    final (icon, what) = switch (p.kind) {
-      NearKind.bus => (Icons.directions_bus_outlined, p.lines.take(8).join(', ')),
-      NearKind.metro => (Icons.subway_outlined, 'Μετρό · ${p.lines.join(', ')}'),
-      NearKind.tram => (Icons.tram_outlined, 'Τραμ · ${p.lines.join(', ')}'),
-      NearKind.rail => (Icons.train_outlined, 'Προαστιακός'),
-    };
+    final next = [for (final (a, _) in groups) a]; // soonest first, one per line and direction
+    final twice = {for (final a in next) if (next.where((b) => b.line == a.line).length > 1) a.line};
+    final quiet = [for (final l in mine) if (!next.any((a) => a.line == l)) l];
+    final rest = others ? [for (final l in p.lines) if (!mine.contains(l)) l].take(8).toList() : const <String>[];
     return InkWell(
       onTap: _open,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Icon(icon, size: 22, color: t.muted),
-            const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(titleCase(p.name), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                if (mine.isEmpty) Text(what, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: t.muted)),
+                Text(titleCase(p.name), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                Text([kindLabel(p.kind), if (p.distM >= 0) distLabel(p.distM)].join(' · '), style: TextStyle(fontSize: 12, color: t.muted)),
               ]),
             ),
             const SizedBox(width: 8),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(distLabel(p.distM), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-              Text('${walkMin(p.distM)}′ με τα πόδια', style: TextStyle(fontSize: 12, color: t.muted)),
-            ]),
+            _WalkButton(place: p),
           ]),
-          for (final (first, _) in groups)
+          if (p.kind != NearKind.bus)
+            _StationNext(key: ValueKey('${p.kind.name}|${p.name}'), place: p)
+          else if (next.isNotEmpty || rest.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(left: 34, top: 6),
-              child: Row(children: [
-                LineBadge(first.line),
-                const SizedBox(width: 8),
-                Expanded(child: Text('→ ${titleCase(first.headsign)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13.5, color: t.muted))),
-                Text('${d.live.isOffline ? '~' : ''}${mins(first.etaS)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              padding: const EdgeInsets.only(top: 8),
+              child: Wrap(spacing: 6, runSpacing: 6, children: [
+                for (final a in next)
+                  _Pill(
+                    badge: _PillBadge(line: a.line),
+                    towards: twice.contains(a.line) ? titleCase(a.headsign) : null, // two directions here: say which
+                    when: '${d.live.isOffline ? '~' : ''}${mins(a.etaS)}',
+                  ),
+                for (final l in rest) _Pill(badge: _PillBadge(line: l)),
               ]),
             ),
           if (quiet.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(left: 34, top: 6),
-              child: Text('${quiet.join(', ')}: κανένα λεωφορείο με GPS τώρα', style: TextStyle(fontSize: 13, color: t.muted)),
+              padding: const EdgeInsets.only(top: 6),
+              child: Text('${quiet.join(', ')}: κανένα λεωφορείο με GPS τώρα', style: TextStyle(fontSize: 12.5, color: t.muted)),
             ),
-          if (p.kind != NearKind.bus) _StationNext(key: ValueKey('${p.kind.name}|${p.name}'), place: p),
         ]),
       ),
+    );
+  }
+}
+
+// Walking person and minutes: Google Maps walking directions to the stop (the web page without the app).
+class _WalkButton extends StatelessWidget {
+  const _WalkButton({required this.place});
+  final NearPlace place;
+
+  Future<void> _go() async {
+    final p = place;
+    try {
+      if (await launchUrl(walkUri(p.lat, p.lon), mode: LaunchMode.externalApplication)) return;
+    } catch (_) {/* no Google Maps app */}
+    await launchUrl(walkWebUri(p.lat, p.lon), mode: LaunchMode.externalApplication);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    final m = place.distM >= 0 ? walkMin(place.distM) : null;
+    return Semantics(
+      label: m == null ? 'Οδηγίες με τα πόδια' : 'Οδηγίες με τα πόδια, $m λεπτά',
+      button: true,
+      excludeSemantics: true,
+      child: SizedBox(
+        height: 48, // the touch target; the outline is 36
+        child: Center(
+          child: Material(
+            color: t.ground,
+            shape: StadiumBorder(side: BorderSide(color: t.outline, width: 1.5)),
+            child: InkWell(
+              customBorder: const StadiumBorder(),
+              onTap: _go,
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.directions_walk, size: 20, color: t.accent),
+                  if (m != null) Text('$m′', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: t.accent)),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// A line's pill: its badge, then (when known) where it goes and the minutes, largest.
+class _Pill extends StatelessWidget {
+  const _Pill({required this.badge, this.towards, this.when, this.note});
+  final Widget badge;
+  final String? towards, when, note;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    return Container(
+      height: 32,
+      padding: EdgeInsets.fromLTRB(4, 0, when == null ? 4 : 10, 0),
+      decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(16)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        badge,
+        if (towards != null)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 130),
+            child: Text(' → $towards', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, color: t.muted)),
+          ),
+        if (note != null) Text(' $note', style: TextStyle(fontSize: 12, color: t.late, fontWeight: FontWeight.w600)),
+        if (when != null) Text('  $when', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+      ]),
+    );
+  }
+}
+
+// A small line badge for a pill: the line's colour from the store, or a given one (metro, tram).
+class _PillBadge extends StatelessWidget {
+  const _PillBadge({required this.line, this.bg, this.fg});
+  final String line;
+  final Color? bg, fg;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = lineColor(Deps.of(context).store, line);
+    return Container(
+      constraints: const BoxConstraints(minWidth: 34),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(color: bg ?? c.bg, borderRadius: BorderRadius.circular(12)),
+      child: Text(line, textAlign: TextAlign.center, style: TextStyle(color: fg ?? c.fg, fontSize: 13, fontWeight: FontWeight.w700)),
     );
   }
 }
@@ -1169,7 +1346,7 @@ class _StationNextState extends State<_StationNext> {
     if (_timer == null) {
       _load();
       _timer = Timer.periodic(const Duration(seconds: 10), (_) {
-        if (appTab.value != 0 || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+        if (!mapShown(context)) return;
         if (++_ticks % 6 == 0) _load();
         if (mounted) setState(() {});
       });
@@ -1219,14 +1396,13 @@ class _StationNextState extends State<_StationNext> {
   Widget build(BuildContext context) {
     final t = context.tones;
     final now = DateTime.now().toUtc();
-    final rows = <Widget>[];
+    final pills = <Widget>[];
     if (widget.place.railId != null) {
       for (final d in nextTrains(_trains, now)) {
         final ends = _sub?.towards(widget.place.railId!, d.next) ?? const <String>{};
         final late = (d.delayMin ?? 0) > 0 && !d.cancelled;
-        rows.add(_row(
-          t,
-          badge: const Icon(Icons.train_outlined, size: 18),
+        pills.add(_Pill(
+          badge: const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Icon(Icons.train_outlined, size: 18)),
           towards: ends.isNotEmpty ? ends.map(titleCase).join(' / ') : titleCase(d.next),
           when: d.cancelled ? 'ακυρώθηκε' : mins(d.expected.difference(now).inSeconds),
           note: late ? '+${d.delayMin}′' : null,
@@ -1236,75 +1412,31 @@ class _StationNextState extends State<_StationNext> {
       final elapsed = now.millisecondsSinceEpoch ~/ 1000 - _at;
       for (final d in nextByDirection(_answers, elapsedS: elapsed, here: widget.place.names.isEmpty ? [widget.place.name] : widget.place.names)) {
         final c = int.tryParse((d.color ?? '').replaceFirst('#', ''), radix: 16);
-        rows.add(_row(
-          t,
-          badge: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-            decoration: BoxDecoration(color: c == null ? t.ink : Color(0xFF000000 | c), borderRadius: BorderRadius.circular(6)),
-            child: Text(d.line, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
-          ),
+        pills.add(_Pill(
+          badge: _PillBadge(line: d.line, bg: c == null ? t.ink : Color(0xFF000000 | c), fg: Colors.white),
           towards: titleCase(d.towards),
           when: mins(d.inS),
         ));
       }
     }
-    if (rows.isEmpty) return const SizedBox.shrink();
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      ...rows,
-      Padding(
-        padding: const EdgeInsets.only(left: 34, top: 4),
-        child: Text(widget.place.railId != null ? 'live από railway.gov.gr' : 'πρόγραμμα ΣΤΑΣΥ, όχι live',
-            style: TextStyle(fontSize: 11.5, color: t.muted)),
-      ),
-    ]);
-  }
-
-  Widget _row(Tones t, {required Widget badge, required String towards, required String when, String? note}) => Padding(
-        padding: const EdgeInsets.only(left: 34, top: 6),
-        child: Row(children: [
-          badge,
-          const SizedBox(width: 8),
-          Expanded(child: Text('→ $towards', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13.5, color: t.muted))),
-          if (note != null) Text('$note ', style: TextStyle(fontSize: 12.5, color: t.late, fontWeight: FontWeight.w600)),
-          Text(when, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-        ]),
+    // No departures (loading, offline, not served now): the station's lines, as before.
+    if (pills.isEmpty) {
+      final p = widget.place;
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(p.railId != null ? 'Προαστιακός · ${p.lines.join(', ')}' : p.lines.join(', '), style: TextStyle(fontSize: 13, color: t.muted)),
       );
-}
-
-// Without the user's position: the saved stop for this time of day and its lines' next buses.
-class _SavedNear extends StatelessWidget {
-  const _SavedNear({required this.ix});
-  final TripIndex? ix;
-
-  @override
-  Widget build(BuildContext context) {
-    final d = Deps.of(context);
-    final t = context.tones;
-    if (d.store.favs.isEmpty) {
-      return Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text('Ή πάτα μια στάση στον χάρτη.', style: TextStyle(color: t.muted)));
     }
-    final fav = d.store.favsByTime(DateTime.now().toUtc()).first;
-    final groups = groupArrivals(d.live.arrivalsNear(fav.name, fav.lat, fav.lon, only: fav.lines)).take(3).toList();
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      InkWell(
-        onTap: () async {
-          final ixx = ix ?? await d.api.trips();
-          final all = linesAt(ixx, fav.name, fav.lat, fav.lon);
-          mapSel.value = StopSel(StopRef(name: fav.name, lat: fav.lat, lon: fav.lon, lines: all.isEmpty ? fav.lines : all));
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(fav.place == Place.work ? 'Δουλειά' : 'Η στάση σου', style: TextStyle(fontSize: 12, color: t.muted, fontWeight: FontWeight.w500)),
-            Text(titleCase(fav.name), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-          ]),
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Wrap(spacing: 6, runSpacing: 6, children: pills),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(widget.place.railId != null ? 'live από railway.gov.gr' : 'πρόγραμμα ΣΤΑΣΥ, όχι live', style: TextStyle(fontSize: 11.5, color: t.muted)),
         ),
-      ),
-      for (final (first, then) in groups)
-        ArrivalRow(first: first, then: then, estimate: d.live.isOffline, onTap: () => mapSel.value = BusSel(first.line, first.vehicleId)),
-      if (groups.isEmpty && fav.lines.isNotEmpty)
-        Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Text('Κανένα από ${fav.lines.join(', ')} δεν έρχεται τώρα.', style: TextStyle(color: t.muted))),
-    ]);
+      ]),
+    );
   }
 }
 
@@ -1347,13 +1479,16 @@ class _PlacePanel extends StatelessWidget {
   }
 }
 
-// Screen 3's sheet: "Οι γραμμές μου τώρα" — buses on the road, how many are late, next at the stop.
-class _MyLinesSheet extends StatelessWidget {
-  const _MyLinesSheet({required this.scroll});
-  final ScrollController scroll;
+// «Κοντά σου» with "only my lines": "Οι γραμμές μου τώρα" — buses on the road, how many are late,
+// next at the stop.
+class _MyLines extends StatelessWidget {
+  const _MyLines();
 
+  // Its own listener: a const widget is not rebuilt with the sheet when the buses move.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(listenable: Deps.of(context).live, builder: (context, _) => _rows(context));
+
+  Widget _rows(BuildContext context) {
     final d = Deps.of(context);
     final t = context.tones;
     final fav = d.store.favs.isEmpty ? null : d.store.favsByTime(DateTime.now().toUtc()).first;
@@ -1385,15 +1520,14 @@ class _MyLinesSheet extends StatelessWidget {
         ),
       ));
     }
-    return ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), children: [
-      const SheetHandle(),
-      const Text('Οι γραμμές μου τώρα', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('Οι γραμμές μου τώρα', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
       Text('τα άλλα λεωφορεία κρυμμένα · πάτα μια γραμμή για τη διαδρομή της', style: TextStyle(fontSize: 13, color: t.muted)),
       ...rows,
       if (rows.isEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text('Καμία γραμμή επιλεγμένη. Διάλεξε από το φίλτρο πάνω δεξιά.', style: TextStyle(color: t.muted)),
+          child: Text('Καμία γραμμή επιλεγμένη. Διάλεξε από το κουμπί του χάρτη (κατέβασε το φύλλο).', style: TextStyle(color: t.muted)),
         ),
     ]);
   }

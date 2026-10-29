@@ -16,9 +16,12 @@ class Tones extends ThemeExtension<Tones> {
     required this.problemBg,
     required this.problemFg,
     required this.mapGround,
+    required this.accent,
+    required this.outline,
   });
 
   final Color ground, surface, ink, muted, rule, indicator, late, onTime, problemBg, problemFg, mapGround;
+  final Color accent, outline; // actions and the smart card's minutes; the walk button's edge
 
   static const light = Tones(
     ground: Color(0xFFFCFCFA),
@@ -32,6 +35,8 @@ class Tones extends ThemeExtension<Tones> {
     problemBg: Color(0xFFF9DEDC),
     problemFg: Color(0xFF410E0B),
     mapGround: Color(0xFFE9ECE6),
+    accent: Color(0xFF1A56C4),
+    outline: Color(0xFFCFD6E0),
   );
 
   static const dark = Tones(
@@ -46,6 +51,8 @@ class Tones extends ThemeExtension<Tones> {
     problemBg: Color(0xFF5C1F1B),
     problemFg: Color(0xFFFFDAD6),
     mapGround: Color(0xFF1B1E1C),
+    accent: Color(0xFF8AB4F8),
+    outline: Color(0xFF4A5560),
   );
 
   @override

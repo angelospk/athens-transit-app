@@ -82,10 +82,6 @@ class _RulesScreenState extends State<RulesScreen> with WidgetsBindingObserver {
           ),
           body: SafeArea(
             child: ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 96), children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                child: Text('Ειδοποιήσεις', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 28)),
-              ),
               head('Τώρα'),
               if (oneOff.isEmpty)
                 Padding(

@@ -42,4 +42,13 @@ void main() {
     mapBack();
     expect((mapSel.value as StopSel).stop.name, 'ΣΧΟΛΗ');
   });
+
+  test('«Πίσω» is named after the level before; the first level goes back home', () {
+    mapSel.value = const StopSel(stop);
+    expect(backLabel(), 'Κοντά σου');
+    mapSel.value = const LineSel('040');
+    expect(backLabel(), 'Σχολη');
+    mapSel.value = const BusSel('040', '1');
+    expect(backLabel(), 'Γραμμή 040');
+  });
 }

@@ -203,5 +203,11 @@ out when it rises, no bounce, honour the system "remove animations" setting.
 - harold: «Μέρη» replaces Σπίτι/Δουλειά; "Πάμε δουλειά" card yes (2026-10-30).
 - agent: back stack per sheet level, labelled back button; from the UX discussion.
 - agent: kept the layers button (only place to change what the map shows).
+- agent: «Διαδρομή» (the planner) is the first menu item: it had its own tab, and no feature may be lost (2026-10-30).
+- agent: the walk button sends `google.navigation:q=…&mode=w`; without the Maps app it opens the web directions page.
+- agent: «Αγαπημένα» tab: saved stops as stop groups and my lines; a link opens the full page (add a stop, mark home/work, the evening last bus).
+- agent: at a near bus stop only my lines get minutes; the other lines show as badges (live minutes exist only for the ≤5 watched lines). The distance stays beside the kind text.
+- agent: smart card without «Σπίτι» and without favourites asks where home is (kept from the old card). «Ενημερώσεις» is a note page with no badge until rt#43.
+- agent: with "only my lines" (layers sheet), «Κοντά σου» lists those lines instead of stops, as before.
 
 Agents: read this file before you change the home screen; write a `## Decisions` line for any rule you change.

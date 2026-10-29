@@ -17,9 +17,9 @@ import 'theme.dart';
 import 'widgets.dart';
 
 class SearchField extends StatefulWidget {
-  const SearchField({super.key, required this.ix, this.trailing});
+  const SearchField({super.key, required this.ix, this.leading});
   final TripIndex? ix;
-  final Widget? trailing; // beside the field, in the same row
+  final Widget? leading; // inside the field, on the left: the menu button
 
   @override
   State<SearchField> createState() => _SearchFieldState();
@@ -168,7 +168,7 @@ class _SearchFieldState extends State<SearchField> {
           onChanged: _search,
           style: const TextStyle(fontSize: 16),
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: widget.leading ?? const Icon(Icons.search),
             suffixIcon: _c.text.isEmpty ? null : IconButton(tooltip: 'Καθαρισμός', icon: const Icon(Icons.close), onPressed: _clear),
             hintText: 'Στάση, γραμμή ή μέρος',
             border: InputBorder.none,
@@ -177,7 +177,7 @@ class _SearchFieldState extends State<SearchField> {
         ),
       );
     return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Row(children: [Expanded(child: field), if (widget.trailing != null) ...[const SizedBox(width: 8), widget.trailing!]]),
+      field,
       const SizedBox(height: 6),
       if (_focus.hasFocus || _c.text.isNotEmpty)
         SingleChildScrollView(

@@ -27,7 +27,7 @@ import '../core/rules.dart';
 import '../data/api.dart' hide Place;
 import '../data/live.dart' show stopIdsNear;
 import '../data/store.dart';
-import '../ui/map_sel.dart' show appTab;
+import '../ui/map_sel.dart' show showFavs;
 import '../ui/widgets.dart' show mins, titleCase;
 
 const _watcherKey = 'watcher_v1';
@@ -118,7 +118,7 @@ class AlertService {
       foregroundTaskOptions: ForegroundTaskOptions(eventAction: ForegroundTaskEventAction.repeat(_tickMs), allowWakeLock: true),
     );
     void open(String? payload) {
-      if (payload == _favsPayload) appTab.value = 1;
+      if (payload == _favsPayload) showFavs();
       if (parseOpen(payload) case final o?) onOpen(o);
     }
 

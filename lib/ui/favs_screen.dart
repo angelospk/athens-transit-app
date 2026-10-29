@@ -17,10 +17,10 @@ import '../core/nearby.dart';
 import '../data/store.dart';
 import 'alert_sheet.dart' show dayClock, remindLast;
 import 'map_sel.dart';
+import 'menu.dart' show PlacesScreen;
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
-import 'planner_screen.dart';
 
 class FavsScreen extends StatelessWidget {
   const FavsScreen({super.key});
@@ -46,24 +46,17 @@ class FavsScreen extends StatelessWidget {
           ),
           body: SafeArea(
             child: ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 96), children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-                child: Text('Αγαπημένα', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 28)),
-              ),
-              // «Σπίτι» is a place (an address or an area), set here or from «Γυρνάς σπίτι».
+              // «Σπίτι», «Δουλειά» and other places live in «Μέρη».
               Card(
                 elevation: 0,
                 color: t.surface,
                 margin: const EdgeInsets.fromLTRB(4, 4, 4, 8),
                 child: ListTile(
-                  leading: const Icon(Icons.home_outlined),
+                  leading: const Icon(Icons.place_outlined),
                   title: Text(d.store.home == null ? 'Πού είναι το σπίτι σου;' : 'Σπίτι · ${d.store.home!.label}'),
-                  subtitle: Text(d.store.home?.approx ?? false ? 'περίπου · μένει μόνο στο κινητό' : 'Ανώνυμο: μένει μόνο στο κινητό',
-                      style: TextStyle(fontSize: 12.5, color: t.muted)),
-                  trailing: d.store.home == null
-                      ? const Icon(Icons.chevron_right)
-                      : IconButton(tooltip: 'Διαγραφή σπιτιού', icon: const Icon(Icons.close), onPressed: () => d.store.setHome(null)),
-                  onTap: () => askHome(context),
+                  subtitle: Text('Μέρη: σπίτι, δουλειά και άλλα · μένουν μόνο στο κινητό', style: TextStyle(fontSize: 12.5, color: t.muted)),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => openPage('Μέρη', const PlacesScreen()),
                 ),
               ),
               // The time-of-day order only matters once a stop is marked «Σπίτι» or «Δουλειά».

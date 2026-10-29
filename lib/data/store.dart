@@ -40,17 +40,25 @@ class FavStop {
       );
 }
 
-/// «Σπίτι» as a place: an address, an area, or a point near home snapped to a ~250 m grid ([approx]),
-/// so nobody has to give the exact address. It stays on the phone.
-class HomePlace {
-  const HomePlace({required this.label, required this.lat, required this.lon, this.approx = false});
-  final String label;
+const homeName = 'Σπίτι', workName = 'Δουλειά';
+
+/// A place of «Μέρη» (Σπίτι, Δουλειά, or any name): an address, an area, or a point snapped to a
+/// ~250 m grid ([approx]), so nobody has to give the exact address. It stays on the phone.
+class SavedPlace {
+  const SavedPlace({this.name = homeName, required this.label, required this.lat, required this.lon, this.approx = false});
+  final String name, label;
   final double lat, lon;
   final bool approx;
 
-  Map<String, dynamic> toJson() => {'label': label, 'lat': lat, 'lon': lon, if (approx) 'approx': true};
-  factory HomePlace.fromJson(Map<String, dynamic> j) =>
-      HomePlace(label: j['label'] as String, lat: (j['lat'] as num).toDouble(), lon: (j['lon'] as num).toDouble(), approx: j['approx'] == true);
+  SavedPlace named(String n) => SavedPlace(name: n, label: label, lat: lat, lon: lon, approx: approx);
+
+  Map<String, dynamic> toJson() => {'name': name, 'label': label, 'lat': lat, 'lon': lon, if (approx) 'approx': true};
+  factory SavedPlace.fromJson(Map<String, dynamic> j) => SavedPlace(
+      name: j['name'] as String? ?? homeName,
+      label: j['label'] as String,
+      lat: (j['lat'] as num).toDouble(),
+      lon: (j['lon'] as num).toDouble(),
+      approx: j['approx'] == true);
 }
 
 const _grid = .0025; // degrees: ~280 m north-south, ~220 m east-west in Athens
@@ -74,7 +82,7 @@ class AppStore extends ChangeNotifier {
   final SharedPreferences _prefs;
 
   List<FavStop> favs = [];
-  HomePlace? home;
+  List<SavedPlace> places = []; // «Μέρη»
   List<String> myLines = [];
   Set<String> hiddenLines = {};
   bool onlyMine = false;
@@ -89,7 +97,9 @@ class AppStore extends ChangeNotifier {
 
   void _load(Map<String, dynamic> j) {
     favs = [for (final f in j['favs'] as List? ?? const []) FavStop.fromJson(f as Map<String, dynamic>)];
-    home = j['home'] == null ? null : HomePlace.fromJson(j['home'] as Map<String, dynamic>);
+    places = [
+      for (final p in j['places'] as List? ?? [?j['home']]) SavedPlace.fromJson(p as Map<String, dynamic>), // 'home': before «Μέρη»
+    ];
     myLines = [for (final l in j['myLines'] as List? ?? const []) l as String];
     hiddenLines = {for (final l in j['hidden'] as List? ?? const []) l as String};
     onlyMine = j['onlyMine'] == true;
@@ -109,7 +119,7 @@ class AppStore extends ChangeNotifier {
 
   Map<String, dynamic> toJson() => {
         'favs': [for (final f in favs) f.toJson()],
-        if (home != null) 'home': home!.toJson(),
+        'places': [for (final p in places) p.toJson()],
         'myLines': myLines,
         'hidden': hiddenLines.toList(),
         'onlyMine': onlyMine,
@@ -137,15 +147,32 @@ class AppStore extends ChangeNotifier {
   FavStop? favNear(String name, double lat, double lon) =>
       favs.where((f) => f.name == name && distTo(f, lat, lon) < 200).firstOrNull;
 
-  void setHome(HomePlace? h) {
-    home = h;
+  SavedPlace? placeNamed(String name) => places.where((p) => p.name == name).firstOrNull;
+  SavedPlace? get home => placeNamed(homeName);
+  SavedPlace? get work => placeNamed(workName);
+
+  /// Adds a place, or replaces the one of the same name where it is.
+  void putPlace(SavedPlace p) {
+    places = places.any((x) => x.name == p.name) ? [for (final x in places) x.name == p.name ? p : x] : [...places, p];
     _save();
   }
 
+  void removePlace(String name) {
+    places = places.where((p) => p.name != name).toList();
+    _save();
+  }
+
+  void setHome(SavedPlace? h) => h == null ? removePlace(homeName) : putPlace(h.named(homeName));
+
   /// Where «Σπίτι» is: the place, or else the saved stop marked «Σπίτι» (before places existed).
-  Pt? get homePt {
-    if (home case final h?) return (h.lat, h.lon);
-    final f = favs.where((f) => f.place == Place.home).firstOrNull;
+  Pt? get homePt => _placePt(home, Place.home);
+
+  /// Where «Δουλειά» is: the place, or else the saved stop marked «Δουλειά».
+  Pt? get workPt => _placePt(work, Place.work);
+
+  Pt? _placePt(SavedPlace? p, Place mark) {
+    if (p != null) return (p.lat, p.lon);
+    final f = favs.where((f) => f.place == mark).firstOrNull;
     return f == null ? null : (f.lat, f.lon);
   }
 

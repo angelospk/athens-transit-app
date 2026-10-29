@@ -236,16 +236,24 @@ class CloseSel extends StatelessWidget {
       IconButton(tooltip: 'Κλείσιμο', icon: const Icon(Icons.close), onPressed: () => mapSel.value = null);
 }
 
-// The sheet's back arrow, top left: to what was open before (map_sel.dart). Nothing when there is
-// nothing to go back to.
+// The sheet's «‹ Πίσω», top left, named after the level before (map_sel.dart backLabel); from the
+// first level it goes back to the home sheet.
 class BackSel extends StatelessWidget {
   const BackSel({super.key});
   @override
   Widget build(BuildContext context) => ValueListenableBuilder(
         valueListenable: mapSel,
-        builder: (context, _, _) => canMapBack()
-            ? IconButton(tooltip: 'Πίσω', icon: const Icon(Icons.arrow_back), onPressed: mapBack)
-            : const SizedBox.shrink(),
+        builder: (context, sel, _) => sel == null
+            ? const SizedBox.shrink()
+            : ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 150, minHeight: 48),
+                child: TextButton.icon(
+                  style: TextButton.styleFrom(padding: const EdgeInsets.fromLTRB(4, 0, 10, 0), foregroundColor: context.tones.ink),
+                  onPressed: mapBack,
+                  icon: const Icon(Icons.chevron_left, size: 22),
+                  label: Text(backLabel(), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                ),
+              ),
       );
 }
 

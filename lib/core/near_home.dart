@@ -135,7 +135,8 @@ List<RailDeparture> nextTrains(List<RailDeparture> all, DateTime now, {int max =
     .toList();
 
 /// nearPlaces for the home sheet, searched again only when the position, the trip index or the stations
-/// change: the sheet is built every frame while it is dragged.
+/// change: the sheet is built every frame while it is dragged. It keeps every place 2,5 km around, so
+/// the stop of my lines and the station further off are found (core/home_sheet.dart homeGroups keeps 8).
 class NearMemo {
   TripIndex? _ix;
   List<Station> _stations = const [];
@@ -152,7 +153,7 @@ class NearMemo {
       _ix = ix;
       _stations = List.of(stations);
       _me = me;
-      _out = nearPlaces(ix, stations, me);
+      _out = nearPlaces(ix, stations, me, max: 100000, radii: const [2500]);
     }
     return _out!;
   }

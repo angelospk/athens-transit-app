@@ -1,10 +1,14 @@
 // What the map's sheet shows: a stop, one bus, or a whole line. Any screen can open one on the map
-// (the Stops tab, the search) instead of pushing a page: the map stays behind the sheet.
+// (a page from the menu, the search) instead of pushing a page: the map stays behind the sheet.
+// The menu's pages open over the map (navKey); the map is the first route.
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../core/geo.dart';
+import 'favs_screen.dart';
+import 'planner_screen.dart';
 import 'stop_screen.dart';
+import 'widgets.dart' show titleCase;
 
 sealed class MapSel {
   const MapSel();
@@ -73,6 +77,17 @@ bool _same(MapSel a, MapSel b) => switch ((a, b)) {
 // A bus opened with its stop (a tapped notification) goes back to that stop even without history.
 bool canMapBack() => _history.isNotEmpty || switch (mapSel.value) { BusSel(stop: _?) => true, _ => false };
 
+/// What «‹ Πίσω» goes back to, in words: the level before, or the home sheet.
+String backLabel() {
+  final prev = _history.lastOrNull ?? switch (mapSel.value) { BusSel(stop: final s?) => StopSel(s), _ => null };
+  return switch (prev) {
+    null => 'Κοντά σου',
+    StopSel(:final stop) => titleCase(stop.name),
+    BusSel(:final line) || LineSel(:final line) => 'Γραμμή $line',
+    StationSel(:final name) || PlaceSel(:final name) => titleCase(name),
+  };
+}
+
 void mapBack() {
   _goingBack = true;
   try {
@@ -88,19 +103,39 @@ void mapBack() {
   }
 }
 final followBus = ValueNotifier(false); // the map keeps the open bus in view
-final appTab = ValueNotifier(0); // the bottom bar's tab
+final homeTab = ValueNotifier(0); // the home sheet's tab: 0 «Κοντά σου», 1 «Αγαπημένα»
+final navKey = GlobalKey<NavigatorState>();
 
-/// A trip for the planner tab to plan: its ends (label and points); a null start keeps the planner's.
+/// A page over the map, with its title and a back arrow.
+Future<void> openPage(String title, Widget body) =>
+    navKey.currentState?.push(MaterialPageRoute<void>(builder: (_) => Scaffold(appBar: AppBar(title: Text(title)), body: body))) ?? Future.value();
+
+void _toMap() => navKey.currentState?.popUntil((r) => r.isFirst);
+
+/// A trip for the planner to plan: its ends (label and points); a null start keeps the planner's.
 typedef PlanEnd = ({String label, List<Pt> pts});
 final planRequest = ValueNotifier<({PlanEnd? from, PlanEnd to})?>(null);
 
 void showPlanner({PlanEnd? from, required PlanEnd to}) {
   planRequest.value = (from: from, to: to);
-  appTab.value = 2;
+  _toMap();
+  openPage('Διαδρομή', const PlannerScreen());
 }
 
 void showOnMap(MapSel s) {
+  _toMap();
   followBus.value = false;
   mapSel.value = s;
-  appTab.value = 0;
+}
+
+/// The saved stops, full page (the evening notification: its last-bus card is there).
+void showFavs() {
+  if (navKey.currentState == null) {
+    // A tapped notification at a cold start comes before the app is built: once it is.
+    WidgetsBinding.instance.addPostFrameCallback((_) => showFavs());
+    return;
+  }
+  _toMap();
+  homeTab.value = 1;
+  openPage('Αγαπημένα', const FavsScreen());
 }
