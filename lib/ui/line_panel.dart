@@ -287,7 +287,7 @@ class _LinePanelState extends State<LinePanel> {
             Text(
                 j['source'] == 'oasa-daily'
                     ? 'Πρόγραμμα ημέρας ΟΑΣΑ, ώρα αναχώρησης από την αφετηρία.' // no seen flags: OASA runs are not matched
-                    : 'Πρόγραμμα ΟΑΣΑ (GTFS), ώρα αναχώρησης από την αφετηρία. Διαγραμμένη: δεν φάνηκε λεωφορείο.',
+                    : 'Πρόγραμμα ΟΑΣΑ, ώρα αναχώρησης από την αφετηρία. Διαγραμμένη: δεν φάνηκε λεωφορείο.',
                 style: TextStyle(fontSize: 12, color: t.muted)),
           ]);
         },

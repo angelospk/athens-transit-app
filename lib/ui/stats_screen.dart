@@ -191,7 +191,7 @@ class _StatsScreenState extends State<StatsScreen> {
       if (w.missed.isEmpty) Text('Καμία γραμμή με αρκετά δρομολόγια.', style: TextStyle(color: t.muted)),
       for (final x in w.missed) row(x.line, '${x.missed} από ${x.measured} δεν έγιναν', '${(100 * x.missed / x.measured).round()}%'),
       if (w.expiredDays > 0)
-        Text('${w.expiredDays} από τις ${last.length} μέρες μετρήθηκαν με ληγμένο πρόγραμμα (GTFS): κάποια «χαμένα» μπορεί να μην υπάρχουν πια.',
+        Text('${w.expiredDays} από τις ${last.length} μέρες μετρήθηκαν με παλιό πρόγραμμα: κάποια «χαμένα» δρομολόγια μπορεί να μην υπάρχουν πια.',
             style: TextStyle(fontSize: 12, color: t.late)),
       const SizedBox(height: 10),
       Text('Πιο αργές', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.muted)),
@@ -279,7 +279,7 @@ class _StatsScreenState extends State<StatsScreen> {
         if (s.expired)
           Padding(
             padding: const EdgeInsets.only(top: 6),
-            child: Text('Το πρόγραμμα του ΟΑΣΑ (GTFS) έχει λήξει: ${s.gtfs}. Μερικά δρομολόγια που λείπουν μπορεί να μην υπάρχουν πια.',
+            child: Text('Συγκρίνω με το πρόγραμμα του ΟΑΣΑ της ${s.gtfs.split('-').reversed.join('/')}, γιατί νεότερο δεν έχει δημοσιευτεί. Μερικά δρομολόγια που λείπουν μπορεί να μην υπάρχουν πια.',
                 style: TextStyle(fontSize: 13, color: t.late)),
           ),
         const SizedBox(height: 8),
