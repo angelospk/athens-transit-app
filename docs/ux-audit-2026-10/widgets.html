@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup: widgets</title>
+<style>
+  :root { --w:#ffffff; --wd:#1d2024; --ink:#16181a; --muted:#6b7177; --late:#c2410c; --b040:#0a6ebd; --b209:#e2a100; }
+  body { margin:0; font-family: Roboto, system-ui, sans-serif; color: var(--foreground, #222); }
+  .home { border-radius:var(--radius, 16px); padding:16px; background: linear-gradient(160deg,#2b3a55,#1b2333 60%,#3a2f45);
+          display:grid; grid-template-columns: repeat(4, 76px); grid-auto-rows: 76px; gap:10px; justify-content:center; }
+  .w { border-radius:18px; background:var(--w); color:var(--ink); padding:10px 12px; box-sizing:border-box; overflow:hidden; font-size:12px; position:relative; }
+  .w.dark { background:var(--wd); color:#eef0f2; }
+  .w .t { font-weight:700; font-size:13px; }
+  .w .s { font-size:10px; opacity:.65; }
+  .tag { position:absolute; top:-1px; right:8px; font-size:9px; font-weight:700; background:#ffd84d; color:#222; border-radius:0 0 6px 6px; padding:1px 5px; }
+  .ln { display:flex; align-items:center; gap:6px; margin-top:6px; }
+  .b { border-radius:5px; padding:2px 4px; font-weight:700; font-size:11px; color:#fff; min-width:28px; text-align:center; }
+  .d { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.8; }
+  .m { font-weight:700; font-size:16px; }
+  .m small { font-size:10px; font-weight:500; opacity:.7; }
+  .big { font-size:22px; font-weight:800; line-height:1.1; margin-top:4px; }
+  .late { color:var(--late); }
+  .w.tight .ln { margin-top:3px; }
+  .gone { text-decoration:line-through; opacity:.45; }
+  .sc { display:flex; justify-content:space-around; align-items:center; height:100%; font-size:11px; font-weight:600; }
+  .sc span { display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .sc i { width:28px; height:28px; border-radius:50%; background:#e8eaee; display:block; }
+  .legend { font-size:13px; line-height:1.5; margin-top:12px; color: var(--muted-foreground, #666); }
+  .legend b { color: var(--foreground, #222); }
+</style>
+</head>
+<body>
+<div class="home">
+  <!-- W1 4x2 -->
+  <div class="w" style="grid-column: span 4; grid-row: span 2;">
+    <span class="tag">W1 4×2</span>
+    <div class="t">Σύνταγμα</div><div class="s">Σπίτι · live πριν 1′</div>
+    <div class="ln"><span class="b" style="background:var(--b040)">040</span><span class="d">→ Πειραιάς</span><span class="m">2′ <small>· 14′</small></span></div>
+    <div class="ln"><span class="b" style="background:var(--b209);color:#222">209</span><span class="d">→ Μεταμόρφωση</span><span class="m">19′ <small>· 41′</small></span></div>
+    <div class="ln"><span class="b" style="background:#888">A2</span><span class="d">→ Βούλα</span><span class="m"><small>≈</small>7′ <small>· 22′</small></span></div>
+  </div>
+
+  <!-- W3a 2x2 -->
+  <div class="w dark" style="grid-column: span 2; grid-row: span 2;">
+    <span class="tag">W3a 2×2</span>
+    <div class="s">ΓΥΡΝΑΣ ΣΠΙΤΙ</div>
+    <div class="big">Φύγε σε 6′</div>
+    <div class="ln"><span class="b" style="background:var(--b040)">040</span><span class="d">Σύνταγμα</span></div>
+    <div class="s" style="margin-top:6px">σπίτι 18:52 · θέση πριν 25′</div>
+  </div>
+  <!-- W3b 2x2 -->
+  <div class="w dark" style="grid-column: span 2; grid-row: span 2;">
+    <span class="tag">W3b 2×2</span>
+    <div class="s">ΤΕΛΕΥΤΑΙΟ ΓΙΑ ΣΠΙΤΙ</div>
+    <div class="big late">23:40</div>
+    <div class="ln"><span class="b" style="background:var(--b209);color:#222">209</span><span class="d">Σύνταγμα</span></div>
+    <div class="s" style="margin-top:6px">σε 1ώ 12′</div>
+  </div>
+
+  <!-- W3c 4x2 -->
+  <div class="w dark tight" style="grid-column: span 4; grid-row: span 2;">
+    <span class="tag">W3c 4×2</span>
+    <div class="t">Γυρνάς σπίτι · τα τελευταία</div><div class="s">από Σύνταγμα · πρώτα χάνεται το 040</div>
+    <div class="ln gone"><span class="b" style="background:#666">A2</span><span class="d">έφυγε</span><span class="m">22:50</span></div>
+    <div class="ln"><span class="b" style="background:var(--b040)">040</span><span class="d">σε 18′</span><span class="m late">23:10</span></div>
+    <div class="ln"><span class="b" style="background:var(--b209);color:#222">209</span><span class="d">σε 48′</span><span class="m">23:40</span></div>
+    <div class="ln"><span class="b" style="background:#d6262b">M2</span><span class="d">σε 1ώ 23′</span><span class="m">00:15</span></div>
+  </div>
+
+  <!-- W2 4x2 -->
+  <div class="w" style="grid-column: span 4; grid-row: span 2;">
+    <span class="tag">W2 4×2</span>
+    <div class="t">Κοντά μου</div><div class="s">γύρω από Αμπελόκηποι · θέση πριν 10′</div>
+    <div class="ln"><span class="b" style="background:#888">B5</span><span class="d">Πανόρμου · 120 μ.</span><span class="m">3′</span></div>
+    <div class="ln"><span class="b" style="background:#888">550</span><span class="d">Αμπελόκηποι · 200 μ.</span><span class="m">6′</span></div>
+    <div class="ln"><span class="b" style="background:#0a6ebd">M3</span><span class="d">Αμπελόκηποι · 250 μ.</span><span class="m">2′</span></div>
+  </div>
+
+  <!-- W4 1x1, 2x1 -->
+  <div class="w" style="padding:8px; text-align:center;">
+    <span class="tag">W4</span>
+    <div class="b" style="background:var(--b040);display:inline-block;margin-top:6px">040</div>
+    <div class="big" style="font-size:20px">2′</div>
+  </div>
+  <div class="w" style="grid-column: span 2;">
+    <span class="tag">W1 2×1</span>
+    <div class="ln" style="margin-top:12px"><span class="b" style="background:var(--b040)">040</span><span class="d">Σύνταγμα</span><span class="m">2′</span></div>
+  </div>
+  <div class="w dark" style="padding:8px;">
+    <span class="tag">W3b</span>
+    <div class="s" style="margin-top:8px">τελευταίο</div>
+    <div class="t late" style="font-size:16px">23:40</div>
+  </div>
+
+  <!-- W5 4x1 -->
+  <div class="w" style="grid-column: span 4; padding:6px;">
+    <span class="tag">W5 4×1</span>
+    <div class="sc"><span><i></i>Σπίτι</span><span><i></i>Κοντά</span><span><i></i>Διαδρομή</span><span><i></i>Πού κατεβαίνω</span></div>
+  </div>
+</div>
+<div class="legend">
+  <b>W1</b> Η στάση μου (σήμερα, με μεγέθη και θέμα συστήματος) · <b>W2</b> Κοντά μου (τελευταία θέση) ·
+  <b>W3a</b> επόμενος για το σπίτι · <b>W3b</b> τελευταίο για το σπίτι · <b>W3c</b> το πρώτο από τα τελευταία ·
+  <b>W4</b> αντίστροφη μέτρηση μιας γραμμής · <b>W5</b> συντομεύσεις. Όλα δείχνουν την ηλικία των δεδομένων ή της θέσης.
+</div>
+</body>
+</html>
