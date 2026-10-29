@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- «Η στάση μου»: 2×1 (one line) to 4×3 (four lines); 4×2 by default. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="250dp"
     android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="40dp"
     android:targetCellWidth="4"
     android:targetCellHeight="2"
+    android:maxResizeWidth="530dp"
+    android:maxResizeHeight="400dp"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/stop_widget"
+    android:previewLayout="@layout/stop_widget_preview"
     android:description="@string/widget_description" />

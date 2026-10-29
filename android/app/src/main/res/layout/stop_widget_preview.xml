@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The picker's preview of «Η στάση μου» (Android 12+): sample lines, not live. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical"
+    android:background="@drawable/widget_bg" android:paddingHorizontal="14dp" android:paddingVertical="10dp">
+    <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="@color/widget_ink" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="Σύνταγμα" />
+    <TextView android:id="@+id/sub" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="@color/widget_muted" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:text="Σπίτι · δεδομένα πριν 1′" />
+    <LinearLayout android:id="@+id/row0" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="6dp" android:visibility="visible">
+        <TextView android:id="@+id/line0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:gravity="center" android:background="@drawable/badge_bg" android:backgroundTint="#0A6EBD"
+            android:paddingHorizontal="6dp" android:paddingVertical="3dp" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:text="040" />
+        <TextView android:id="@+id/note0" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" android:text="→ Πειραιάς" />
+        <TextView android:id="@+id/eta0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/widget_ink" android:textSize="22sp" android:textStyle="bold" android:text="2′" />
+        <TextView android:id="@+id/next0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:paddingStart="4dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:text="· 14′" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/row1" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="6dp" android:visibility="visible">
+        <TextView android:id="@+id/line1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:gravity="center" android:background="@drawable/badge_bg" android:backgroundTint="#E2A100"
+            android:paddingHorizontal="6dp" android:paddingVertical="3dp" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:text="209" />
+        <TextView android:id="@+id/note1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" android:text="→ Μεταμόρφωση" />
+        <TextView android:id="@+id/eta1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/widget_ink" android:textSize="22sp" android:textStyle="bold" android:text="19′" />
+        <TextView android:id="@+id/next1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:paddingStart="4dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:text="· 41′" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/row2" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="6dp" android:visibility="visible">
+        <TextView android:id="@+id/line2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:gravity="center" android:background="@drawable/badge_bg" android:backgroundTint="#5B5F66"
+            android:paddingHorizontal="6dp" android:paddingVertical="3dp" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" android:text="A2" />
+        <TextView android:id="@+id/note2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" android:text="→ Βούλα" />
+        <TextView android:id="@+id/eta2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/widget_ink" android:textSize="22sp" android:textStyle="bold" android:text="7′" />
+        <TextView android:id="@+id/next2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:paddingStart="4dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:text="· 22′" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/row3" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="6dp" android:visibility="gone">
+        <TextView android:id="@+id/line3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="44dp" android:gravity="center" android:background="@drawable/badge_bg"
+            android:paddingHorizontal="6dp" android:paddingVertical="3dp" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" />
+        <TextView android:id="@+id/note3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp" android:textColor="@color/widget_muted" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/eta3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/widget_ink" android:textSize="22sp" android:textStyle="bold" />
+        <TextView android:id="@+id/next3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:paddingStart="4dp" android:textColor="@color/widget_muted" android:textSize="13sp" />
+    </LinearLayout>
+</LinearLayout>
