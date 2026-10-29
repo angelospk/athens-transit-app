@@ -25,6 +25,7 @@ import '../core/rail.dart';
 import '../data/basemap.dart';
 import '../data/locate.dart';
 import '../data/store.dart';
+import 'go_home_card.dart';
 import 'help.dart';
 import 'line_panel.dart';
 import 'map_sel.dart';
@@ -1054,6 +1055,7 @@ class _NearSheet extends StatelessWidget {
         const Expanded(child: Text('Κοντά σου', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
         if (places.isNotEmpty) const LiveNote(),
       ]),
+      if (here != null) GoHomeCard(me: here, ix: ix),
       if (here == null) ...[
         if (!located)
           Padding(
