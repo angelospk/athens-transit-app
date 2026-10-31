@@ -16,18 +16,22 @@ not draw the map's street names).
 
 What it does:
 
+- **Home**: a full-screen map with one sheet: «Κοντά σου» (the nearest stops and stations with their
+  next buses and trains) and «Αγαπημένα», a smart card («Γυρνάς σπίτι», «Πάμε δουλειά»), and the menu
+  from the left.
 - **Map**: every bus of the city live, coloured by delay, moving along its route between GPS fixes;
   metro, tram and suburban rail stations with their next trains.
 - **Stops and lines**: next arrivals live, runs not started yet from today's timetable, runs that did
   not start («Δεν ξεκίνησαν») with another option; a line's timetable with each run seen or missed,
   the gaps between its buses and slow stretches ahead.
 - **Διαδρομή (planner)**: bus without or with one change, bus + metro; a step-by-step screen with the
-  next bus live, «φύγε σε N′», «Ανέβηκα» and «Ακολούθησέ με».
-- **Alerts that run with the app closed**: minutes or stops before the bus, «Πότε να φύγω» from your
-  position, «Πες μου και αν αργεί», weekly rules, a live card on the lock screen, «Είμαι μέσα» (one
+  next bus live, «φύγε σε N′», «Πού κατεβαίνω;» and «Ακολούθησέ με».
+- **Alerts that run with the app closed**: minutes or stops before the bus, «Φύγε εγκαίρως» from your
+  position, «Πες μου και αν αργεί», weekly rules, a live card on the lock screen, «Πού κατεβαίνω;» (one
   stop before you get off), «Ακολούθησέ με» (notices when you board), the last bus of the day and a
   Friday/Saturday evening suggestion for the last bus home.
-- **Αγαπημένα** (home and work stops first by time of day), network statistics, home-screen widget.
+- **Αγαπημένα** and **Μέρη** (named places, kept on the phone), network statistics, home-screen widgets
+  «Η στάση μου» and «Γυρνάς σπίτι».
 
 Changes per version: [CHANGELOG.md](CHANGELOG.md). Manual test list: [docs/TEST-CHECKLIST.md](docs/TEST-CHECKLIST.md).
 

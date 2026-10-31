@@ -7,18 +7,53 @@ Detail per task and what was checked: [docs/PLAN-2026-10-28.md](docs/PLAN-2026-1
 
 ## Unreleased
 
-### Χάρτης
-- New: «Κοντά σου» on the map's sheet: the nearest bus stops and metro, tram and suburban stations,
-  with metres and minutes on foot. A saved line that stops there shows its next bus on the row. It
-  replaces «Η στάση σου». Without location: a «Τοποθεσία» button, and the saved stop meanwhile.
-- Fixed: the map waited forever for the position when the planner asked for it at the same time.
-- New: a metro, tram or suburban station in «Κοντά σου» shows the next departure of each of its
-  lines and directions (metro and tram: STASY timetable; suburban: live from railway.gov.gr).
-- Fixed: turning «Παρασκευή και Σάββατο βράδυ» back on did not always set the evening alarm again.
-- Changed: the bottom bar keeps its size. It no longer shrinks while the map moves or the sheet is up:
-  that resized the map under it every frame and made the map stutter.
-- Faster: «Κοντά σου» searches the nearest stops again only when the position or the data change, not
-  on every frame of a sheet drag.
+## v0.3.0 (2026-10-31)
+
+### Αρχική (new home screen)
+- New: no bottom bar. A full-screen map with one sheet half open, and a search bar with the menu
+  button on its left. The menu (from the left): Διαδρομή, Γραμμές, Ενημερώσεις, Ειδοποιήσεις, Μέρη,
+  Widgets, Στατιστικά, Ρυθμίσεις, Σχετικά.
+- New: the sheet has two tabs, «Κοντά σου» and «Αγαπημένα». «Κοντά σου» lists the nearest bus stops
+  and metro, tram and suburban stations, grouped by stop, with metres and minutes on foot, line pills
+  (line + minutes) and a walk button that opens Google Maps walking directions.
+- A metro, tram or suburban station shows the next departure of each of its lines and directions
+  (metro and tram: STASY timetable; suburban: live from railway.gov.gr).
+- New: a smart card on top: «Γυρνάς σπίτι» (the direct lines home, the next bus you can still walk
+  to, today's last run home, in the warning colour within 30′), «Πάμε δουλειά» on weekday mornings,
+  else the next bus of a favourite stop.
+- New: «Μέρη»: named places (an address, an area, or «Κοντά στη θέση μου (περίπου)» on a ~250 m grid),
+  kept only on the phone. The old «Σπίτι» stop moves there.
+- No first-run screen: the map opens first and asks for location only after it says why.
+- «‹ Πίσω» names the level before. The back button closes the menu first, then one sheet level.
+
+### Map, stops and buses
+- One «Χάρτης» sheet replaces the «Όλα ▾» menu and the layers button: all buses or my lines, the
+  Μετρό / Τραμ / Προαστιακός chips, the colours; the rarer settings under «Για προχωρημένους».
+- Search: Latin letters find Greek names («syntagma», «kifisia», «marousi»). The results list fits
+  above the keyboard.
+- Bus card: the minutes to your stop first, the delay in words («αργεί 20′»), the details folded.
+  The map follows an open bus and stops on a drag. «Είμαι μέσα» / «Ανέβηκα» become «Πού κατεβαίνω;»,
+  «Πότε να φύγω» becomes «Φύγε εγκαίρως».
+- Stop card: one list, starred lines on top («Οι γραμμές σου»), then «Περνούν επίσης». Each row has
+  one fact («αργεί 7′», «2 στάσεις μακριά» or «εκτίμηση»). A bell on every line; filled when an
+  alert is set.
+- Alert sheet: one button («Ειδοποίησέ με 5′ πριν»); the rest under «Περισσότερες επιλογές».
+- Weekly rule: a dialog says why before the Android «Alarms & reminders» page; × deletes a rule from
+  the list.
+- Statistics: plainer words about the OASA timetable date, no «GTFS».
+
+### Widgets and icon
+- «Η στάση μου»: one layout per size (2×1 to 4×3), light or dark with the system, a real preview in
+  the picker, rows that read «→ Πειραιάς  2′ · 14′».
+- New widget «Γυρνάς σπίτι»: today's last runs home; the small size shows the next one, the large one
+  lists them and warns within 30′.
+- New app icon (white bus on green, with a monochrome layer for themed icons).
+
+### Fixed
+- The map waited forever for the position when the planner asked for it at the same time.
+- Turning «Παρασκευή και Σάββατο βράδυ» back on did not always set the evening alarm again.
+- The map stuttered while it moved: the bottom bar resized the map on every frame.
+- After midnight, a «24:40» last run counted as future until 04:00, also on nights the clocks change.
 
 ## v0.2.0 (2026-10-28)
 
