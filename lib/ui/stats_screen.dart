@@ -30,6 +30,7 @@ class _StatsScreenState extends State<StatsScreen> {
   Future<DayStats>? _day;
   Future<List<DayStats>>? _long;
   int _period = 7; // days for "Χειρότερες γραμμές"
+  int _tab = 0; // «Τάσεις» when back from a line reopens the page
 
   void _load() => setState(() => _day = Deps.of(context).api.stats());
   void _loadLong() => setState(() => _long = Deps.of(context).api.storedDays());
@@ -37,6 +38,12 @@ class _StatsScreenState extends State<StatsScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_day == null) {
+      if (reopenedState(context) case final int p) {
+        _period = p;
+        _tab = 1;
+      }
+    }
     _day ??= Deps.of(context).api.stats();
     _long ??= Deps.of(context).api.storedDays();
   }
@@ -46,6 +53,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final t = context.tones;
     return DefaultTabController(
       length: 2,
+      initialIndex: _tab,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Στατιστικά δικτύου'),
@@ -164,7 +172,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final w = worstOver(last);
     Widget row(String line, String text, String note) => InkWell(
           onTap: () {
-            Navigator.of(context).popUntil((r) => r.isFirst); // stats is a pushed page over the tabs
+            keepPageState(context, _period); // back from the line reopens «Τάσεις» with this period
             showOnMap(LineSel(line));
           },
           child: Padding(

@@ -708,15 +708,19 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _styleFor = style;
     final start = _me ?? athensCentre;
     final sel = mapSel.value;
-    // Back pops one sheet level; from the home sheet it leaves the app.
-    return PopScope(
-      canPop: sel == null,
-      onPopInvokedWithResult: (popped, _) {
-        if (popped) return;
-        final menu = Scaffold.maybeOf(context);
-        if (menu != null && menu.isDrawerOpen) return menu.closeDrawer(); // back closes the menu first
-        mapBack();
-      },
+    // Back pops one sheet level, then «Αγαπημένα» goes to «Κοντά σου»; only from there it leaves the app.
+    return ValueListenableBuilder(
+      valueListenable: homeTab,
+      builder: (context, _, child) => PopScope(
+        canPop: atHome(),
+        onPopInvokedWithResult: (popped, _) {
+          if (popped) return;
+          final menu = Scaffold.maybeOf(context);
+          if (menu != null && menu.isDrawerOpen) return menu.closeDrawer(); // back closes the menu first
+          mapBack();
+        },
+        child: child!,
+      ),
       child: ListenableBuilder(
         listenable: Listenable.merge([d.store, d.live]),
         builder: (context, _) {

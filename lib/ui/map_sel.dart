@@ -55,9 +55,8 @@ final mapSel = ValueNotifier<MapSel?>(null)..addListener(_track);
 final _history = <MapSel>[];
 MapSel? _last;
 bool _goingBack = false;
-// A page opened the first level (a step of a planned trip): back from that level reopens it.
-typedef MapReturn = ({String label, VoidCallback open});
-MapReturn? _return;
+// The pages a jump to the map closed (showOnMap from a page): back from the first level reopens them.
+List<MaterialPageRoute<dynamic>>? _return;
 
 void _track() {
   final v = mapSel.value;
@@ -85,14 +84,21 @@ bool canMapBack() => _history.isNotEmpty || _return != null || switch (mapSel.va
 String backLabel() {
   final prev = _history.lastOrNull ?? switch (mapSel.value) { BusSel(stop: final s?) => StopSel(s), _ => null };
   return switch (prev) {
-    null => _return?.label ?? 'Κοντά σου',
+    null => _return == null ? 'Κοντά σου' : _return!.last.settings.name ?? 'Πίσω',
     StopSel(:final stop) => titleCase(stop.name),
     BusSel(:final line) || LineSel(:final line) => 'Γραμμή $line',
     StationSel(:final name) || PlaceSel(:final name) => titleCase(name),
   };
 }
 
+/// The phone's back button leaves the app only from here: nothing open on the map, «Κοντά σου».
+bool atHome() => mapSel.value == null && homeTab.value == 0;
+
 void mapBack() {
+  if (mapSel.value == null) {
+    homeTab.value = 0; // «Αγαπημένα» goes back to «Κοντά σου» first
+    return;
+  }
   _goingBack = true;
   try {
     if (_history.isNotEmpty) {
@@ -100,9 +106,14 @@ void mapBack() {
     } else if (mapSel.value case BusSel(stop: final s?)) {
       mapSel.value = StopSel(s);
     } else {
-      final r = _return;
+      final pages = _return;
       mapSel.value = null;
-      r?.open();
+      for (final p in pages ?? const <MaterialPageRoute<dynamic>>[]) {
+        navKey.currentState?.push(MaterialPageRoute<void>(
+          builder: p.builder,
+          settings: RouteSettings(name: p.settings.name, arguments: _Reopened(_kept[p])),
+        ));
+      }
     }
   } finally {
     _goingBack = false;
@@ -112,9 +123,56 @@ final followBus = ValueNotifier(false); // the map keeps the open bus in view
 final homeTab = ValueNotifier(0); // the home sheet's tab: 0 «Κοντά σου», 1 «Αγαπημένα»
 final navKey = GlobalKey<NavigatorState>();
 
-/// A page over the map, with its title and a back arrow.
+/// The routes of navKey, the map first: a jump to the map keeps the pages over it to reopen them.
+class PageLog extends NavigatorObserver {
+  final routes = <Route<dynamic>>[];
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (previousRoute == null) routes.clear(); // a new navigator (a test, a restart)
+    routes.add(route);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => routes.remove(route);
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) => routes.remove(route);
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    final i = oldRoute == null ? -1 : routes.indexOf(oldRoute);
+    if (i >= 0 && newRoute != null) routes[i] = newRoute;
+  }
+
+  // The full pages over the map, not the sheets and dialogs on them.
+  List<MaterialPageRoute<dynamic>> get pages => routes.skip(1).whereType<MaterialPageRoute<dynamic>>().toList();
+}
+
+final pageLog = PageLog();
+
+// What each page keeps of itself (keepPageState), by its route: back gives it to the page it reopens.
+final _kept = Expando<Object>('kept');
+
+class _Reopened {
+  const _Reopened(this.state);
+  final Object? state;
+}
+
+/// A page keeps what it shows, so the page back reopens after a jump to the map shows the same.
+void keepPageState(BuildContext context, Object state) {
+  final r = ModalRoute.of(context);
+  if (r != null) _kept[r] = state;
+}
+
+/// What the page kept, when back reopened it (see showOnMap); null for a page opened anew.
+Object? reopenedState(BuildContext context) =>
+    switch (ModalRoute.of(context)?.settings.arguments) { _Reopened(:final state) => state, _ => null };
+
+/// A page over the map, with its title and a back arrow. The title also names it for «‹ Πίσω».
 Future<void> openPage(String title, Widget body) =>
-    navKey.currentState?.push(MaterialPageRoute<void>(builder: (_) => Scaffold(appBar: AppBar(title: Text(title)), body: body))) ?? Future.value();
+    navKey.currentState?.push(MaterialPageRoute<void>(
+      settings: RouteSettings(name: title),
+      builder: (_) => Scaffold(appBar: AppBar(title: Text(title)), body: body),
+    )) ??
+    Future.value();
 
 void _toMap() => navKey.currentState?.popUntil((r) => r.isFirst);
 
@@ -128,13 +186,15 @@ void showPlanner({PlanEnd? from, required PlanEnd to}) {
   openPage('Διαδρομή', const PlannerScreen());
 }
 
-void showOnMap(MapSel s, {MapReturn? back}) {
+/// Opens s on the map's sheet. From a page: back from s reopens the pages it closed.
+void showOnMap(MapSel s) {
+  final pages = pageLog.pages;
   _toMap();
   followBus.value = false;
   mapSel.value = s;
-  if (back != null) {
-    _history.clear(); // what was open before the page is not on the way back to it
-    _return = back;
+  if (pages.isNotEmpty) {
+    _history.clear(); // what was open on the map before the pages is not on the way back to them
+    _return = pages;
   }
 }
 

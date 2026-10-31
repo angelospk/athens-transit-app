@@ -31,6 +31,7 @@ void openRoute(BuildContext context,
         required bool live,
         List<MetroStation> stations = const []}) =>
     Navigator.of(context).push(MaterialPageRoute<void>(
+      settings: const RouteSettings(name: 'Διαδρομή'),
       builder: (_) => RouteScreen(ix: ix, steps: steps, from: from, to: to, live: live, stations: stations),
     ));
 
@@ -46,29 +47,20 @@ class RouteScreen extends StatelessWidget {
   });
   final TripIndex ix;
   final List<RouteStep> steps;
-  final PlanEnd from, to; // the trip's ends: back from a step on the map plans it again
+  final PlanEnd from, to;
   final bool live; // leaving now: the buses are live
   final List<MetroStation> stations;
 
-  // Back to the map with the step's stop or station open; back from there reopens the planner and
-  // this trip.
+  // The map with the step's stop or station open; back from there reopens the planner and this trip.
   void _show(BuildContext context, RouteStep s) {
     final at = s.fromAt ?? s.toAt;
     final name = s.fromAt != null ? s.from : s.to;
     if (at == null) return;
-    final MapReturn back = (
-      label: 'Διαδρομή',
-      open: () {
-        showPlanner(from: from, to: to);
-        navKey.currentState?.push(MaterialPageRoute<void>(builder: (_) => this));
-      },
-    );
-    Navigator.of(context).pop();
     if (s.kind == StepKind.metro) {
       final st = stations.where((x) => x.name == name).firstOrNull;
-      showOnMap(StationSel(name, at, lines: st?.lines ?? const []), back: back);
+      showOnMap(StationSel(name, at, lines: st?.lines ?? const []));
     } else {
-      showOnMap(StopSel(StopRef(name: name, lat: at.$1, lon: at.$2, lines: linesAt(ix, name, at.$1, at.$2))), back: back);
+      showOnMap(StopSel(StopRef(name: name, lat: at.$1, lon: at.$2, lines: linesAt(ix, name, at.$1, at.$2))));
     }
   }
 

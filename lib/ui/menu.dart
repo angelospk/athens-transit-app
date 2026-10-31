@@ -49,7 +49,10 @@ class AppMenu extends StatelessWidget {
           item(Icons.widgets_outlined, 'Widgets', () => go('Widgets', const _Widgets())),
           item(Icons.query_stats, 'Στατιστικά', () {
             Scaffold.of(context).closeDrawer();
-            navKey.currentState?.push(MaterialPageRoute<void>(builder: (_) => const StatsScreen())); // its own bar, with tabs
+            navKey.currentState?.push(MaterialPageRoute<void>(
+              settings: const RouteSettings(name: 'Στατιστικά'),
+              builder: (_) => const StatsScreen(), // its own bar, with tabs
+            ));
           }),
           item(Icons.settings_outlined, 'Ρυθμίσεις', () => go('Ρυθμίσεις', const SettingsScreen())),
           item(Icons.info_outline, 'Σχετικά', () => go('Σχετικά', const _About())),

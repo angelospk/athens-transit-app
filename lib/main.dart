@@ -49,6 +49,7 @@ class TransitApp extends StatelessWidget {
       builder: (context, _) => MaterialApp(
         title: 'Athens Transit',
         navigatorKey: navKey,
+        navigatorObservers: [pageLog],
         debugShowCheckedModeBanner: false,
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),

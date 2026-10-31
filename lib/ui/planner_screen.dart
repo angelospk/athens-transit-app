@@ -37,6 +37,9 @@ class PlannerScreen extends StatefulWidget {
   State<PlannerScreen> createState() => _PlannerScreenState();
 }
 
+// What the planner shows, kept for the page back reopens after a jump to the map (map_sel.dart).
+typedef _Shown = ({_End? from, _End? to, TimeOfDay? at, bool metro});
+
 class _PlannerScreenState extends State<PlannerScreen> {
   _End? _from, _to;
   bool _locating = false, _metro = true, _failed = false;
@@ -73,7 +76,15 @@ class _PlannerScreenState extends State<PlannerScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_ix == null) _init();
+    if (_ix == null) {
+      if (reopenedState(context) case final _Shown s) {
+        _from = s.from;
+        _to = s.to;
+        _at = s.at;
+        _metro = s.metro;
+      }
+      _init();
+    }
     _request(); // asked before this tab was first built
   }
 
@@ -140,6 +151,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
   Widget build(BuildContext context) {
     final t = context.tones;
     final from = _from, to = _to, ix = _ix;
+    keepPageState(context, (from: from, to: to, at: _at, metro: _metro));
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),

@@ -7,8 +7,11 @@ Detail per task and what was checked: [docs/PLAN-2026-10-28.md](docs/PLAN-2026-1
 
 ## Unreleased
 
-- Fixed: a step of a planned trip opened its stop on the map, and back from there went to the home
-  screen. Back («‹ Διαδρομή», the back button or the swipe) now returns to the trip.
+- Fixed: back went to the home screen after a page opened something on the map (a step of a trip, a
+  line from «Γραμμές», «Αγαπημένα» or «Στατιστικά»). Back («‹ <page>», the back button or the swipe)
+  now reopens the pages it came from, in order; «Διαδρομή» keeps its ends, time and «Με μετρό».
+- Changed: back on «Αγαπημένα» goes to «Κοντά σου» first. The app closes only from «Κοντά σου» with
+  nothing open.
 
 ## v0.3.0 (2026-10-31)
 
