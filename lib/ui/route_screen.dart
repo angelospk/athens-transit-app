@@ -26,12 +26,12 @@ import 'widgets.dart';
 void openRoute(BuildContext context,
         {required TripIndex ix,
         required List<RouteStep> steps,
-        required String fromLabel,
-        required String toLabel,
+        required PlanEnd from,
+        required PlanEnd to,
         required bool live,
         List<MetroStation> stations = const []}) =>
     Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => RouteScreen(ix: ix, steps: steps, fromLabel: fromLabel, toLabel: toLabel, live: live, stations: stations),
+      builder: (_) => RouteScreen(ix: ix, steps: steps, from: from, to: to, live: live, stations: stations),
     ));
 
 class RouteScreen extends StatelessWidget {
@@ -39,28 +39,36 @@ class RouteScreen extends StatelessWidget {
     super.key,
     required this.ix,
     required this.steps,
-    required this.fromLabel,
-    required this.toLabel,
+    required this.from,
+    required this.to,
     required this.live,
     this.stations = const [],
   });
   final TripIndex ix;
   final List<RouteStep> steps;
-  final String fromLabel, toLabel;
+  final PlanEnd from, to; // the trip's ends: back from a step on the map plans it again
   final bool live; // leaving now: the buses are live
   final List<MetroStation> stations;
 
-  // Back to the map with the step's stop or station open.
+  // Back to the map with the step's stop or station open; back from there reopens the planner and
+  // this trip.
   void _show(BuildContext context, RouteStep s) {
     final at = s.fromAt ?? s.toAt;
     final name = s.fromAt != null ? s.from : s.to;
     if (at == null) return;
+    final MapReturn back = (
+      label: 'Διαδρομή',
+      open: () {
+        showPlanner(from: from, to: to);
+        navKey.currentState?.push(MaterialPageRoute<void>(builder: (_) => this));
+      },
+    );
     Navigator.of(context).pop();
     if (s.kind == StepKind.metro) {
       final st = stations.where((x) => x.name == name).firstOrNull;
-      showOnMap(StationSel(name, at, lines: st?.lines ?? const []));
+      showOnMap(StationSel(name, at, lines: st?.lines ?? const []), back: back);
     } else {
-      showOnMap(StopSel(StopRef(name: name, lat: at.$1, lon: at.$2, lines: linesAt(ix, name, at.$1, at.$2))));
+      showOnMap(StopSel(StopRef(name: name, lat: at.$1, lon: at.$2, lines: linesAt(ix, name, at.$1, at.$2))), back: back);
     }
   }
 
@@ -88,7 +96,7 @@ class RouteScreen extends StatelessWidget {
     final arrive = DateTime.now().add(Duration(minutes: total));
     final bus = firstBus < 0 ? null : steps[firstBus];
     return Scaffold(
-      appBar: AppBar(title: Text('${titleCase(fromLabel)} → ${titleCase(toLabel)}', maxLines: 2, style: const TextStyle(fontSize: 17))),
+      appBar: AppBar(title: Text('${titleCase(from.label)} → ${titleCase(to.label)}', maxLines: 2, style: const TextStyle(fontSize: 17))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
         children: [

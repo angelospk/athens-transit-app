@@ -7,6 +7,9 @@ Detail per task and what was checked: [docs/PLAN-2026-10-28.md](docs/PLAN-2026-1
 
 ## Unreleased
 
+- Fixed: a step of a planned trip opened its stop on the map, and back from there went to the home
+  screen. Back («‹ Διαδρομή», the back button or the swipe) now returns to the trip.
+
 ## v0.3.0 (2026-10-31)
 
 ### Αρχική (new home screen)

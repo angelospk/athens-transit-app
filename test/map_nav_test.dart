@@ -3,6 +3,7 @@ import 'package:athens_transit/ui/stop_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized(); // showOnMap asks navKey for the pages over the map
   const stop = StopRef(name: 'ΣΧΟΛΗ', lat: 38, lon: 23.7, lines: ['040']);
   setUp(() => mapSel.value = null);
 
@@ -50,5 +51,31 @@ void main() {
     expect(backLabel(), 'Σχολη');
     mapSel.value = const BusSel('040', '1');
     expect(backLabel(), 'Γραμμή 040');
+  });
+
+  test('a stop opened from a trip goes back to the trip, by name', () {
+    var reopened = 0;
+    mapSel.value = const LineSel('550'); // open before: the trip's stop replaces it, not a step back
+    showOnMap(const StopSel(stop), back: (label: 'Διαδρομή', open: () => reopened++));
+    expect(canMapBack(), isTrue);
+    expect(backLabel(), 'Διαδρομή');
+    mapSel.value = const BusSel('040', '1', stop: stop);
+    mapBack();
+    expect(mapSel.value, isA<StopSel>());
+    expect(reopened, 0);
+    mapBack();
+    expect(mapSel.value, isNull);
+    expect(reopened, 1);
+    expect(backLabel(), 'Κοντά σου'); // once only
+  });
+
+  test('closing the sheet forgets the way back to the trip', () {
+    var reopened = 0;
+    showOnMap(const StopSel(stop), back: (label: 'Διαδρομή', open: () => reopened++));
+    mapSel.value = null;
+    mapSel.value = const StopSel(stop);
+    expect(canMapBack(), isFalse);
+    mapBack();
+    expect(reopened, 0);
   });
 }

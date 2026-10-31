@@ -60,7 +60,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
   // Another screen asks for a trip (a run that did not start: «Άλλη επιλογή»).
   void _request() {
     final r = planRequest.value;
-    if (r == null) return;
+    // A planner still closing (back from the map during the pop animation) leaves it to the new one.
+    if (r == null || ModalRoute.of(context)?.isActive == false) return;
     planRequest.value = null;
     setState(() {
       if (r.from != null) _from = r.from;
@@ -332,7 +333,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
   void _open(List<RouteStep> steps) {
     final ix = _ix, from = _from, to = _to;
     if (steps.isEmpty || ix == null || from == null || to == null) return;
-    openRoute(context, ix: ix, steps: steps, fromLabel: from.label, toLabel: to.label, live: _at == null, stations: _stations);
+    openRoute(context, ix: ix, steps: steps, from: from, to: to, live: _at == null, stations: _stations);
   }
 
   // A bus and the metro: the bus leg as on the other cards, then (or before it) the metro.

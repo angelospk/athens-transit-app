@@ -55,6 +55,9 @@ final mapSel = ValueNotifier<MapSel?>(null)..addListener(_track);
 final _history = <MapSel>[];
 MapSel? _last;
 bool _goingBack = false;
+// A page opened the first level (a step of a planned trip): back from that level reopens it.
+typedef MapReturn = ({String label, VoidCallback open});
+MapReturn? _return;
 
 void _track() {
   final v = mapSel.value;
@@ -62,6 +65,7 @@ void _track() {
   _last = v;
   if (v == null) {
     _history.clear();
+    _return = null;
   } else if (!_goingBack && was != null && !identical(was, v) && !_same(was, v)) {
     _history.add(was);
     if (_history.length > 30) _history.removeAt(0);
@@ -75,13 +79,13 @@ bool _same(MapSel a, MapSel b) => switch ((a, b)) {
     };
 
 // A bus opened with its stop (a tapped notification) goes back to that stop even without history.
-bool canMapBack() => _history.isNotEmpty || switch (mapSel.value) { BusSel(stop: _?) => true, _ => false };
+bool canMapBack() => _history.isNotEmpty || _return != null || switch (mapSel.value) { BusSel(stop: _?) => true, _ => false };
 
 /// What «‹ Πίσω» goes back to, in words: the level before, or the home sheet.
 String backLabel() {
   final prev = _history.lastOrNull ?? switch (mapSel.value) { BusSel(stop: final s?) => StopSel(s), _ => null };
   return switch (prev) {
-    null => 'Κοντά σου',
+    null => _return?.label ?? 'Κοντά σου',
     StopSel(:final stop) => titleCase(stop.name),
     BusSel(:final line) || LineSel(:final line) => 'Γραμμή $line',
     StationSel(:final name) || PlaceSel(:final name) => titleCase(name),
@@ -96,7 +100,9 @@ void mapBack() {
     } else if (mapSel.value case BusSel(stop: final s?)) {
       mapSel.value = StopSel(s);
     } else {
+      final r = _return;
       mapSel.value = null;
+      r?.open();
     }
   } finally {
     _goingBack = false;
@@ -122,10 +128,14 @@ void showPlanner({PlanEnd? from, required PlanEnd to}) {
   openPage('Διαδρομή', const PlannerScreen());
 }
 
-void showOnMap(MapSel s) {
+void showOnMap(MapSel s, {MapReturn? back}) {
   _toMap();
   followBus.value = false;
   mapSel.value = s;
+  if (back != null) {
+    _history.clear(); // what was open before the page is not on the way back to it
+    _return = back;
+  }
 }
 
 /// The saved stops, full page (the evening notification: its last-bus card is there).
