@@ -4,14 +4,14 @@ Flutter app for the Athens bus map: live buses, arrivals at your stops, and aler
 with the app closed. Android first; the code is shared with iOS.
 
 <p>
-  <img src="docs/screenshots/map.png" width="160" alt="Map with live buses, metro lines and the arrivals at your stop">
-  <img src="docs/screenshots/stop.png" width="160" alt="A stop with the next arrivals of your lines">
+  <img src="docs/screenshots/map.png" width="160" alt="Home screen: map with live buses and the Near you sheet with the Going home card">
+  <img src="docs/screenshots/stop.png" width="160" alt="A stop with the next arrivals of its lines">
   <img src="docs/screenshots/alert.png" width="160" alt="Alert sheet: notify me 5 minutes before the bus arrives">
-  <img src="docs/screenshots/rules.png" width="160" alt="Weekly alert rules">
-  <img src="docs/screenshots/widget.png" width="160" alt="Home-screen widget counting down the next arrivals">
+  <img src="docs/screenshots/menu.png" width="160" alt="Menu opened from the left">
+  <img src="docs/screenshots/widget.png" width="160" alt="Home-screen widget with the next buses at your stop">
 </p>
 
-Map · stop · alert · weekly rules · home-screen widget (Android emulator, live data; the emulator does
+Home · stop · alert · menu · home-screen widget (v0.3.0, Android emulator, live data; the emulator does
 not draw the map's street names).
 
 What it does:
