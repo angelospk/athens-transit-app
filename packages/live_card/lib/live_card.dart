@@ -21,14 +21,26 @@ class LiveCard {
     String endLabel = 'Σταμάτα',
     String ruleId = '',
     String? open,
-  }) =>
-      _ch.invokeMethod('show', {
+  }) async {
+    try {
+      await _ch.invokeMethod('show', {
         'id': id, 'title': title, 'text': text, 'sub': sub, 'progress': progress, 'chip': chip, 'endLabel': endLabel,
         'ruleId': ruleId, 'open': open,
       });
+    } on MissingPluginException {
+      // No native side (iOS): no card.
+    }
+  }
 
-  /// The rule ids whose card the user ended since the last call (each is returned once).
-  static Future<List<String>> takeEnded() async => [...?await _ch.invokeListMethod<String>('takeEnded')];
+  /// The rule ids whose card the user ended since the last call (each is returned once); empty on a
+  /// platform without the native side.
+  static Future<List<String>> takeEnded() async {
+    try {
+      return [...?await _ch.invokeListMethod<String>('takeEnded')];
+    } on MissingPluginException {
+      return const [];
+    }
+  }
 
   /// What the tapped card asked to open, once; null when the app was not opened from the card (or on a
   /// platform without the native side).
