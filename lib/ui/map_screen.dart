@@ -54,6 +54,7 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   MapLibreMapController? _map;
   bool _styled = false;
+  Future<void>? _styling;
   final _tiles = <String, List<Vehicle>>{}; // "z/x/y" → vehicles
   Set<String> _want = {};
   int _z = 13;
@@ -213,8 +214,14 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         left: 32, right: 32, top: 140, bottom: _h * _half + 24));
   }
 
-  Future<void> _onStyle() async {
+  // iOS (maplibre_gl 0.27) can report one style load twice: the second call joins the first, or
+  // finds its sources there and stops. Adding them again throws sourceAlreadyExists.
+  Future<void> _onStyle() => _styling ??= _addLayers().whenComplete(() => _styling = null);
+
+  Future<void> _addLayers() async {
     final m = _map!;
+    if ((await m.getSourceIds()).contains('metro')) return;
+    if (!mounted) return;
     final api = Deps.of(context).api;
     final dark = Theme.of(context).brightness == Brightness.dark;
     final halo = dark ? '#1B1D21' : '#FFFFFF';
