@@ -1,6 +1,7 @@
 // The menu from the left (docs/DESIGN-home.md): every page that is not the map. Each opens over the
 // map with a back arrow. «Διαδρομή» is here too: the planner had its own tab before.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -46,7 +47,9 @@ class AppMenu extends StatelessWidget {
           item(Icons.campaign_outlined, 'Ενημερώσεις', () => go('Ενημερώσεις', const _Updates())),
           item(Icons.notifications_outlined, 'Ειδοποιήσεις', () => go('Ειδοποιήσεις', const RulesScreen())),
           item(Icons.place_outlined, 'Μέρη', () => go('Μέρη', const PlacesScreen())),
-          item(Icons.widgets_outlined, 'Widgets', () => go('Widgets', const _Widgets())),
+          // Home-screen widgets exist only on Android.
+          if (defaultTargetPlatform == TargetPlatform.android)
+            item(Icons.widgets_outlined, 'Widgets', () => go('Widgets', const _Widgets())),
           item(Icons.query_stats, 'Στατιστικά', () {
             Scaffold.of(context).closeDrawer();
             navKey.currentState?.push(MaterialPageRoute<void>(
