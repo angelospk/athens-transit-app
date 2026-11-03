@@ -99,6 +99,23 @@ class _Step {
   const _Step(this.s, this.max, this.cost, this.from);
 }
 
+/// The steps no other one beats. A step is worth keeping while no other has both a lower cost and no
+/// higher max (a higher max rules more later legs out): one best step per leg is not enough (web#20).
+/// Of two equal ones, the earlier stays.
+List<_Step> _frontier(List<_Step> xs) => [
+  for (var j = 0; j < xs.length; j++)
+    if (!_beaten(xs, j)) xs[j],
+];
+
+bool _beaten(List<_Step> xs, int j) {
+  final y = xs[j];
+  for (var i = 0; i < xs.length; i++) {
+    final x = xs[i];
+    if (i != j && x.max <= y.max && x.cost <= y.cost && (x.max < y.max || x.cost < y.cost || i < j)) return true;
+  }
+  return false;
+}
+
 /// s of each stop, chosen for the whole run: the placement of all the stops whose sum of offsets from
 /// the shape is smallest, kept in order along the shape (a small step back is GPS noise). A stop may be
 /// left out instead, at a cost above any leg's offset: the stop takes the place of the one before it,
@@ -111,27 +128,24 @@ List<double> stopOffsets(List<Pt> shape, List<Pt> stops) {
     final before = steps.isEmpty ? const [_Step(0, 0, 0, -1)] : steps.last;
     final next = <_Step>[];
     for (final c in projectCandidates(shape, p)) {
-      _Step? best;
       for (var k = 0; k < before.length; k++) {
         final b = before[k];
-        if (c.s < b.max - _backM) continue;
-        final cost = b.cost + c.offM;
-        if (best == null || cost < best.cost - 0.5) best = _Step(c.s, max(b.max, c.s), cost, k);
+        if (c.s >= b.max - _backM) next.add(_Step(c.s, max(b.max, c.s), b.cost + c.offM, k));
       }
-      if (best != null) next.add(best);
     }
     // After the legs: on equal cost, a stop in place wins over one left out.
     for (var k = 0; k < before.length; k++) {
       final b = before[k];
       next.add(_Step(b.s, b.max, b.cost + _leftOutCost, k));
     }
-    steps.add(next);
+    steps.add(_frontier(next));
   }
   if (steps.isEmpty) return const [];
   final last = steps.last;
+  // The least cost; on a tie (float noise only: 0.1 m less may be a leg km away), the earlier step.
   var k = 0;
   for (var i = 1; i < last.length; i++) {
-    if (last[i].cost < last[k].cost - 0.5) k = i;
+    if (last[i].cost < last[k].cost - 1e-6) k = i;
   }
   final out = List<double>.filled(steps.length, 0);
   for (var i = steps.length - 1; i >= 0; i--) {
