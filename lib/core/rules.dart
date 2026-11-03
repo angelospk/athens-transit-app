@@ -332,3 +332,16 @@ Set<String> stoppedIds(Iterable<String> entries, int nowS) => {
       for (final e in entries)
         if (e.split('|') case [final id, final until] when (int.tryParse(until) ?? 0) > nowS) id,
     };
+
+/// iOS runs no code at an alarm: the weekly starts of the next [days] days, each moment once, sorted,
+/// at most [max]. The app sets a notification for each and renews them each time it opens.
+List<DateTime> startsWithin(List<Rule> rules, DateTime nowUtc, {int days = 14, int max = 40}) {
+  final end = nowUtc.add(Duration(days: days));
+  final out = <DateTime>{};
+  for (final r in rules) {
+    for (var t = nextStartUtc(r, nowUtc); t != null && t.isBefore(end); t = nextStartUtc(r, t)) {
+      out.add(t);
+    }
+  }
+  return (out.toList()..sort()).take(max).toList();
+}

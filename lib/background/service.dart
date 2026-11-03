@@ -16,6 +16,7 @@ import 'package:live_card/live_card.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' hide NotificationVisibility;
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 import '../core/athens_time.dart';
 import '../core/board.dart';
@@ -37,6 +38,10 @@ const _noteAlarmBase = 5000; // notifications at a time (not a bus): alarm ids f
 const _notePrefix = 'timenote_v1.'; // + alarm id → {"title", "body", "payload"}
 const _noteNextKey = 'timenote_next_v1'; // the next alarm id after _noteAlarmBase
 const _favsPayload = 'tab:favs'; // a tap opens Αγαπημένα
+// iOS runs no code at an alarm: ready notifications, set ahead and renewed each time the app opens.
+// Ids above the Android note alarms (_noteAlarmBase + up to 100000).
+const _iosStartBase = 200000, _iosStarts = 40; // weekly rule starts of the next two weeks
+const _iosNudgeBase = 200100, _iosNudges = 4; // two Fridays and two Saturdays
 const _tickMs = 10000; // the card is recounted this often; each line is polled when its data is due
 const _serviceId = 7; // also the id of the service's notification, which the live card replaces
 const _boardedPrefix = 'boarded_v1.'; // + rule id → the vehicle a followed trip («Ακολούθησέ με») rides
@@ -139,19 +144,26 @@ class AlertService {
     store.addListener(nudgeListener(store, () => syncNudge(store)));
   }
 
-  /// A store listener that calls [rearm] each time the evening alarm becomes wanted or not wanted.
+  /// A store listener that calls [rearm] each time the evening alarm becomes wanted or not wanted, or
+  /// its home stop or line changes (iOS sets the text ahead).
   static VoidCallback nudgeListener(AppStore store, void Function() rearm) {
-    var wanted = _wantsNudge(store);
+    var key = _nudgeKey(store);
     return () {
-      if (_wantsNudge(store) == wanted) return;
-      wanted = !wanted;
+      final k = _nudgeKey(store);
+      if (k == key) return;
+      key = k;
       rearm();
     };
   }
 
+  static String? _nudgeKey(AppStore store) =>
+      _wantsNudge(store) ? '${_home(store)!.key}|${_home(store)!.lines.first}' : null;
+
   static bool _wantsNudge(AppStore store) => store.lastBusNudge && _hasHome(store);
 
-  static bool _hasHome(AppStore store) => store.favs.any((f) => f.place == Place.home && f.lines.isNotEmpty);
+  static bool _hasHome(AppStore store) => _home(store) != null;
+
+  static FavStop? _home(AppStore store) => store.favs.where((f) => f.place == Place.home && f.lines.isNotEmpty).firstOrNull;
 
   /// The live card's bus, when a tap on the card opened the app.
   static Future<void> takeOpen(void Function(OpenBus) onOpen) async {
@@ -251,11 +263,11 @@ class AlertService {
   /// A notification at [utc] (a time, not a bus): «σε 30′ φεύγει το τελευταίο». Kept by the alarm
   /// across a reboot; the text waits in the preferences.
   static Future<void> noteAt(DateTime utc, String title, String body, {String? payload}) async {
-    if (!Platform.isAndroid) return;
     final p = await SharedPreferences.getInstance();
     final n = p.getInt(_noteNextKey) ?? 0; // two notes for one minute are two alarms
     await p.setInt(_noteNextKey, (n + 1) % 100000);
     final id = _noteAlarmBase + n;
+    if (!Platform.isAndroid) return _iosAt(id, utc, title, body, payload: payload);
     await p.setString('$_notePrefix$id', jsonEncode({'title': title, 'body': body, 'payload': payload}));
     await AndroidAlarmManager.oneShotAt(utc.toLocal(), id, noteFired,
         exact: await exactAllowed(), wakeup: true, allowWhileIdle: true, rescheduleOnReboot: true);
@@ -264,7 +276,19 @@ class AlertService {
   /// The evening suggestion: an alarm at the next Friday or Saturday 21:00 while there is a home stop
   /// and the setting is on.
   static Future<void> syncNudge(AppStore store) async {
-    if (!Platform.isAndroid) return;
+    if (!Platform.isAndroid) {
+      for (var i = 0; i < _iosNudges; i++) {
+        await _notes.cancel(id: _iosNudgeBase + i);
+      }
+      final home = _home(store);
+      if (!_wantsNudge(store) || home == null) return;
+      // No timetable at that hour: the general text.
+      final at = nextNudgesUtc(DateTime.now().toUtc(), _iosNudges);
+      for (var i = 0; i < at.length; i++) {
+        await _iosAt(_iosNudgeBase + i, at[i], _nudgeTitle(at[i]), _nudgeBody(home), payload: _favsPayload);
+      }
+      return;
+    }
     await AndroidAlarmManager.cancel(_nudgeAlarmId);
     if (!_wantsNudge(store)) return;
     await AndroidAlarmManager.oneShotAt(nextNudgeUtc(DateTime.now().toUtc()).toLocal(), _nudgeAlarmId, nudgeFired,
@@ -272,7 +296,17 @@ class AlertService {
   }
 
   static Future<void> _scheduleNext(List<Rule> rules, DateTime now) async {
-    if (!Platform.isAndroid) return;
+    if (!Platform.isAndroid) {
+      // The app cannot start the service from the background: the notification asks to open it.
+      for (var i = 0; i < _iosStarts; i++) {
+        await _notes.cancel(id: _iosStartBase + i);
+      }
+      final at = startsWithin(rules, now, max: _iosStarts);
+      for (var i = 0; i < at.length; i++) {
+        await _iosAt(_iosStartBase + i, at[i], 'Ξεκινά ο κανόνας σου', 'Άνοιξε την εφαρμογή για live ειδοποιήσεις.');
+      }
+      return;
+    }
     await AndroidAlarmManager.cancel(_alarmId);
     DateTime? next;
     for (final r in rules) {
@@ -345,9 +379,9 @@ Future<void> nudgeFired() async {
   await prefs.reload(); // the alarm isolate may live on with an old copy
   final store = AppStore(prefs);
   await AlertService.syncNudge(store);
-  final home = store.favs.where((f) => f.place == Place.home && f.lines.isNotEmpty).firstOrNull;
+  final home = AlertService._home(store);
   if (!store.lastBusNudge || home == null) return;
-  var body = 'Δες πότε φεύγει το τελευταίο ${home.lines.first} για ${titleCase(home.name)} και βάλε ειδοποίηση.';
+  var body = _nudgeBody(home);
   try {
     final api = Api();
     final line = home.lines.first;
@@ -359,12 +393,28 @@ Future<void> nudgeFired() async {
   await _initNotes();
   await _notes.show(
     id: _nudgeAlarmId,
-    title: 'Βράδυ ${athensWall(DateTime.now().toUtc()).weekday == DateTime.friday ? 'Παρασκευής' : 'Σαββάτου'} · το τελευταίο για το σπίτι',
+    title: _nudgeTitle(DateTime.now().toUtc()),
     body: body,
     notificationDetails: const NotificationDetails(android: _hitChannel),
     payload: _favsPayload,
   );
 }
+
+String _nudgeTitle(DateTime utc) =>
+    'Βράδυ ${athensWall(utc).weekday == DateTime.friday ? 'Παρασκευής' : 'Σαββάτου'} · το τελευταίο για το σπίτι';
+
+String _nudgeBody(FavStop home) => 'Δες πότε φεύγει το τελευταίο ${home.lines.first} για ${titleCase(home.name)} και βάλε ειδοποίηση.';
+
+// iOS: a notification at [utc], kept by the system; no code runs then.
+Future<void> _iosAt(int id, DateTime utc, String title, String body, {String? payload}) => _notes.zonedSchedule(
+      id: id,
+      scheduledDate: tz.TZDateTime.from(utc, tz.UTC),
+      notificationDetails: const NotificationDetails(android: _hitChannel),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      title: title,
+      body: body,
+      payload: payload,
+    );
 
 @pragma('vm:entry-point')
 void startCallback() => FlutterForegroundTask.setTaskHandler(RuleTask());

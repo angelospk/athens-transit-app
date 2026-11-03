@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // The evening alarm follows the setting and the home stop: the store listener re-arms it each time
-// either one changes whether the alarm is wanted.
+// either one changes whether the alarm is wanted, or what it says (iOS sets its text ahead).
 void main() {
   late AppStore store;
   var calls = 0;
@@ -36,5 +36,16 @@ void main() {
     store.addFav(home);
     store.setLastBusNudge(true); // already on
     expect(calls, 1);
+  });
+
+  test('a new home stop or home line re-arms the alarm: its text names them', () {
+    store.addFav(home);
+    expect(calls, 1);
+    store.updateFav(home.copyWith(lines: ['A2', '040']));
+    expect(calls, 2, reason: 'the text names the first line');
+    const other = FavStop(name: 'ΟΜΟΝΟΙΑ', lat: 37.984, lon: 23.728, place: Place.home, lines: ['A2']);
+    store.addFav(other); // takes the home place
+    store.removeFav(home.copyWith(lines: ['A2', '040']));
+    expect(calls, greaterThanOrEqualTo(3), reason: 'another home stop');
   });
 }

@@ -90,6 +90,7 @@ class _ShellState extends State<Shell> with WidgetsBindingObserver {
     d.live.pause(s != AppLifecycleState.resumed);
     if (s == AppLifecycleState.resumed) {
       AlertService.sync(d.store);
+      AlertService.syncNudge(d.store); // iOS sets the evening alarms ahead: renew them
       AlertService.takeOpen((o) => openBus(d.api, o));
     }
     if (s == AppLifecycleState.paused) pushWidget(d.store, d.live, force: true);

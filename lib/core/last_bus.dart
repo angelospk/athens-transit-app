@@ -62,3 +62,12 @@ DateTime nextNudgeUtc(DateTime nowUtc) {
   }
   throw StateError('no Friday in a week');
 }
+
+/// The next [n] evening nudges, for iOS, which sets them ahead.
+List<DateTime> nextNudgesUtc(DateTime nowUtc, int n) {
+  final out = <DateTime>[];
+  for (var t = nowUtc; out.length < n;) {
+    out.add(t = nextNudgeUtc(t));
+  }
+  return out;
+}
