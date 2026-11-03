@@ -16,7 +16,11 @@ import '../ui/widgets.dart';
 const _provider = 'StopWidgetProvider';
 int _lastPush = 0;
 
+// Home-screen widgets exist only on Android (iOS has no app group for them).
+bool get _widgets => defaultTargetPlatform == TargetPlatform.android;
+
 Future<void> pushWidget(AppStore store, LiveHub live, {bool force = false}) async {
+  if (!_widgets) return;
   final now = live.nowS;
   if (!force && now - _lastPush < 60) return;
   _lastPush = now;
@@ -63,6 +67,7 @@ const _homeProvider = 'HomeLastWidgetProvider';
 /// background), the one that goes first on top, as clock times; the widget strikes the ones gone.
 /// No direct way home from where the app is now: the runs of the place before must not stay.
 Future<void> clearHomeWidget() async {
+  if (!_widgets) return;
   try {
     await HomeWidget.saveWidgetData<String>('h_from', null);
     await HomeWidget.saveWidgetData<String>('h_rows', null);
@@ -73,6 +78,7 @@ Future<void> clearHomeWidget() async {
 }
 
 Future<void> pushHomeWidget(AppStore store, List<HomeLast> last, {required String from}) async {
+  if (!_widgets) return;
   try {
     final now = DateTime.now().toUtc();
     await HomeWidget.saveWidgetData('h_from', titleCase(from));
