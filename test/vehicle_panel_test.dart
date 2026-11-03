@@ -14,12 +14,15 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Real I/O (the disk cache) between frames: its callbacks run on the next pump.
-Future<void> settle(WidgetTester t) async {
-  for (var i = 0; i < 20; i++) {
+// Real I/O (the disk cache, the fixtures) until [done]: a fixed wait failed under a parallel test run.
+Future<void> settle(WidgetTester t, bool Function() done) async {
+  for (var i = 0; i < 200 && !done(); i++) {
     await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
     await t.pump();
   }
 }
+
+bool shown(Finder f) => f.evaluate().isNotEmpty;
 
 void main() {
   // A bus of a line the app does not poll, opened without a network: the panel must recover by itself
@@ -43,12 +46,12 @@ void main() {
         home: Scaffold(body: VehiclePanel(line: '040', vehicleId: '44548', scroll: ScrollController())),
       ),
     ));
-    await settle(t);
+    await settle(t, () => shown(find.textContaining('χωρίς σύνδεση')));
     expect(find.textContaining('χωρίς σύνδεση'), findsOneWidget);
 
     online = true;
     await t.pump(const Duration(seconds: 15)); // the retry timer, in fake time
-    await settle(t);
+    await settle(t, () => shown(find.text('Πού κατεβαίνω;')));
     expect(find.textContaining('χωρίς σύνδεση'), findsNothing);
     // One default per screen: the two actions, no follow switch; the vehicle number sits folded.
     expect(find.text('Πού κατεβαίνω;'), findsOneWidget);

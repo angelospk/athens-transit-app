@@ -20,7 +20,10 @@ void main() {
     final live = LiveHub(api);
     await t.runAsync(() async {
       live.watch(['040']);
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      // Until the failed fetch lands (a fixed 200 ms failed under a parallel test run).
+      for (var i = 0; i < 200 && !live.isOffline; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+      }
     });
     expect(live.isOffline, isTrue);
     await t.pumpWidget(Deps(
