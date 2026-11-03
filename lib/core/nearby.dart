@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'geo.dart';
 import 'models.dart';
 
@@ -146,3 +148,105 @@ List<String> linesAt(TripIndex ix, String name, double lat, double lon) {
   }
   return sortLines(out);
 }
+
+Pt _at(TripIndex ix, int k) => (ix.s[k].$2, ix.s[k].$3);
+
+// Degrees clockwise from north. marker.dart has this, but nearby -> marker -> models -> nearby is a cycle.
+double _bearing(Pt a, Pt b) {
+  final dx = (b.$2 - a.$2) * cos(a.$1 * pi / 180), dy = b.$1 - a.$1;
+  return (atan2(dx, dy) * 180 / pi + 360) % 360;
+}
+
+double _angleDiff(double a, double b) => ((a - b + 540) % 360 - 180).abs();
+
+// Which way each line runs at stop [k]: per line, the bearing from the stop before to the stop after, per pass.
+Map<String, List<double>> _headingsAt(TripIndex ix, int k) {
+  final out = <String, List<double>>{};
+  for (final e in ix.l.entries) {
+    for (final seq in e.value.values) {
+      if (seq.length < 2) continue;
+      for (var p = 0; p < seq.length; p++) {
+        if (seq[p] != k) continue;
+        final a = seq[max(0, p - 1)], b = seq[min(seq.length - 1, p + 1)];
+        if (a == b || a < 0 || a >= ix.s.length || b < 0 || b >= ix.s.length) continue;
+        (out[e.key] ??= <double>[]).add(_bearing(_at(ix, a), _at(ix, b)));
+      }
+    }
+  }
+  return out;
+}
+
+// One stop right after the other on some variant: the next stop the same way, never the one across.
+bool _adjacent(TripIndex ix, int a, int b) {
+  for (final vs in ix.l.values) {
+    for (final seq in vs.values) {
+      for (var p = 1; p < seq.length; p++) {
+        final x = seq[p], y = seq[p - 1];
+        if ((x == a && y == b) || (x == b && y == a)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/// The stop across the road from the card of [name] at (lat, lon), when OASA gives it another name (a loop
+/// line's «1η/2η ΚΟΜΒΟΣ»): another name within 100 m, not the next stop on any variant, where a line of both
+/// runs the other way. As on the web (twins, v0.2.6). m is the distance, in metres.
+({String name, double lat, double lon, int m})? acrossStop(TripIndex ix, String name, double lat, double lon) {
+  final key = fold(name);
+  final members = <int>[];
+  for (var k = 0; k < ix.s.length; k++) {
+    final s = ix.s[k];
+    if (s.$1 == name && distM((s.$2, s.$3), (lat, lon)) <= 200) members.add(k);
+  }
+  if (members.isEmpty) return null;
+
+  var bestJ = -1;
+  var bestM = double.infinity;
+  final memberHeads = <int, Map<String, List<double>>>{};
+  for (var j = 0; j < ix.s.length; j++) {
+    if (members.contains(j)) continue; // the same name is this card already
+    final sj = ix.s[j];
+    if (fold(sj.$1) == key) continue;
+    final pj = (sj.$2, sj.$3);
+    var near = double.infinity;
+    for (final k in members) {
+      final d = distM(_at(ix, k), pj);
+      if (d < near) near = d;
+    }
+    if (near > 100) continue; // the check below is costly: distance first
+    if (near >= bestM) continue; // a nearer one is across the road already
+    // The card's stops are one place: a next stop of any of them runs the same way, not across.
+    var nextSameWay = false;
+    for (final k in members) {
+      if (_adjacent(ix, k, j)) {
+        nextSameWay = true;
+        break;
+      }
+    }
+    if (nextSameWay) continue;
+    Map<String, List<double>>? theirs;
+    var opposite = false;
+    for (final k in members) {
+      if (distM(_at(ix, k), pj) > 100) continue;
+      theirs ??= _headingsAt(ix, j);
+      final mine = memberHeads[k] ??= _headingsAt(ix, k);
+      for (final e in mine.entries) {
+        final other = theirs[e.key];
+        if (other == null) continue;
+        if (e.value.any((a) => other.any((b) => _angleDiff(a, b) > 120))) {
+          opposite = true;
+          break;
+        }
+      }
+      if (opposite) break;
+    }
+    if (!opposite) continue;
+    bestJ = j;
+    bestM = near;
+  }
+  if (bestJ < 0) return null;
+  final s = ix.s[bestJ];
+  return (name: s.$1, lat: s.$2, lon: s.$3, m: bestM.round());
+}
+

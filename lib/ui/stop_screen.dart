@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../core/athens_time.dart';
 import '../core/eta.dart';
 import '../core/models.dart';
+import '../core/nearby.dart';
 import '../core/rules.dart';
 import '../data/live.dart';
 import '../data/store.dart';
@@ -38,6 +39,9 @@ class _StopPanelState extends State<StopPanel> {
   Map<String, LineLive> others = {};
   Map<String, Map<String, dynamic>> _schedules = {}; // line -> today's timetable, when the backend has it
   Timer? _timer;
+  TripIndex? _ix;
+  ({String name, double lat, double lon, int m})? _across; // the stop across the road, another name
+  bool _askedAcross = false;
 
   StopRef get s => widget.stop;
 
@@ -51,6 +55,25 @@ class _StopPanelState extends State<StopPanel> {
     });
     if (others.isEmpty) _loadOthers();
     if (_schedules.isEmpty) _loadSchedules();
+    if (!_askedAcross) {
+      _askedAcross = true;
+      _loadAcross();
+    }
+  }
+
+  // The stop across the road, from the planner's index: one fetch, and only this stop's few neighbours.
+  Future<void> _loadAcross() async {
+    final stop = s;
+    try {
+      final ix = await Deps.of(context).api.trips();
+      if (!mounted || stop != s) return;
+      setState(() {
+        _ix = ix;
+        _across = acrossStop(ix, stop.name, stop.lat, stop.lon);
+      });
+    } catch (_) {
+      // No index: the card keeps its line count alone.
+    }
   }
 
   Future<void> _loadSchedules() async {
@@ -130,8 +153,11 @@ class _StopPanelState extends State<StopPanel> {
       all = false;
       others = {};
       _schedules = {};
+      _ix = null;
+      _across = null;
       _loadOthers();
       _loadSchedules();
+      _loadAcross();
     }
   }
 
@@ -210,8 +236,22 @@ class _StopPanelState extends State<StopPanel> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(titleCase(s.name), style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 2),
-                  Text([if (fav?.place == Place.home) 'Σπίτι', if (fav?.place == Place.work) 'Δουλειά', '${s.lines.length} γραμμές'].join(' · '),
-                      style: TextStyle(fontSize: 13, color: t.muted)),
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text([if (fav?.place == Place.home) 'Σπίτι', if (fav?.place == Place.work) 'Δουλειά', '${s.lines.length} γραμμές'].join(' · '),
+                          style: TextStyle(fontSize: 13, color: t.muted)),
+                      if (_across case final a?) ...[
+                        Text(' · ', style: TextStyle(fontSize: 13, color: t.muted)),
+                        GestureDetector(
+                          onTap: () => mapSel.value =
+                              StopSel(StopRef(name: a.name, lat: a.lat, lon: a.lon, lines: linesAt(_ix!, a.name, a.lat, a.lon))),
+                          child: Text('Απέναντι στάση · ${a.m} μ',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.primary)),
+                        ),
+                      ],
+                    ],
+                  ),
                 ]),
               ),
               IconButton.filledTonal(
