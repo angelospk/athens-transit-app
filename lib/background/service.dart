@@ -50,7 +50,12 @@ const _hitChannel = AndroidNotificationDetails('hits', 'Το λεωφορείο 
     importance: Importance.high, priority: Priority.high, category: AndroidNotificationCategory.reminder, icon: 'ic_stat_bus');
 
 Future<void> _initNotes({void Function(String payload)? onOpen}) => _notes.initialize(
-      settings: const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')),
+      // iOS: no permission question at launch; ensurePermissions asks when an alert is first set.
+      settings: const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        iOS: DarwinInitializationSettings(
+            requestAlertPermission: false, requestSoundPermission: false, requestBadgePermission: false),
+      ),
       onDidReceiveNotificationResponse: onOpen == null ? null : (r) => r.payload == null ? null : onOpen(r.payload!),
     );
 
