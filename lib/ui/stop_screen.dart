@@ -104,8 +104,11 @@ class _StopPanelState extends State<StopPanel> {
           }
         }
         final after = live.where((a) => a.line == l && a.headsign == h).fold<int?>(null, (m, a) => m == null || a.etaS > m ? a.etaS : m);
+        // After the turn of a loop, the run shown goes back: name the place it heads back to.
+        final back = st.returnsTo(vid, i);
+        final shown = back == null ? h : '${titleCase(back)} (επιστροφή)';
         for (final eta in plannedEtas(deps, st, vid, i, nowWall, afterS: after).take(2)) {
-          out.add((l, h, eta));
+          out.add((l, shown, eta));
         }
       }
     }

@@ -1,4 +1,5 @@
 import 'geo.dart';
+import 'nearby.dart' show fold;
 
 double? _d(Object? x) => x is num ? x.toDouble() : null;
 int? _i(Object? x) => x is num ? x.round() : null;
@@ -95,6 +96,43 @@ class LineStatic {
       pts.add(s != null ? (s.lat, s.lon) : (pts.isNotEmpty ? pts.last : (v.shape.isNotEmpty ? v.shape.first : (0.0, 0.0))));
     }
     return _offsets[variantId] = v.shape.length < 2 ? List.filled(pts.length, 0.0) : stopOffsets(v.shape, pts);
+  }
+
+  /// On a loop (a variant whose first and last stop are one stop, with one headsign for both ways), the
+  /// place the bus heads back to once it is past the turn at stop [i], else null. The turn is the stop
+  /// the headsign's last place names ("ΣΤ. ΚΟΡΩΠΙ - ΑΥΛΑΚΙ" turns at ΑΥΛΑΚΙ); a headsign that names no
+  /// stop turns at the stop farthest from the first. The way back is the headsign's first place.
+  String? returnsTo(String variantId, int i) {
+    final v = variants[variantId];
+    final seq = v?.stops;
+    if (v == null || seq == null || i < 0 || i >= seq.length || seq.length < 3) return null;
+    if (seq.first != seq.last) return null; // a loop starts and ends at one stop
+    final hs = v.headsign;
+    final parts = hs.split(' - ');
+    final end = parts.last.trim();
+    final key = fold(end.isEmpty ? hs : end);
+    var turn = -1;
+    for (var q = 1; q < seq.length - 1; q++) { // not the first (= last) stop: the start is no turn
+      final s = stops[seq[q]];
+      if (s != null && fold(s.name) == key) {
+        turn = q;
+        break;
+      }
+    }
+    if (turn < 0) {
+      final first = stops[seq.first];
+      var far = -1.0;
+      for (var q = 0; q < seq.length; q++) {
+        final s = stops[seq[q]];
+        final d = first == null || s == null ? 0.0 : distM((first.lat, first.lon), (s.lat, s.lon));
+        if (d > far) {
+          far = d;
+          turn = q;
+        }
+      }
+    }
+    if (i <= turn) return null;
+    return parts.length > 1 ? parts.first.trim() : stops[seq.first]?.name;
   }
 }
 

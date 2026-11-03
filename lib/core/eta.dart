@@ -88,6 +88,7 @@ class Arrival {
   final int etaS;
   final int? stopsLeft, delayS;
   final int positionAt;
+  final String? back; // on a loop, the place the bus heads back to once past the turn
   const Arrival({
     required this.line,
     required this.variant,
@@ -97,6 +98,7 @@ class Arrival {
     required this.stopsLeft,
     required this.delayS,
     required this.positionAt,
+    this.back,
   });
 }
 
@@ -125,6 +127,7 @@ List<Arrival> arrivalsAt(String stopId, Map<String, LineStatic> statics, Map<Str
         stopsLeft: stopsLeft(stops, i, v, nowS),
         delayS: v.delayS,
         positionAt: v.positionAt,
+        back: st.returnsTo(vid, i),
       ));
     }
   }

@@ -333,7 +333,7 @@ class _FavCardState extends State<_FavCard> {
               child: Row(children: [
                 Text(a.line, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: t.muted)),
                 const SizedBox(width: 8),
-                Expanded(child: Text('→ ${titleCase(a.headsign)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: t.muted))),
+                Expanded(child: Text('→ ${towards(a)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: t.muted))),
                 Text('${d.live.isOffline ? '~' : ''}${mins(a.etaS)}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.muted)),
               ]),
             ),

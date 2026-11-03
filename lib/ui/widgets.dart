@@ -102,7 +102,7 @@ class ArrivalRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('→ ${titleCase(first.headsign)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+              Text('→ ${towards(first)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
               const SizedBox(height: 3),
               Row(children: [
                 if (far) ...[StopsDots(left, color: lineColor(Deps.of(context).store, first.line).bg), const SizedBox(width: 6)],
@@ -137,11 +137,12 @@ class ArrivalRow extends StatelessWidget {
   return (mine: mine, others: rest.take(room).toList(), hidden: rest.length - room);
 }
 
-// Groups arrivals by line and direction: first, then the next ones.
+// Groups arrivals by line and direction: first, then the next ones. The way back of a loop is its own
+// direction: the bus runs the other way along the same headsign.
 List<(Arrival, List<Arrival>)> groupArrivals(List<Arrival> all) {
   final by = <String, List<Arrival>>{};
   for (final a in all) {
-    (by['${a.line}|${a.headsign}'] ??= []).add(a);
+    (by['${a.line}|${a.headsign}|${a.back}'] ??= []).add(a);
   }
   final out = [for (final g in by.values) (g.first, g.sublist(1))];
   out.sort((a, b) => a.$1.etaS.compareTo(b.$1.etaS));
@@ -155,6 +156,9 @@ String titleCase(String s) {
   final words = low.split(' ').map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1)).join(' ');
   return words.replaceAll(RegExp(r'σ(?=$|[\s.,)\-])'), 'ς');
 }
+
+// Where the bus goes: the headsign, or on a loop after the turn, the way back.
+String towards(Arrival a) => a.back == null ? titleCase(a.headsign) : '${titleCase(a.back!)} (επιστροφή)';
 
 // The bus (a dot in its line's colour), the stops in between, and your stop as a ring: "●··◯".
 class StopsDots extends StatelessWidget {

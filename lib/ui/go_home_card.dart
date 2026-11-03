@@ -87,7 +87,7 @@ class _NextFav extends StatelessWidget {
     return SmartShell(
       onTap: () => mapSel.value = StopSel(StopRef(name: fav.name, lat: fav.lat, lon: fav.lon, lines: fav.lines)),
       kicker: 'ΑΠΟ ${titleCase(fav.name).toUpperCase()}',
-      title: a == null ? 'Κανένα από ${fav.lines.join(', ')} δεν έρχεται τώρα' : 'Το ${a.line} → ${titleCase(a.headsign)}',
+      title: a == null ? 'Κανένα από ${fav.lines.join(', ')} δεν έρχεται τώρα' : 'Το ${a.line} → ${towards(a)}',
       minutes: a == null ? null : '${d.live.isOffline ? '~' : ''}${mins(a.etaS)}',
     );
   }
