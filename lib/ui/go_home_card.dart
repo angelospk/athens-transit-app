@@ -18,6 +18,7 @@ import '../core/models.dart';
 import '../data/live.dart' show nextArrivalsAt;
 import 'alert_sheet.dart' show dayClock;
 import 'map_sel.dart';
+import 'motion_fx.dart';
 import 'planner_screen.dart' show askHome;
 import 'stop_screen.dart';
 import 'theme.dart';
@@ -55,7 +56,7 @@ class _SmartCardState extends State<SmartCard> {
     final store = Deps.of(context).store;
     final home = store.homePt, work = store.workPt;
     final kind = pickSmart(utc: DateTime.now().toUtc(), me: me, home: home, work: work, hasFav: store.favs.any((f) => f.lines.isNotEmpty));
-    return switch (kind) {
+    final card = switch (kind) {
       Smart.toWork => TripCard(key: const ValueKey('work'), me: me!, ix: ix, to: work!, home: false),
       Smart.goHome => TripCard(key: const ValueKey('home'), me: me!, ix: ix, to: home!, home: true),
       Smart.askHome => SmartShell(
@@ -65,8 +66,10 @@ class _SmartCardState extends State<SmartCard> {
           lines: const ['Αρκεί μια περιοχή. Ανώνυμο: μένει μόνο στο κινητό.'],
         ),
       Smart.nextFav => const _NextFav(),
-      Smart.none => const SizedBox.shrink(),
+      Smart.none => null,
     };
+    // Another card (morning to evening, home set): it appears, the old one goes at once.
+    return card == null ? const SizedBox.shrink() : Enter(key: ValueKey(kind), child: card);
   }
 }
 
@@ -130,7 +133,7 @@ class SmartShell extends StatelessWidget {
                 const SizedBox(width: 12),
                 Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                   if (minutesLabel != null) Text(minutesLabel!, style: TextStyle(fontSize: 11, color: t.muted)),
-                  Text(minutes!, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: t.accent, height: 1.1)),
+                  Tick(value: minutes!, child: Text(minutes!, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: t.accent, height: 1.1))),
                 ]),
               ],
             ]),
