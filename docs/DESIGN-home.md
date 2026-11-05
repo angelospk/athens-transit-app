@@ -185,6 +185,13 @@ Keep the five vault defaults: 200ms ease-out for sheet level changes, 150ms for
 pill/press feedback, map buttons fade in 150ms when the sheet collapses and fade
 out when it rises, no bounce, honour the system "remove animations" setting.
 
+Trial with `flutter_animate` (branch try/flutter-animate, `lib/ui/motion_fx.dart`); three spots only:
+
+- Harold: stop groups enter with a fade and a 8% rise, 180ms ease-out, 40ms stagger for the first 4 rows; they play on first load and on a tab change, not on a live refresh. (approved 2026-11-05)
+- Harold: minutes that change (pill minutes, smart-card minutes) drop in from just above, 150ms fade; the same value never replays. (approved 2026-11-05)
+- Harold: a new smart card (another kind) fades and rises in 180ms; the old card leaves at once (exit faster than entry). (approved 2026-11-05)
+- Harold: no exit motion anywhere. With Android "remove animations" (`disableAnimations`) or iOS Reduce Motion (`accessibilityFeatures.reduceMotion`; Flutter does not map it to `disableAnimations`) on, `Enter` and `Tick` return the plain widget; flutter_animate checks neither. Recording: `docs/motion-trial/`. (approved 2026-11-05)
+
 ## Do's and Don'ts
 
 - Do keep minutes the largest text in every row.

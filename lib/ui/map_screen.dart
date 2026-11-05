@@ -32,6 +32,7 @@ import 'help.dart';
 import 'favs_screen.dart';
 import 'line_panel.dart';
 import 'map_sel.dart';
+import 'motion_fx.dart';
 import 'rules_screen.dart' show hm;
 import 'search.dart';
 import 'station_panel.dart';
@@ -1082,7 +1083,7 @@ class _HomeSheet extends StatelessWidget {
     return [
       for (final (i, p) in groups.indexed) ...[
         if (i > 0) Divider(height: 1, color: t.rule),
-        _StopGroup(place: p, ix: ix, mine: myLinesHere(p, d.store.myLines), others: true),
+        Enter(key: ValueKey('near|${p.kind.name}|${p.name}|${p.lat},${p.lon}'), i: i, child: _StopGroup(place: p, ix: ix, mine: myLinesHere(p, d.store.myLines), others: true)),
         if (i == 1 && groups.length > 2)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -1106,11 +1107,15 @@ class _HomeSheet extends StatelessWidget {
         ),
       for (final (i, f) in favs.indexed) ...[
         if (i > 0) Divider(height: 1, color: t.rule),
-        _StopGroup(
-          place: NearPlace(kind: NearKind.bus, name: f.name, lat: f.lat, lon: f.lon, distM: me == null ? -1 : distM(me!, (f.lat, f.lon)), lines: f.lines),
-          ix: ix,
-          mine: f.lines,
-          others: false,
+        Enter(
+          key: ValueKey('fav|${f.name}|${f.lat},${f.lon}'),
+          i: i,
+          child: _StopGroup(
+            place: NearPlace(kind: NearKind.bus, name: f.name, lat: f.lat, lon: f.lon, distM: me == null ? -1 : distM(me!, (f.lat, f.lon)), lines: f.lines),
+            ix: ix,
+            mine: f.lines,
+            others: false,
+          ),
         ),
       ],
       if (d.store.myLines.isNotEmpty) ...[
@@ -1221,11 +1226,12 @@ class _StopGroup extends StatelessWidget {
               child: Wrap(spacing: 6, runSpacing: 6, children: [
                 for (final a in next)
                   _Pill(
+                    key: ValueKey('${a.line}|${a.headsign}|${a.back}'),
                     badge: _PillBadge(line: a.line),
                     towards: twice.contains(a.line) ? titleCase(a.headsign) : null, // two directions here: say which
                     when: '${d.live.isOffline ? '~' : ''}${mins(a.etaS)}',
                   ),
-                for (final l in rest) _Pill(badge: _PillBadge(line: l)),
+                for (final l in rest) _Pill(key: ValueKey(l), badge: _PillBadge(line: l)),
               ]),
             ),
           if (quiet.isNotEmpty)
@@ -1287,7 +1293,7 @@ class _WalkButton extends StatelessWidget {
 
 // A line's pill: its badge, then (when known) where it goes and the minutes, largest.
 class _Pill extends StatelessWidget {
-  const _Pill({required this.badge, this.towards, this.when, this.note});
+  const _Pill({super.key, required this.badge, this.towards, this.when, this.note});
   final Widget badge;
   final String? towards, when, note;
 
@@ -1306,7 +1312,7 @@ class _Pill extends StatelessWidget {
             child: Text(' → $towards', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, color: t.muted)),
           ),
         if (note != null) Text(' $note', style: TextStyle(fontSize: 12, color: t.late, fontWeight: FontWeight.w600)),
-        if (when != null) Text('  $when', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+        if (when != null) Tick(value: when!, child: Text('  $when', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
       ]),
     );
   }
@@ -1413,6 +1419,7 @@ class _StationNextState extends State<_StationNext> {
         final ends = _sub?.towards(widget.place.railId!, d.next) ?? const <String>{};
         final late = (d.delayMin ?? 0) > 0 && !d.cancelled;
         pills.add(_Pill(
+          key: ValueKey((d.train, d.scheduled)), // the number can be empty
           badge: const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Icon(Icons.train_outlined, size: 18)),
           towards: ends.isNotEmpty ? ends.map(titleCase).join(' / ') : titleCase(d.next),
           when: d.cancelled ? 'ακυρώθηκε' : mins(d.expected.difference(now).inSeconds),
@@ -1424,6 +1431,7 @@ class _StationNextState extends State<_StationNext> {
       for (final d in nextByDirection(_answers, elapsedS: elapsed, here: widget.place.names.isEmpty ? [widget.place.name] : widget.place.names)) {
         final c = int.tryParse((d.color ?? '').replaceFirst('#', ''), radix: 16);
         pills.add(_Pill(
+          key: ValueKey('${d.line}|${d.towards}'),
           badge: _PillBadge(line: d.line, bg: c == null ? t.ink : Color(0xFF000000 | c), fg: Colors.white),
           towards: titleCase(d.towards),
           when: mins(d.inS),
