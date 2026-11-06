@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="el"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@500;600;800&display=block" rel="stylesheet">
+<style>
+:root{--navy:#0d1a3a;--ink:#0d1a3a;--blue:#1f5fd1;--sky:#e8efff;--yellow:#e9a400;--green:#0c9a6c;--red:#d93a3a}
+*{box-sizing:border-box;margin:0}
+html,body{width:100vw;height:100vh;overflow:hidden;font-family:Commissioner,sans-serif}
+.slide{position:relative;width:100vw;height:100vh;overflow:hidden;padding:9vw 7.5vw 0}
+.dark{background:var(--navy);color:#fff}
+.light{background:var(--sky);color:var(--ink)}
+.kicker{display:inline-flex;align-items:center;gap:1.6vw;font-weight:600;font-size:3.4vw;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.kicker i{width:2.2vw;height:2.2vw;border-radius:50%;display:inline-block}
+h1{font-weight:800;font-size:9.4vw;line-height:1.02;letter-spacing:-.02em;margin-top:3vw}
+p.sub{font-weight:500;font-size:4.2vw;line-height:1.3;margin-top:3vw;opacity:.8;max-width:80vw}
+.phone{position:absolute;left:50%;transform:translateX(-50%);top:var(--top,58vw);width:78vw;border-radius:9vw 9vw 0 0;
+  background:#0a0a0a;padding:2.2vw 2.2vw 0;box-shadow:0 4vw 10vw rgba(0,0,0,.28);bottom:0;display:flex;flex-direction:column}
+.screen{position:relative;flex:1;border-radius:7vw 7vw 0 0;overflow:hidden;background:#fafafa}
+.screen>img{display:block;width:100%}
+.bar{height:6.5vw;display:flex;align-items:center;justify-content:space-between;padding:0 6vw;font:600 3vw Commissioner;color:#222;background:#fafafa}
+.bar.on-map{position:absolute;top:0;left:0;right:0;background:transparent;z-index:2}
+.bar svg{height:2.6vw}
+.dim{filter:brightness(.45) saturate(.8)}
+.notif{position:absolute;left:3vw;right:3vw;top:12vw;z-index:3;border-radius:4vw;overflow:hidden;box-shadow:0 2vw 6vw rgba(0,0,0,.4)}
+.notif img{display:block;width:100%}
+.badges{display:flex;gap:2vw;margin-top:4vw;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:1.4vw;border:.3vw solid currentColor;border-radius:99vw;padding:1.2vw 3vw;font:600 3.1vw Commissioner;opacity:.9}
+.badge svg{width:3.4vw;height:3.4vw}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="sig" viewBox="0 0 60 16"><path d="M2 14h3V10H2zM8 14h3V7H8zM14 14h3V4h-3zM20 14h3V1h-3z" fill="currentColor"/><rect x="34" y="3" width="22" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="36.5" y="5.5" width="15" height="6" rx="1" fill="currentColor"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+<div id="root"></div>
+<script>
+const bar = (cls='') => `<div class="bar ${cls}"><span>11:24</span><svg viewBox="0 0 60 16" style="color:#222"><use href="#sig"/></svg></div>`;
+const S = {
+  1:{c:'dark',dot:'var(--yellow)',k:'Live χάρτης',h:'Κάθε λεωφορείο της Αθήνας. Τώρα.',p:'Δες πού είναι, και αν αργεί, πριν βγεις από το σπίτι.',
+     scr:`<div class="screen">${bar()}<img src="home.png"></div>`},
+  2:{c:'light',dot:'var(--blue)',k:'Η στάση σου',h:'Πόσο απέχει; Μια ματιά αρκεί.',p:'Αφίξεις live, πόσες στάσεις μακριά, και ποιο ακολουθεί.',
+     scr:`<div class="screen">${bar()}<img src="stop.png"></div>`},
+  3:{c:'dark',dot:'var(--green)',k:'Ειδοποιήσεις',h:'Μην περιμένεις στη στάση.',p:'Σε ειδοποιεί λίγα λεπτά πριν φτάσει το λεωφορείο.',
+     scr:`<div class="screen">${bar()}<img src="alert.png"></div>`},
+  4:{c:'light',dot:'var(--red)',k:'Με κλειστή εφαρμογή',h:'Σε ενημερώνει live. Ακόμα και κλειστή.',p:'Η κάρτα μετρά αντίστροφα μέχρι να έρθει το λεωφορείο σου.',
+     scr:`<div class="screen">${bar()}<img class="dim" src="home.png"><div class="notif"><img src="notif.png"></div></div>`},
+  5:{c:'dark',dot:'var(--blue)',k:'Διαδρομή',h:'Λεωφορείο, μετρό, ή και τα δύο.',p:'Ο γρηγορότερος δρόμος, και πού να κατέβεις.',
+     extra:`<div class="badges"><span class="badge"><svg><use href="#check"/></svg>Χωρίς λογαριασμό</span><span class="badge"><svg><use href="#check"/></svg>Χωρίς διαφημίσεις</span></div>`,
+     top:'74vw', scr:`<div class="screen">${bar()}<img src="plan.png"></div>`},
+};
+const n = +(new URLSearchParams(location.search).get('s')||1), s = S[n];
+document.getElementById('root').innerHTML = `<section class="slide ${s.c}">
+  <div class="kicker"><i style="background:${s.dot}"></i>${s.k}</div>
+  <h1>${s.h}</h1><p class="sub">${s.p}</p>${s.extra||''}
+  <div class="phone" style="--top:${s.top||'66vw'}">${s.scr}</div></section>`;
+</script></body></html>

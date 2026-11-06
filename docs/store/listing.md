@@ -74,5 +74,10 @@ affiliated with OASA, STASY or Hellenic Train.
 |---|---|---|
 | Play icon | 512×512 PNG | από το `ios/.../Icon-App-1024x1024@1x.png` |
 | Play feature graphic | 1024×500 | νέο |
-| Play screenshots | 2-8, κινητό | `docs/screenshots/` (v0.3.0, ξαναβγάλε με την τελευταία έκδοση) |
-| iOS screenshots | 6.9" (1320×2868) | iPhone 16/17 Pro Max simulator |
+| Play screenshots | 1080×2160 | `docs/store/screenshots/play/` (έτοιμα, 2026-11-06) |
+| iOS screenshots | 6.9" (1320×2868) | `docs/store/screenshots/ios/` (έτοιμα· οθόνες Android, βλ. σημείωση) |
+
+Τα screenshots ξαναβγαίνουν με `docs/store/screenshots/src/render.sh`. Οι οθόνες είναι από Android.
+Οι οθόνες της εφαρμογής είναι ίδιες στο iOS (Flutter), αλλά το 04 δείχνει ειδοποίηση Android. Η
+Apple απορρίπτει αναφορές σε άλλες πλατφόρμες (guideline 2.3.10): στο iOS ανέβασε μόνο τα 01-03 και
+05, ή ξαναβγάλε το 04 από iPhone simulator.
