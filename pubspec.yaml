@@ -1,5 +1,5 @@
 name: athens_transit
-description: "A new Flutter project."
+description: "Athens Transit: live buses, arrivals and alerts for Athens."
 publish_to: 'none'
 version: 0.3.0+9
 
