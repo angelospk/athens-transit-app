@@ -3,7 +3,7 @@
 Αρχεία σε αυτόν τον φάκελο:
 
 - `privacy-policy.md`: πολιτική απορρήτου (EL + EN). Συμπλήρωσε τα `<...>` και ανέβασέ τη σε δημόσιο
-  URL (π.χ. `bus.haroldpoi.dev/privacy`). Το URL μπαίνει και στα δύο stores.
+  URL (π.χ. `staseis.gr/privacy`). Το URL μπαίνει και στα δύο stores.
 - `listing.md`: τίτλοι, περιγραφές, keywords, γραφικά που λείπουν.
 - `declarations.md`: Data safety, foreground service, App Privacy, review notes, λογαριασμός.
 

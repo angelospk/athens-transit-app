@@ -1,5 +1,5 @@
 name: athens_transit
-description: "Athens Transit: live buses, arrivals and alerts for Athens."
+description: "Στάσεις (staseis.gr): live buses, arrivals and alerts."
 publish_to: 'none'
 version: 0.3.0+9
 

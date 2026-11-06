@@ -47,7 +47,7 @@ class TransitApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: store,
       builder: (context, _) => MaterialApp(
-        title: 'Athens Transit',
+        title: 'Στάσεις',
         navigatorKey: navKey,
         navigatorObservers: [pageLog],
         debugShowCheckedModeBanner: false,

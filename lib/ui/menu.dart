@@ -40,7 +40,7 @@ class AppMenu extends StatelessWidget {
         child: ListView(padding: const EdgeInsets.symmetric(vertical: 8), children: [
           const Padding(
             padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
-            child: Text('Athens Transit', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+            child: Text('Στάσεις', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
           ),
           item(Icons.directions, 'Διαδρομή', () => go('Διαδρομή', const PlannerScreen())),
           item(Icons.format_list_bulleted, 'Γραμμές', () => go('Γραμμές', const LinesScreen())),

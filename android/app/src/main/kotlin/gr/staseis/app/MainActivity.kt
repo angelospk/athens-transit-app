@@ -1,4 +1,4 @@
-package dev.haroldpoi.athens_transit
+package gr.staseis.app
 
 import io.flutter.embedding.android.FlutterActivity
 

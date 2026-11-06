@@ -254,7 +254,7 @@ class AlertService {
     return FlutterForegroundTask.startService(
       serviceId: _serviceId,
       serviceTypes: [ForegroundServiceTypes.dataSync, if (location) ForegroundServiceTypes.location],
-      notificationTitle: 'Athens Transit · live',
+      notificationTitle: 'Στάσεις · live',
       notificationText: 'Παρακολουθώ τις γραμμές σου…',
       callback: startCallback,
     );
@@ -565,7 +565,7 @@ class RuleTask extends TaskHandler {
       return;
     }
     if (rules.isEmpty) {
-      await FlutterForegroundTask.updateService(notificationTitle: 'Athens Transit', notificationText: 'Σε ειδοποιώ όταν έρθει το λεωφορείο.');
+      await FlutterForegroundTask.updateService(notificationTitle: 'Στάσεις', notificationText: 'Σε ειδοποιώ όταν έρθει το λεωφορείο.');
       return;
     }
     String title = '${rules.first.line} · ${titleCase(rules.first.stopName)}', text = 'Κανένα λεωφορείο με GPS ακόμη.';

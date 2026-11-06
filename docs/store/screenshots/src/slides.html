@@ -46,7 +46,16 @@ const S = {
      extra:`<div class="badges"><span class="badge"><svg><use href="#check"/></svg>Χωρίς λογαριασμό</span><span class="badge"><svg><use href="#check"/></svg>Χωρίς διαφημίσεις</span></div>`,
      top:'74vw', scr:`<div class="screen">${bar()}<img src="plan.png"></div>`},
 };
-const n = +(new URLSearchParams(location.search).get('s')||1), s = S[n];
+const EN = {
+  1:{k:'Live map',h:'Every Athens bus. Right now.',p:'See where it is, and if it runs late, before you leave home.'},
+  2:{k:'Your stop',h:'How far is it? One look.',p:'Live arrivals, how many stops away, and what comes next.'},
+  3:{k:'Alerts',h:'Stop waiting at the stop.',p:'Get a heads-up a few minutes before your bus arrives.'},
+  4:{k:'Works when closed',h:'Live updates. Even with the app closed.',p:'The card counts down until your bus is here.'},
+  5:{k:'Trip planner',h:'Bus, metro, or both.',p:'The fastest way there, and where to get off.',
+     extra:`<div class="badges"><span class="badge"><svg><use href="#check"/></svg>No account</span><span class="badge"><svg><use href="#check"/></svg>No ads</span></div>`},
+};
+const q = new URLSearchParams(location.search);
+const n = +(q.get('s')||1), s = q.get('lang')==='en' ? {...S[n], ...EN[n]} : S[n];
 document.getElementById('root').innerHTML = `<section class="slide ${s.c}">
   <div class="kicker"><i style="background:${s.dot}"></i>${s.k}</div>
   <h1>${s.h}</h1><p class="sub">${s.p}</p>${s.extra||''}

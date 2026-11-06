@@ -1,11 +1,12 @@
 # Κείμενα για τα stores
 
-Όρια χαρακτήρων στις παρενθέσεις. Πριν το ανέβασμα: έλεγξε ότι το όνομα «Athens Transit» δεν το
-χρησιμοποιεί ήδη άλλη εφαρμογή στα δύο stores.
+Όρια χαρακτήρων στις παρενθέσεις. Όνομα: **Στάσεις** (staseis.gr). Δεν δένεται με πόλη, γιατί θα μπουν κι άλλες πόλεις. Όσο υπάρχει
+μόνο η Αθήνα, ο τίτλος λέει «Αθήνας» για την αναζήτηση· με τη δεύτερη πόλη γίνεται «Στάσεις:
+Λεωφορεία live». Πριν το ανέβασμα: ψάξε «Στάσεις» στα δύο stores για εφαρμογή με ίδιο όνομα.
 
 ## Google Play
 
-**Τίτλος (30)**: Athens Transit: Λεωφορεία live
+**Τίτλος (30)**: Στάσεις: Λεωφορεία Αθήνας live
 
 **Σύντομη περιγραφή (80)**: Λεωφορεία της Αθήνας live, αφίξεις στη στάση σου και ειδοποιήσεις πριν έρθει.
 
@@ -46,9 +47,9 @@
 
 ## App Store
 
-**Όνομα (30)**: Athens Transit
-**Υπότιτλος (30)**: Λεωφορεία Αθήνας live
-**Λέξεις-κλειδιά (100)**: λεωφορείο,στάση,ΟΑΣΑ,αφίξεις,μετρό,τραμ,προαστιακός,Αθήνα,συγκοινωνίες,bus,athens
+**Όνομα (30)**: Στάσεις: Λεωφορεία Αθήνας live
+**Υπότιτλος (30)**: Αφίξεις live και ειδοποιήσεις
+**Λέξεις-κλειδιά (100)**: λεωφορείο,ΟΑΣΑ,αφίξεις,μετρό,τραμ,προαστιακός,Αθήνα,συγκοινωνίες,staseis,bus,athens
 
 > «ΟΑΣΑ» στα keywords: η Apple μπορεί να το θεωρήσει χρήση εμπορικού σήματος (guideline 2.3.7). Αν
 > απορριφθεί, σβήσε το.
@@ -59,14 +60,49 @@
 **Περιγραφή**: η ίδια με το Play, χωρίς την ενότητα «Widgets» (κρυφή στο iOS).
 **Κατηγορία**: Navigation · δευτερεύουσα Travel · **Age rating**: 4+
 
-## English (both stores)
+## English (both stores, locale en-US / en-GB)
 
-**Title**: Athens Transit: Live Buses
-**Short**: Live Athens buses, arrivals at your stop and alerts before your bus arrives.
-**Description**: Live map of every Athens bus, next arrivals at your stop, a trip planner with bus and
-metro, and alerts that run with the app closed: minutes before your bus, when to leave, the last bus of
-the day. No account, no ads, no tracking: your location stays on your phone. Unofficial app, not
-affiliated with OASA, STASY or Hellenic Train.
+The app interface is in Greek. The English page says so, so that visitors are not surprised.
+
+**Title / App Store name (30)**: Staseis: Athens Bus Live
+**App Store subtitle (30)**: Live arrivals and bus alerts
+**Keywords (100)**: athens,bus,transit,metro,tram,oasa,greece,arrivals,timetable,public transport
+**Short description (80)**: Live Athens buses, arrivals at your stop and alerts before your bus arrives.
+**Promotional text (170)**: Every Athens bus, live. Arrivals at your stop and an alert a few minutes
+before your bus comes. No account, no ads.
+
+**Description**:
+
+See where your bus is right now, how far it is from your stop, and when to leave.
+
+LIVE MAP
+• Every Athens bus on the map, coloured by delay
+• Metro, tram and suburban rail stations with their next trains
+
+STOPS AND LINES
+• Live arrivals, plus the runs that have not started yet from the timetable
+• Runs that did not start, with another option
+• Each line's timetable and the gaps between its buses
+
+TRIP PLANNER
+• One bus, one change, or bus plus metro
+• Step by step: "leave in N min", "Where do I get off?" and "Follow me"
+
+ALERTS THAT RUN WITH THE APP CLOSED
+• A few minutes or stops before your bus arrives
+• "Leave on time" from where you are
+• Weekly rules for your daily trips
+• The last bus of the day
+
+FAVOURITES AND WIDGETS
+• Favourite stops and places ("Home", "Work")
+• Home-screen widgets: "My stop" and "Going home" (Android)
+
+PRIVACY
+No account, no ads, no tracking. Your location stays on your phone.
+
+Interface in Greek for now; English is coming. Unofficial app, not affiliated with OASA, STASY or
+Hellenic Train. Data comes from their public sources.
 
 ## Γραφικά που λείπουν
 
@@ -74,8 +110,8 @@ affiliated with OASA, STASY or Hellenic Train.
 |---|---|---|
 | Play icon | 512×512 PNG | από το `ios/.../Icon-App-1024x1024@1x.png` |
 | Play feature graphic | 1024×500 | νέο |
-| Play screenshots | 1080×2160 | `docs/store/screenshots/play/` (έτοιμα, 2026-11-06) |
-| iOS screenshots | 6.9" (1320×2868) | `docs/store/screenshots/ios/` (έτοιμα· οθόνες Android, βλ. σημείωση) |
+| Play screenshots | 1080×2160 | `docs/store/screenshots/play/el/`, `.../play/en/` |
+| iOS screenshots | 6.9" (1320×2868) | `docs/store/screenshots/ios/el/`, `.../ios/en/` (οθόνες Android, βλ. σημείωση) |
 
 Τα screenshots ξαναβγαίνουν με `docs/store/screenshots/src/render.sh`. Οι οθόνες είναι από Android.
 Οι οθόνες της εφαρμογής είναι ίδιες στο iOS (Flutter), αλλά το 04 δείχνει ειδοποίηση Android. Η

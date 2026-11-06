@@ -4,7 +4,7 @@
     android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical"
     android:background="@drawable/widget_bg" android:paddingHorizontal="14dp" android:paddingVertical="10dp">
     <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:textColor="@color/widget_ink" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="Athens Transit" />
+        android:textColor="@color/widget_ink" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="Στάσεις" />
     <TextView android:id="@+id/sub" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:textColor="@color/widget_muted" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:text="Άνοιξε την εφαρμογή για να διαλέξεις στάση" />
     <LinearLayout android:id="@+id/row0" android:layout_width="match_parent" android:layout_height="wrap_content"

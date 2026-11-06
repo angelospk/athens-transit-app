@@ -1,9 +1,9 @@
-# Πολιτική απορρήτου · Athens Transit
+# Πολιτική απορρήτου · Στάσεις
 
 Τελευταία αλλαγή: <ΗΜΕΡΟΜΗΝΙΑ>
 Εκδότης: <ΟΝΟΜΑ ΕΚΔΟΤΗ> · Επικοινωνία: <EMAIL>
 
-Το Athens Transit είναι ανεπίσημη εφαρμογή. Δεν έχει σχέση με τον ΟΑΣΑ, τη ΣΤΑΣΥ ή την Hellenic Train.
+Οι Στάσεις (staseis.gr) είναι ανεπίσημη εφαρμογή. Δεν έχει σχέση με τον ΟΑΣΑ, τη ΣΤΑΣΥ ή την Hellenic Train.
 
 ## Τι δεν συλλέγουμε
 
@@ -44,11 +44,11 @@
 
 ---
 
-# Privacy policy · Athens Transit
+# Privacy policy · Staseis
 
 Last updated: <DATE> · Publisher: <PUBLISHER NAME> · Contact: <EMAIL>
 
-Athens Transit is an unofficial app, not affiliated with OASA, STASY or Hellenic Train.
+Staseis (staseis.gr) is an unofficial app, not affiliated with OASA, STASY or Hellenic Train.
 
 - No accounts, no ads, no analytics, no tracking.
 - Your location **stays on your phone**. It is used for nearby stops, distance to your stop and

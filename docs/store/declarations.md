@@ -57,7 +57,7 @@
 
 ## App Store · Review notes
 
-> Athens Transit shows live public transport in Athens, Greece. Outside Athens the map still works:
+> Staseis shows live public transport in Athens, Greece. Outside Athens the map still works:
 > pan to Athens, or use the search to open "Σύνταγμα" (Syntagma), then tap any stop to see live
 > arrivals. No login is needed. Alerts: open a stop, tap a line, choose "Ειδοποίησέ με" (notify me).
 > The app is unofficial and uses public data from OASA, STASY and Hellenic Train.
@@ -72,7 +72,7 @@
   κανόνας closed test: 12 testers για 14 μέρες πριν το production.
 - **App Store Connect**: σε προσθέτει στο Users and Access (App Manager). Για builds από το Mac
   χρειάζεσαι και πρόσβαση στο developer team (certificates, `DEVELOPMENT_TEAM` στο Xcode).
-- **Bundle ID / applicationId**: `dev.haroldpoi.athensTransit` / `dev.haroldpoi.athens_transit`. Δεν
-  αλλάζουν ποτέ μετά την πρώτη δημοσίευση. Αποφάσισε τώρα αν μένουν έτσι.
+- **Bundle ID / applicationId**: `gr.staseis.app` και στις δύο πλατφόρμες (αλλαγή 2026-11-06). Δεν
+  αλλάζει ποτέ μετά την πρώτη δημοσίευση· φαίνεται στο link του Play.
 - **Play App Signing**: το upload key είναι στο `~/.config/athens-transit-app/key.properties`. Κράτα
   αντίγραφο ασφαλείας του keystore εκτός του mini PC.
