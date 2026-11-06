@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="el"><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@500;600;800&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@500;600;800&family=Inter:wght@600&display=block" rel="stylesheet">
 <style>
 :root{--navy:#0d1a3a;--ink:#0d1a3a;--blue:#1f5fd1;--sky:#e8efff;--yellow:#e9a400;--green:#0c9a6c;--red:#d93a3a}
 *{box-sizing:border-box;margin:0}
@@ -25,14 +25,30 @@ p.sub{font-weight:500;font-size:4.2vw;line-height:1.3;margin-top:3vw;opacity:.8;
 .badges{display:flex;gap:2vw;margin-top:4vw;flex-wrap:wrap}
 .badge{display:inline-flex;align-items:center;gap:1.4vw;border:.3vw solid currentColor;border-radius:99vw;padding:1.2vw 3vw;font:600 3.1vw Commissioner;opacity:.9}
 .badge svg{width:3.4vw;height:3.4vw}
+/* iPhone mode (?device=iphone): the whole phone, Pro Max proportions (440x956 pt) */
+.iphone .phone{width:64vw;aspect-ratio:440/956;bottom:auto;border-radius:10.6vw;padding:1.35vw;background:#050505;
+  box-shadow:0 0 0 .5vw #9a958f,0 0 0 .8vw #4d4a46,0 5vw 12vw rgba(0,0,0,.35)}
+.iphone .phone::before,.iphone .phone::after{content:"";position:absolute;width:.7vw;border-radius:.4vw;background:#6f6b66}
+.iphone .phone::before{left:-1.4vw;top:24vw;height:8vw;box-shadow:0 11vw 0 #6f6b66}
+.iphone .phone::after{right:-1.4vw;top:30vw;height:13vw}
+.iphone .screen{border-radius:9.3vw}
+.ibar{position:relative;height:7.6vw;display:flex;align-items:center;justify-content:space-between;padding:1vw 6.4vw 0 8vw;
+  font:600 3.4vw Inter,-apple-system,sans-serif;color:#111;background:#fafafa}
+.ibar svg{height:2.5vw}
+.island{position:absolute;left:50%;top:1.5vw;transform:translateX(-50%);width:17.5vw;height:5.1vw;border-radius:3vw;background:#000}
+.home-ind{position:absolute;left:50%;bottom:1.3vw;transform:translateX(-50%);width:21vw;height:.75vw;border-radius:1vw;background:#111;opacity:.85;z-index:5}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute">
   <symbol id="sig" viewBox="0 0 60 16"><path d="M2 14h3V10H2zM8 14h3V7H8zM14 14h3V4h-3zM20 14h3V1h-3z" fill="currentColor"/><rect x="34" y="3" width="22" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="36.5" y="5.5" width="15" height="6" rx="1" fill="currentColor"/></symbol>
+  <symbol id="ios" viewBox="0 0 74 14"><path d="M1 13h3V9H1zM6 13h3V7H6zM11 13h3V4.5h-3zM16 13h3V2h-3z" fill="currentColor"/><path d="M33 3.2a11 11 0 0 1 15 0l-1.6 1.7a8.6 8.6 0 0 0-11.8 0zM35.8 6.2a7 7 0 0 1 9.4 0l-1.6 1.7a4.6 4.6 0 0 0-6.2 0zM38.6 9.2a3 3 0 0 1 3.8 0L40.5 11.3z" fill="currentColor"/><rect x="51" y="1.5" width="19" height="11" rx="3.2" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="52.8" y="3.3" width="15.4" height="7.4" rx="1.8" fill="currentColor"/><path d="M71.6 5.2v3.6a1.9 1.9 0 0 0 0-3.6z" fill="currentColor" opacity=".45"/></symbol>
   <symbol id="check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 <div id="root"></div>
 <script>
-const bar = (cls='') => `<div class="bar ${cls}"><span>11:24</span><svg viewBox="0 0 60 16" style="color:#222"><use href="#sig"/></svg></div>`;
+const q = new URLSearchParams(location.search), iphone = q.get('device') === 'iphone';
+const bar = (cls='') => iphone
+  ? `<div class="ibar"><span>9:41</span><i class="island"></i><svg viewBox="0 0 74 14"><use href="#ios"/></svg></div>`
+  : `<div class="bar ${cls}"><span>11:24</span><svg viewBox="0 0 60 16" style="color:#222"><use href="#sig"/></svg></div>`;
 const S = {
   1:{c:'dark',dot:'var(--yellow)',k:'Live χάρτης',h:'Κάθε λεωφορείο της Αθήνας. Τώρα.',p:'Δες πού είναι, και αν αργεί, πριν βγεις από το σπίτι.',
      scr:`<div class="screen">${bar()}<img src="home.png"></div>`},
@@ -54,10 +70,10 @@ const EN = {
   5:{k:'Trip planner',h:'Bus, metro, or both.',p:'The fastest way there, and where to get off.',
      extra:`<div class="badges"><span class="badge"><svg><use href="#check"/></svg>No account</span><span class="badge"><svg><use href="#check"/></svg>No ads</span></div>`},
 };
-const q = new URLSearchParams(location.search);
 const n = +(q.get('s')||1), s = q.get('lang')==='en' ? {...S[n], ...EN[n]} : S[n];
-document.getElementById('root').innerHTML = `<section class="slide ${s.c}">
+const phoneTop = iphone ? (n === 5 ? '67vw' : '59vw') : (s.top || '66vw');
+document.getElementById('root').innerHTML = `<section class="slide ${s.c}${iphone ? ' iphone' : ''}">
   <div class="kicker"><i style="background:${s.dot}"></i>${s.k}</div>
   <h1>${s.h}</h1><p class="sub">${s.p}</p>${s.extra||''}
-  <div class="phone" style="--top:${s.top||'66vw'}">${s.scr}</div></section>`;
+  <div class="phone" style="--top:${phoneTop}">${s.scr}${iphone ? '<i class="home-ind"></i>' : ''}</div></section>`;
 </script></body></html>
