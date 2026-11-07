@@ -39,6 +39,7 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["appLabel"] = "Στάσεις"
     }
 
     signingConfigs {
@@ -55,6 +56,13 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            // -P staging=true (.github/workflows/staging.yml): a build of main that installs next to
+            // the released app.
+            if (project.findProperty("staging") == "true") {
+                applicationIdSuffix = ".dev"
+                versionNameSuffix = "-dev"
+                manifestPlaceholders["appLabel"] = "Στάσεις dev"
+            }
         }
     }
 }

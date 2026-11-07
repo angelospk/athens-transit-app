@@ -1,0 +1,75 @@
+# Every push to main builds a signed APK of main ("Στάσεις dev", gr.staseis.app.dev), which installs
+# next to the released app, and publishes it as the pre-release dev-<run>. The newest 3 are kept.
+# Obtainium: add this repo, "Include prereleases" on, "Filter release titles by regular expression"
+# = ^Στάσεις dev, and it fetches each new build.
+name: Staging APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'docs/**', 'LICENSE']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: staging
+  cancel-in-progress: true # only main's last push matters
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      CERT_SHA256: 1fd391fcba705fb3a648f14dd655b0ab10bfbc6f95095cecce1c3cad90b5a763
+      TAG: dev-${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter test
+
+      - name: Signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=release\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/release.jks" "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > "$RUNNER_TEMP/key.properties"
+          echo "ATHENS_TRANSIT_KEY_PROPERTIES=$RUNNER_TEMP/key.properties" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          # Above any pubspec build number, and rising with every run: each build updates the last.
+          flutter build apk --release -P staging=true --build-number=$((100000 + GITHUB_RUN_NUMBER))
+          mkdir -p out
+          cp build/app/outputs/flutter-apk/app-release.apk "out/staseis-$TAG.apk"
+
+      - name: Check signature
+        run: |
+          apksigner="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner"
+          "$apksigner" verify --print-certs out/*.apk | grep -q "SHA-256 digest: $CERT_SHA256" || { echo "wrong signer"; exit 1; }
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG" out/* --prerelease --target "$GITHUB_SHA" \
+            --title "Στάσεις dev $TAG" \
+            --notes "Build of main at ${GITHUB_SHA::7}, not a release. Installs next to the released app as gr.staseis.app.dev."
+          # Keep the newest 3 dev builds.
+          gh release list --limit 100 --json tagName,createdAt \
+            --jq '[.[] | select(.tagName | startswith("dev-"))] | sort_by(.createdAt) | reverse | .[3:] | .[].tagName' |
+            while read -r old; do gh release delete "$old" --cleanup-tag --yes; done
