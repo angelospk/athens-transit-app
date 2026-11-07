@@ -452,14 +452,18 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // The static shape of a vehicle with along_m (contract rev 20), so it drives on along the whole
   // shape. Its line's file is asked for once (only lines of vehicles on the map); null until it is in.
   final _shapes = Expando<ShapeRoute>();
-  final _askedStatics = <String>{};
+  final _askedStatics = <String, int>{}; // line: when its file was asked for (ms); asked again after a minute
   ShapeRoute? _shapeOf(Vehicle v) {
     final line = v.line, variant = v.variant;
     if (v.alongM == null || line == null || variant == null) return null;
     final live = Deps.of(context).live;
     final st = live.statics[line];
     if (st == null) {
-      if (_askedStatics.add(line)) live.loadStatics([line]);
+      final now = DateTime.now().millisecondsSinceEpoch, asked = _askedStatics[line];
+      if (asked == null || now - asked > 60000) {
+        _askedStatics[line] = now;
+        live.loadStatics([line]);
+      }
       return null;
     }
     final va = st.variants[variant];

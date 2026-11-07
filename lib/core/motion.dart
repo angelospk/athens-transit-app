@@ -339,6 +339,7 @@ class _Track {
   int positionAt = 0;
   List<Pt>? path; // the path the plan was built from
   ShapeRoute? route; // the shape the plan runs on (along_m), or null
+  ShapeRoute? routeIn; // the shape offered with that data (checked once per fix)
   ({double t0, Pt from, double dur, bool back})? glide;
   Pt? off; // sideways offset still fading out (dLat, dLon)
   double offAt = 0, offDur = offS;
@@ -371,11 +372,12 @@ class Motion {
     int? alongM,
   }) {
     final t = _tracks.putIfAbsent(id, () => _Track(fix, double.negativeInfinity));
-    final s0 = route != null && alongM != null ? alongS(route, alongM, fix) : null;
-    final on = s0 != null ? route : null;
-    if (t.last > double.negativeInfinity && t.positionAt == positionAt && _samePath(t.path, path) && identical(t.route, on)) {
+    if (t.last > double.negativeInfinity && t.positionAt == positionAt && _samePath(t.path, path) && identical(t.routeIn, route)) {
       return;
     }
+    t.routeIn = route;
+    final s0 = route != null && alongM != null ? alongS(route, alongM, fix) : null;
+    final on = s0 != null ? route : null;
     final first = t.last == double.negativeInfinity;
     t.positionAt = positionAt;
     t.path = path;
