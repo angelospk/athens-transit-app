@@ -15,10 +15,10 @@ import 'cache.dart';
 
 // `--dart-define=API_BASE=http://127.0.0.1:18095` points a debug build at a local backend (QA).
 const apiBase = String.fromEnvironment('API_BASE', defaultValue: 'https://transit.haroldpoi.dev');
-const staticBase = 'https://angelospk.github.io/athens-transit-rt/static/v1';
+const staticBase = 'https://angelospk.github.io/staseis-rt/static/v1';
 const tripsUrl = 'https://bus.haroldpoi.dev/trips.json';
 const metroUrl = 'https://bus.haroldpoi.dev/metro.json'; // metro, ISAP, tram: STASY GTFS + OSM tracks
-const statsBase = 'https://raw.githubusercontent.com/angelospk/athens-transit-rt/stats/v1';
+const statsBase = 'https://raw.githubusercontent.com/angelospk/staseis-rt/stats/v1';
 const statsUrl = '$statsBase/latest.json'; // newest day, once a day
 const pushBase = 'https://push.haroldpoi.dev';
 const railUrl = 'https://railway.gov.gr/api/public'; // suburban rail boards (docs/research/rail-data.md)

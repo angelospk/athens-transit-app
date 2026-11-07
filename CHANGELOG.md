@@ -1,12 +1,15 @@
 # Changelog
 
 Signed APKs for every version: [releases](https://github.com/angelospk/athens-transit-app/releases).
-Backend and API changes: [athens-transit-rt CHANGELOG](https://github.com/angelospk/athens-transit-rt/blob/main/CHANGELOG.md).
+Backend and API changes: [staseis-rt CHANGELOG](https://github.com/angelospk/staseis-rt/blob/main/CHANGELOG.md).
 Detail per task and what was checked: [docs/PLAN-2026-10-28.md](docs/PLAN-2026-10-28.md),
 [docs/QA-2026-10-28.md](docs/QA-2026-10-28.md). Manual test list: [docs/TEST-CHECKLIST.md](docs/TEST-CHECKLIST.md).
 
 ## Unreleased
 
+- The backend repo is now `staseis-rt`. The static map data moved with it to
+  `angelospk.github.io/staseis-rt/static/v1` (GitHub Pages does not redirect), so v0.3.0 and older
+  lose their static data: install this version.
 - Buses on the map keep moving along their route between updates instead of stopping at the end of
   their short path and then jumping: with the backend's `along_m` (contract rev 20) the app loads the
   line's route once and drives the bus along it at the typical speeds, up to the end of the route

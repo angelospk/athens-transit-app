@@ -238,7 +238,7 @@ class _Widgets extends StatelessWidget {
 const _links = [
   ('Πρότεινε μια ιδέα', 'https://docs.google.com/forms/d/e/1FAIpQLSdBJSeu7xzH0ma5GWn7hIlcaaPPmOSTP9bD5D_NA-f1FhHyLQ/viewform', Icons.lightbulb_outline),
   ('Λάθος θέση στάσης; Πες μας', 'https://github.com/angelospk/athens-transit-map/issues/new', Icons.wrong_location_outlined),
-  ('Σχετικά · δεδομένα · ανοιχτό API', 'https://angelospk.github.io/athens-transit-rt/', Icons.info_outline),
+  ('Σχετικά · δεδομένα · ανοιχτό API', 'https://angelospk.github.io/staseis-rt/', Icons.info_outline),
   ('Ο χάρτης στο web', 'https://bus.haroldpoi.dev', Icons.public),
 ];
 
