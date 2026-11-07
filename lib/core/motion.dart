@@ -309,11 +309,16 @@ double? alongS(ShapeRoute r, int along, Pt fix) {
   return distM(pointAtCum(r.shape, r.cum, at), fix) <= alongFixM ? at : null;
 }
 
-/// Along the whole shape from s0 at `at`: the step speeds when given, else `speed` with waits at the
-/// stops ahead; it stands at the shape's end.
-Handoff shapePlan(Pt shown, ShapeRoute r, double s0, double speed, double at, double nowSec, {List<double?>? steps}) {
-  final end = r.cum.last - s0;
-  final stops = [for (final x in r.stopS) if (x > s0 + 1) x - s0];
+/// Along the whole shape from s0 at `at`: the step speeds when given, else `speed` with waits at
+/// `pathStops` (the server's, scaled), then at the route's stops after them; it stands at the
+/// shape's end.
+Handoff shapePlan(Pt shown, ShapeRoute r, double s0, double speed, double at, double nowSec,
+    {List<double?>? steps, List<double>? pathStops}) {
+  final end = r.cum.last - s0, lm = r.lengthM;
+  final k = lm != null && lm > 0 ? r.cum.last / lm : 1.0;
+  final near = [for (final x in pathStops ?? const <double>[]) x * k];
+  final after = near.isEmpty ? 1.0 : near.last + 15;
+  final stops = [...near, for (final x in r.stopS) if (x - s0 > after) x - s0];
   final f = steps != null && steps.isNotEmpty ? walk(steps, speed, end) : drive(speed, stops, end);
   return planOnto(shown, Plan(geom: r.shape, cum: r.cum, target: (t) => s0 + f(t - at)), nowSec);
 }
@@ -338,7 +343,6 @@ class _Track {
   double last;
   int positionAt = 0;
   List<Pt>? path; // the path the plan was built from
-  ShapeRoute? route; // the shape the plan runs on (along_m), or null
   ShapeRoute? routeIn; // the shape offered with that data (checked once per fix)
   ({double t0, Pt from, double dur, bool back})? glide;
   Pt? off; // sideways offset still fading out (dLat, dLon)
@@ -381,9 +385,8 @@ class Motion {
     final first = t.last == double.negativeInfinity;
     t.positionAt = positionAt;
     t.path = path;
-    t.route = on;
     final h = on != null
-        ? shapePlan(t.pos, on, s0!, speed ?? noSpeed, positionAt.toDouble(), nowS, steps: pathSpeeds)
+        ? shapePlan(t.pos, on, s0!, speed ?? noSpeed, positionAt.toDouble(), nowS, steps: pathSpeeds, pathStops: pathStops)
         : path != null && path.length > 1
             ? pathPlan(t.pos, path, speed ?? noSpeed, positionAt.toDouble(), nowS, stops: pathStops ?? const [], steps: pathSpeeds)
             : linePlan(t.pos, fix, bearing);

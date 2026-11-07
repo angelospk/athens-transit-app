@@ -445,7 +445,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final id = '${v.line}|${v.id}';
     _motion.update(id,
         path: v.path, speed: v.speed, positionAt: v.positionAt, pathSpeeds: v.pathSpeeds, fix: (v.lat, v.lon), nowS: nowS,
-        route: _shapeOf(v), alongM: v.alongM);
+        pathStops: v.pathStops, route: _shapeOf(v), alongM: v.alongM);
     return _motion.step(id, nowS);
   }
 

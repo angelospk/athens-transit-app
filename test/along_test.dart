@@ -71,14 +71,25 @@ void main() {
       final path = [atM(1000), atM(1300)];
       mv.update('v', path: path, speed: 10, positionAt: 0, pathSpeeds: null, fix: atM(1000), nowS: 0, alongM: 1000);
       mv.step('v', 0);
+      final r = routeOf(long);
       Pt? p;
       for (var i = 1; i <= 1500; i++) {
         final t = i / 10;
         mv.update('v', path: path, speed: 10, positionAt: 0, pathSpeeds: null, fix: atM(1000), nowS: t,
-            route: t >= 5 ? routeOf(long) : null, alongM: 1000);
+            route: t >= 5 ? r : null, alongM: 1000);
         p = mv.step('v', t);
       }
       expect(sAlong(long, p!), greaterThan(2000));
+    });
+
+    test('waits at path_stops on a loop, not at the other pass\'s stops', () {
+      final back = [atM(0), atM(1000), atM(0)];
+      // The client snapped the return stop on the way out (300 m); the server says 300 m ahead.
+      final r = ShapeRoute(shape: back, cum: cumulative(back), stopS: const [300]);
+      final h = shapePlan(atM(600), r, 1400, 8, 0, 0, pathStops: const [300]);
+      final a = h.plan.target(40), b = h.plan.target(45);
+      expect((a - b).abs(), lessThan(0.5)); // standing at the stop
+      expect((a - 1700).abs(), lessThan(2));
     });
 
     test('walks path_speeds and stands at the shape end', () {
