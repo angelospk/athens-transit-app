@@ -285,6 +285,39 @@ Handoff pathPlan(Pt shown, List<Pt> path, double speed, double at, double nowSec
   return planOnto(shown, Plan(geom: path, cum: cum, target: (t) => f(t - at)), nowSec);
 }
 
+/// A variant's static shape for along_m (contract rev 20): its points, metres to each point, its
+/// length in the server's metres (null: unknown) and its stops as metres along it.
+class ShapeRoute {
+  final List<Pt> shape;
+  final List<double> cum;
+  final double? lengthM;
+  final List<double> stopS;
+  const ShapeRoute({required this.shape, required this.cum, this.lengthM, this.stopS = const []});
+}
+
+const alongFixM = 200.0; // the server's point is at most 150 m from the fix; farther: another shape
+const _alongEndM = 50.0; // along_m past the shape's end by more than this: another shape
+
+/// The vehicle's metres along [r] from the server's along_m, scaled to the app's metres by
+/// length / length_m; null when it does not fit (a static file of another GTFS).
+double? alongS(ShapeRoute r, int along, Pt fix) {
+  if (r.shape.length < 2) return null;
+  final l = r.cum.last, lm = r.lengthM;
+  final s = along * (lm != null && lm > 0 ? l / lm : 1.0);
+  if (s < 0 || s > l + _alongEndM) return null;
+  final at = min(s, l);
+  return distM(pointAtCum(r.shape, r.cum, at), fix) <= alongFixM ? at : null;
+}
+
+/// Along the whole shape from s0 at `at`: the step speeds when given, else `speed` with waits at the
+/// stops ahead; it stands at the shape's end.
+Handoff shapePlan(Pt shown, ShapeRoute r, double s0, double speed, double at, double nowSec, {List<double?>? steps}) {
+  final end = r.cum.last - s0;
+  final stops = [for (final x in r.stopS) if (x > s0 + 1) x - s0];
+  final f = steps != null && steps.isNotEmpty ? walk(steps, speed, end) : drive(speed, stops, end);
+  return planOnto(shown, Plan(geom: r.shape, cum: r.cum, target: (t) => s0 + f(t - at)), nowSec);
+}
+
 /// No geometry: glide straight to a fixed point. With a bearing, a point well behind is a correction.
 Handoff linePlan(Pt shown, Pt to, double? bearing) {
   final d = distM(shown, to);
@@ -305,6 +338,7 @@ class _Track {
   double last;
   int positionAt = 0;
   List<Pt>? path; // the path the plan was built from
+  ShapeRoute? route; // the shape the plan runs on (along_m), or null
   ({double t0, Pt from, double dur, bool back})? glide;
   Pt? off; // sideways offset still fading out (dLat, dLon)
   double offAt = 0, offDur = offS;
@@ -320,8 +354,9 @@ class Motion {
   // The point shown for this vehicle now, or null if it is not tracked.
   Pt? shown(String id) => _tracks[id]?.pos;
 
-  // A vehicle's newest data. A new plan only when its position_at or its path really changed, so
-  // calling it every tick with the same data costs a comparison.
+  // A vehicle's newest data. A new plan only when its position_at, its path or the shape it can run
+  // on really changed, so calling it every tick with the same data costs a comparison. With `route`
+  // (its variant's shape) and `alongM` (rev 20) it runs on along the whole shape.
   void update(
     String id, {
     required List<Pt>? path,
@@ -332,15 +367,24 @@ class Motion {
     double? bearing,
     required double nowS,
     List<double>? pathStops,
+    ShapeRoute? route,
+    int? alongM,
   }) {
     final t = _tracks.putIfAbsent(id, () => _Track(fix, double.negativeInfinity));
-    if (t.last > double.negativeInfinity && t.positionAt == positionAt && _samePath(t.path, path)) return;
+    final s0 = route != null && alongM != null ? alongS(route, alongM, fix) : null;
+    final on = s0 != null ? route : null;
+    if (t.last > double.negativeInfinity && t.positionAt == positionAt && _samePath(t.path, path) && identical(t.route, on)) {
+      return;
+    }
     final first = t.last == double.negativeInfinity;
     t.positionAt = positionAt;
     t.path = path;
-    final h = path != null && path.length > 1
-        ? pathPlan(t.pos, path, speed ?? noSpeed, positionAt.toDouble(), nowS, stops: pathStops ?? const [], steps: pathSpeeds)
-        : linePlan(t.pos, fix, bearing);
+    t.route = on;
+    final h = on != null
+        ? shapePlan(t.pos, on, s0!, speed ?? noSpeed, positionAt.toDouble(), nowS, steps: pathSpeeds)
+        : path != null && path.length > 1
+            ? pathPlan(t.pos, path, speed ?? noSpeed, positionAt.toDouble(), nowS, stops: pathStops ?? const [], steps: pathSpeeds)
+            : linePlan(t.pos, fix, bearing);
     t.plan = h.plan;
     if (first) {
       // First sight of a vehicle: show it where it is, without an animation.

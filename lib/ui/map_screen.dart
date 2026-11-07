@@ -444,8 +444,27 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   Pt _glidePos(Vehicle v, double nowS) {
     final id = '${v.line}|${v.id}';
     _motion.update(id,
-        path: v.path, speed: v.speed, positionAt: v.positionAt, pathSpeeds: v.pathSpeeds, fix: (v.lat, v.lon), nowS: nowS);
+        path: v.path, speed: v.speed, positionAt: v.positionAt, pathSpeeds: v.pathSpeeds, fix: (v.lat, v.lon), nowS: nowS,
+        route: _shapeOf(v), alongM: v.alongM);
     return _motion.step(id, nowS);
+  }
+
+  // The static shape of a vehicle with along_m (contract rev 20), so it drives on along the whole
+  // shape. Its line's file is asked for once (only lines of vehicles on the map); null until it is in.
+  final _shapes = Expando<ShapeRoute>();
+  final _askedStatics = <String>{};
+  ShapeRoute? _shapeOf(Vehicle v) {
+    final line = v.line, variant = v.variant;
+    if (v.alongM == null || line == null || variant == null) return null;
+    final live = Deps.of(context).live;
+    final st = live.statics[line];
+    if (st == null) {
+      if (_askedStatics.add(line)) live.loadStatics([line]);
+      return null;
+    }
+    final va = st.variants[variant];
+    if (va == null || va.shape.length < 2) return null;
+    return _shapes[va] ??= ShapeRoute(shape: va.shape, cum: cumulative(va.shape), lengthM: va.lengthM, stopS: st.offsetsFor(variant));
   }
 
   // With the map open and location already allowed: a bus that moved with the phone for a minute
@@ -522,6 +541,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         'delay_s': v.delayS, 'speed': v.speed, 'next_stop_id': v.nextStopId, 'trip_id': v.tripId,
         'path': [for (final p in v.path ?? const <Pt>[]) [p.$1, p.$2]],
         'path_speeds': v.pathSpeeds,
+        'along_m': v.alongM,
       });
 
   // A line shown on the map in its own colour: one of mine keeps its slot, any other line is blue.

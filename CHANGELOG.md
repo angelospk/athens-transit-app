@@ -7,6 +7,10 @@ Detail per task and what was checked: [docs/PLAN-2026-10-28.md](docs/PLAN-2026-1
 
 ## Unreleased
 
+- Buses on the map keep moving along their route between updates instead of stopping at the end of
+  their short path and then jumping: with the backend's `along_m` (contract rev 20) the app loads the
+  line's route once and drives the bus along it at the typical speeds, up to the end of the route
+  (athens-transit-rt#108).
 - Fixed: back went to the home screen after a page opened something on the map (a step of a trip, a
   line from «Γραμμές», «Αγαπημένα» or «Στατιστικά»). Back («‹ <page>», the back button or the swipe)
   now reopens the pages it came from, in order; «Διαδρομή» keeps its ends, time and «Με μετρό».

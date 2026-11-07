@@ -41,13 +41,15 @@ class Variant {
   final String headsign;
   final int direction;
   final List<Pt> shape;
+  final double? lengthM; // rev 20: the shape's length in the server's metres (along_m's unit)
   final List<String> stops;
-  const Variant({required this.headsign, required this.direction, required this.shape, required this.stops});
+  const Variant({required this.headsign, required this.direction, required this.shape, this.lengthM, required this.stops});
 
   factory Variant.fromJson(Map<String, dynamic> j) => Variant(
         headsign: (j['headsign'] as String?) ?? '',
         direction: _i(j['direction']) ?? 0,
         shape: _pts(j['shape']),
+        lengthM: _d(j['length_m']),
         stops: [for (final s in (j['stops'] as List? ?? const [])) s as String],
       );
 }
@@ -148,6 +150,7 @@ class Vehicle {
   final List<Pt>? path, pathBeyond;
   final List<double>? pathStops;
   final List<double?>? pathSpeeds;
+  final int? alongM; // rev 20: metres along the variant's static shape at position_at
 
   const Vehicle({
     required this.id,
@@ -167,6 +170,7 @@ class Vehicle {
     this.pathBeyond,
     this.pathStops,
     this.pathSpeeds,
+    this.alongM,
   });
 
   factory Vehicle.fromJson(Map<String, dynamic> j) => Vehicle(
@@ -187,6 +191,7 @@ class Vehicle {
         pathBeyond: j['path_beyond'] == null ? null : _pts(j['path_beyond']),
         pathStops: j['path_stops'] == null ? null : [for (final x in j['path_stops'] as List) (x as num).toDouble()],
         pathSpeeds: j['path_speeds'] == null ? null : [for (final x in j['path_speeds'] as List) _d(x)],
+        alongM: _i(j['along_m']),
       );
 }
 
