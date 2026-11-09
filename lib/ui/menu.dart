@@ -252,7 +252,7 @@ const _links = [
 ];
 
 // The site's legal pages (athens-transit-map: staseis.gr).
-const termsUrl = 'https://staseis.gr/terms', privacyUrl = 'https://staseis.gr/privacy';
+const termsUrl = 'https://staseis.gr/terms/', privacyUrl = 'https://staseis.gr/privacy/';
 
 /// «Σχετικά»: the version, links, the terms, the privacy policy and the open-source licenses.
 class AboutScreen extends StatelessWidget {
