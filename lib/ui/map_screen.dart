@@ -23,10 +23,12 @@ import '../core/map_geo.dart';
 import '../core/marker.dart';
 import '../core/models.dart';
 import '../core/motion.dart';
+import '../core/muni.dart';
 import '../core/near_home.dart';
 import '../core/nearby.dart';
 import '../core/rail.dart';
 import '../core/stopfix.dart';
+import '../data/api.dart' show MuniData;
 import '../data/basemap.dart';
 import '../data/locate.dart';
 import '../data/stopfix_store.dart';
@@ -37,6 +39,7 @@ import 'favs_screen.dart';
 import 'line_panel.dart';
 import 'map_sel.dart';
 import 'motion_fx.dart';
+import 'muni_panel.dart';
 import 'rules_screen.dart' show hm;
 import 'search.dart';
 import 'station_panel.dart';
@@ -86,6 +89,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   Map<String, dynamic>? _metroJson; // metro.json: a tapped station is found by its index
   double _h = 700; // the map's height: the sheet's sizes are fractions of it
   LineStatic? _routeSt; // the line whose stops are drawn on its route: a tap on one opens it
+  Map<String, MuniStop>? _muniStops; // the open municipal line's stops are drawn: a tap opens one
   String? _dark; // the lightened dark style (JSON); the plain URL until it loads
   final _near = NearMemo(); // the home sheet's nearest stops, searched again only when they can change
 
@@ -212,6 +216,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         Deps.of(context).api.lineStatic(line).then((st) {
           if (identical(mapSel.value, s)) _fit(st); // not after another selection
         }).ignore();
+      case MuniSel(:final card):
+        _fitPts([for (final r in card.routes) for (final part in r.shape) ...part]);
+      case MuniStopSel(:final stop):
+        _reveal(stop.lat, stop.lon);
       case null:
     }
   }
@@ -245,15 +253,15 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     await _focus(lat, lon, z);
   }
 
-  void _fit(LineStatic st) {
+  void _fit(LineStatic st) => _fitPts([for (final v in st.variants.values) ...v.shape]);
+
+  void _fitPts(Iterable<Pt> pts) {
     var s = 90.0, w = 180.0, n = -90.0, e = -180.0;
-    for (final v in st.variants.values) {
-      for (final p in v.shape) {
-        s = min(s, p.$1);
-        n = max(n, p.$1);
-        w = min(w, p.$2);
-        e = max(e, p.$2);
-      }
+    for (final p in pts) {
+      s = min(s, p.$1);
+      n = max(n, p.$1);
+      w = min(w, p.$2);
+      e = max(e, p.$2);
     }
     if (s > n || !mounted) return;
     _map?.animateCamera(CameraUpdate.newLatLngBounds(LatLngBounds(southwest: LatLng(s, w), northeast: LatLng(n, e)),
@@ -609,7 +617,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final now = nowS ~/ 1;
     final features = <Object>[];
     final shown = <String>{};
-    final focus = sel is BusSel || sel is LineSel;
+    final focus = sel is BusSel || sel is LineSel || sel is MuniSel; // «the others» setting dims the rest
     for (final v in _vehicles(store)) {
       final line = v.line ?? '';
       final on = switch (sel) {
@@ -691,7 +699,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         want[line] = vv == null ? null : {vv};
       case LineSel(:final line, :final variants):
         want[line] = variants;
-      case StopSel() || PlaceSel() || StationSel():
+      case StopSel() || PlaceSel() || StationSel() || MuniSel() || MuniStopSel():
         break;
       case null:
         if (store.onlyMine) {
@@ -704,9 +712,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       StopSel(:final stop) => (name: stop.name, lat: stop.lat, lon: stop.lon),
       PlaceSel(:final name, :final at) => (name: name, lat: at.$1, lon: at.$2),
       StationSel(:final name, :final at) => (name: name, lat: at.$1, lon: at.$2),
+      MuniStopSel(:final id, :final stop) => (name: 'muni|$id', lat: stop.lat, lon: stop.lon),
       _ => null,
     };
-    final key = '${want.entries.map((e) => '${e.key}:${e.value}').join(',')}|${picked?.name}|${store.myLines}';
+    final mc = sel is MuniSel ? sel.card : null;
+    final key = '${want.entries.map((e) => '${e.key}:${e.value}').join(',')}|${picked?.name}|${mc?.id}|${store.myLines}';
     if (key == _routesPending) return;
     if (key == _routesKey) {
       if (_routesPending != null) {
@@ -723,13 +733,21 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       final st = live.statics[l] ?? await api.lineStatic(l).then<LineStatic?>((x) => x, onError: (_) => null);
       if (st != null) statics[l] = st;
     }
+    final muniStops = mc == null ? null : (await api.muni().then<MuniData?>((x) => x, onError: (_) => null))?.data.stops;
     if (stale()) return; // a newer draw (selection, filter, style) writes its own
     final drawn = [for (final e in want.entries) if (statics[e.key] case final st?) (line: e.key, color: _hexOf(store, e.key), st: st, only: e.value)];
-    await m.setGeoJsonSource('routes', routesGeo(drawn));
+    await m.setGeoJsonSource('routes', mc != null ? muniRoutesGeo(mc, muniHex) : routesGeo(drawn));
     if (stale()) return;
     final one = sel is BusSel || sel is LineSel ? drawn.firstOrNull : null;
     _routeSt = one?.st;
-    await m.setGeoJsonSource('route-stops', one == null ? _empty : lineStopsGeo(one.st, one.color, variants: one.only));
+    _muniStops = muniStops;
+    await m.setGeoJsonSource(
+        'route-stops',
+        mc != null && muniStops != null
+            ? muniStopsGeo(mc, muniStops, muniHex)
+            : one == null
+                ? _empty
+                : lineStopsGeo(one.st, one.color, variants: one.only));
     if (stale()) return;
     await m.setGeoJsonSource('picked', {
       'type': 'FeatureCollection',
@@ -739,7 +757,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     });
     if (stale()) return;
     _routesPending = null;
-    if (statics.length == want.length) _routesKey = key; // a failed load is tried again on the next draw
+    if (statics.length == want.length && (mc == null || muniStops != null)) _routesKey = key; // a failed load is tried again on the next draw
   }
 
   void _tap(Point<double> point, LatLng at, String id, String layer, Annotation? annotation) {
@@ -756,6 +774,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       final st = list[i] as Map<String, dynamic>;
       mapSel.value = StationSel(st['name'] as String, ((st['lat'] as num).toDouble(), (st['lon'] as num).toDouble()),
           lines: [for (final l in st['lines'] as List) l as String]);
+    } else if (id.startsWith('ms|') && _muniStops?[id.substring(3)] != null) {
+      mapSel.value = MuniStopSel(id.substring(3), _muniStops![id.substring(3)]!);
     } else if (id.startsWith('v|')) {
       final p = id.split('|');
       final stop = switch (mapSel.value) { StopSel(:final stop) => stop, BusSel(:final stop) => stop, _ => null };
@@ -915,6 +935,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     LineSel(:final line, :final variants) => LinePanel(key: ValueKey(line), line: line, variants: variants, scroll: scroll),
                     PlaceSel(:final name, :final at) => _PlacePanel(name: name, at: at, ix: _ix, scroll: scroll),
                     StationSel() => StationPanel(key: ObjectKey(sel), sel: sel, ix: _ix, scroll: scroll),
+                    MuniSel(:final card) => MuniPanel(key: ValueKey(card.id), card: card, scroll: scroll),
+                    MuniStopSel(:final id, :final stop) => MuniStopPanel(key: ValueKey('ms|$id'), id: id, stop: stop, scroll: scroll),
                     null => _HomeSheet(
                         me: _me,
                         memo: _near,

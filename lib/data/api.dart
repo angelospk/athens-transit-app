@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 
 import '../core/geo.dart';
 import '../core/models.dart';
+import '../core/muni.dart';
 import '../core/rail.dart';
 import '../core/stats.dart';
 import 'cache.dart';
@@ -26,6 +27,10 @@ const railUrl = 'https://railway.gov.gr/api/public'; // suburban rail boards (do
 // Sheet row). Public: the web's bundle carries it too. App reports come without the web's bot check.
 const feedbackUrl =
     'https://script.google.com/macros/s/AKfycbzZH84suueqVGCinNzSDdd8oCplE2_w3jH8xkXB2GZ21TgS6U1tvQll0qmXFzdl2GezWw/exec';
+const municipalUrl = '$apiBase/v2/municipal'; // «Δημοτικά»: municipal routes and stops (OSM, ODbL)
+const muniTimesUrl = 'https://staseis.gr/municipal-times.json'; // the timetables the web checked, built with it
+typedef MuniData = ({Municipal data, List<MuniCard> cards});
+
 const placesUrl = 'https://photon.komoot.io/api/'; // OSM geocoder: addresses, areas, shops, landmarks
 
 // Photon answers 403 to the default "Dart/x (dart:io)" agent.
@@ -152,6 +157,15 @@ class Api {
 
   Future<LineStatic> lineStatic(String line) => _once('line_$line',
       () => _static('line_$line', '$staticBase/lines/${Uri.encodeComponent(line)}.json').then((j) => LineStatic.fromJson(j)));
+
+  /// The municipal lines, one card each, with their timetables; null while the backend has no routes.
+  /// A timetable file that fails to load leaves the lines without times, never without the lines.
+  Future<MuniData?> muni() => _once('muni', () async {
+        final d = parseMunicipal(await _static('municipal', municipalUrl));
+        if (d == null) return null;
+        final t = await _static('muni_times', muniTimesUrl).then(parseMuniTimes).catchError((_) => const <MuniTable>[]);
+        return (data: d, cards: muniCards(d, t));
+      });
 
   // GeoJSON-ready raw data: {lines: [{id, name, color, paths: [[[lon, lat]...]...]}], stations: [...]}.
   Future<Map<String, dynamic>> metro() => _once('metro', () async => (await _static('metro', metroUrl)) as Map<String, dynamic>);

@@ -1,4 +1,5 @@
 import 'package:athens_transit/core/muni.dart';
+import 'package:athens_transit/ui/muni_panel.dart' show muniNextRows;
 import 'package:flutter_test/flutter_test.dart';
 
 // /v2/municipal (backend, OSM): line Α of Αγ. Δημήτριος both ways, and Χαλάνδρι Β1 / Β2 (two refs, one timetable group).
@@ -164,5 +165,12 @@ void main() {
     expect(cardsAtStop(cards, 'n3').map((c) => c.ref), ['Β1']);
     expect(cardsAtStop(cards, 'n1').map((c) => c.ref), ['Α']);
     expect(cardsAtStop(cards, 'zz'), isEmpty);
+  });
+
+  test('the sheet\'s rows: where each time leaves from; with two refs each row names its own', () {
+    final cards = muniCards(_data, _tables);
+    final b = cards.firstWhere((c) => c.ref == 'Β1');
+    expect(muniNextRows(b, _mon0830), ['Β1: 08:50 · 10:50 · 12:50 από Πολύδροσο', 'Β2: 09:20 · 11:20 από Κοιμητήριο']);
+    expect(muniNextRows(cards.firstWhere((c) => c.ref == 'Α'), _mon0830), ['≈ 08:40 · 09:00']);
   });
 }

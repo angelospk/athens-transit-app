@@ -2,6 +2,7 @@
 // GeoJSON wants [lon, lat].
 
 import 'models.dart';
+import 'muni.dart';
 import 'rail.dart';
 
 typedef Geo = Map<String, dynamic>;
@@ -40,6 +41,28 @@ Geo lineStopsGeo(LineStatic st, String color, {String? variant, Iterable<String>
         },
   ]);
 }
+
+// A municipal line: every part of every route, and its stops (tap id «ms|<osm id>»).
+Geo muniRoutesGeo(MuniCard c, String color) => _fc([
+      for (final r in c.routes)
+        for (final part in r.shape)
+          {
+            'type': 'Feature',
+            'properties': {'line': c.id, 'color': color},
+            'geometry': {'type': 'LineString', 'coordinates': [for (final p in part) [p.$2, p.$1]]},
+          },
+    ]);
+
+Geo muniStopsGeo(MuniCard c, Map<String, MuniStop> stops, String color) => _fc([
+      for (final id in c.stopIds)
+        if (stops[id] case final s?)
+          {
+            'type': 'Feature',
+            'id': 'ms|$id',
+            'properties': {'id': id, 'name': s.name ?? '', 'color': color},
+            'geometry': {'type': 'Point', 'coordinates': [s.lon, s.lat]},
+          },
+    ]);
 
 bool isTram(String line) => line.startsWith('T');
 

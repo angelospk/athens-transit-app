@@ -10,8 +10,10 @@ import 'package:flutter/material.dart';
 import '../data/api.dart';
 import '../core/map_geo.dart' show isTram;
 import '../core/models.dart';
+import '../core/muni.dart';
 import '../core/nearby.dart';
 import 'map_sel.dart';
+import 'muni_panel.dart' show MuniBadge;
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -30,6 +32,8 @@ class _SearchFieldState extends State<SearchField> {
   final _focus = FocusNode();
   List<LineInfo> _lines = [];
   List<LineInfo> _lineHits = [];
+  List<MuniCard> _muni = []; // «Δημοτικά»: municipal lines, found by ref, municipality or name
+  List<MuniCard> _muniHits = [];
   List<int> _stopHits = []; // stop indexes in ix: each side of the road its own row
   List<Place> _placeHits = [];
   List<_Station> _stations = [];
@@ -44,6 +48,7 @@ class _SearchFieldState extends State<SearchField> {
     super.didChangeDependencies();
     final api = Deps.of(context).api;
     if (_lines.isEmpty) api.lines().then((l) => mounted ? setState(() => _lines = l) : null).ignore();
+    if (_muni.isEmpty) api.muni().then((m) => mounted && m != null ? setState(() => _muni = m.cards) : null, onError: (_) => null).ignore();
     if (_stations.isEmpty) {
       Future.wait([
         api.metro().then((j) => [
@@ -113,6 +118,7 @@ class _SearchFieldState extends State<SearchField> {
     if (f.isEmpty) {
       setState(() {
         _lineHits = [];
+        _muniHits = [];
         _stopHits = [];
         _placeHits = [];
         _stationHits = [];
@@ -129,14 +135,16 @@ class _SearchFieldState extends State<SearchField> {
       });
     }
     final lines = _lines.where((l) => fold(l.id).startsWith(f) || (f.length > 2 && nameMatches(l.name, q))).take(5).toList();
+    final muni = f.length > 1 ? findMuniCards(_muni, q).take(4).toList() : <MuniCard>[];
     final stations = f.length > 1 ? _stations.where((st) => nameMatches(st.name, q)).toList() : <_Station>[];
     final stops = ix != null && f.length > 2 ? stopHits(ix, q) : <int>[];
     final shownStations = [for (final st in stations) if (_on(st.mode)) st];
     setState(() {
       _lineHits = _buses ? lines : [];
+      _muniHits = _buses ? muni : [];
       _stopHits = _buses ? stops : [];
       _stationHits = shownStations.take(5).toList();
-      _hidden = (_buses ? 0 : lines.length + stops.length) + stations.length - shownStations.length;
+      _hidden = (_buses ? 0 : lines.length + muni.length + stops.length) + stations.length - shownStations.length;
     });
   }
 
@@ -190,7 +198,7 @@ class _SearchFieldState extends State<SearchField> {
               ),
           ]),
         ),
-      if (_hidden > 0 && _lineHits.isEmpty && _stopHits.isEmpty && _stationHits.isEmpty)
+      if (_hidden > 0 && _lineHits.isEmpty && _muniHits.isEmpty && _stopHits.isEmpty && _stationHits.isEmpty)
         Material(
           color: t.ground,
           elevation: 3,
@@ -201,7 +209,7 @@ class _SearchFieldState extends State<SearchField> {
             trailing: TextButton(onPressed: _showAll, child: const Text('Εμφάνιση')),
           ),
         ),
-      if (_lineHits.isNotEmpty || _stopHits.isNotEmpty || _placeHits.isNotEmpty || _stationHits.isNotEmpty)
+      if (_lineHits.isNotEmpty || _muniHits.isNotEmpty || _stopHits.isNotEmpty || _placeHits.isNotEmpty || _stationHits.isNotEmpty)
         // Above the keyboard, and scrolls when lines, stops and places do not fit: the room left in the
         // map's body, which the Scaffold already shrinks for the keyboard (viewInsets read 0 here).
         Flexible(
@@ -219,6 +227,16 @@ class _SearchFieldState extends State<SearchField> {
                   onTap: () {
                     _clear();
                     mapSel.value = LineSel(l.id);
+                  },
+                ),
+              for (final c in _muniHits)
+                ListTile(
+                  leading: MuniBadge(c.ref),
+                  title: Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text('Δημοτική · ${c.municipality}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                  onTap: () {
+                    _clear();
+                    mapSel.value = MuniSel(c);
                   },
                 ),
               for (final st in _stationHits)

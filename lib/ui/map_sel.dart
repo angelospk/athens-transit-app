@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/geo.dart';
+import '../core/muni.dart';
 import 'favs_screen.dart';
 import 'planner_screen.dart';
 import 'stop_screen.dart';
@@ -48,6 +49,19 @@ class PlaceSel extends MapSel {
   final Pt at;
 }
 
+// A municipal line («Δημοτικά»): its routes, stops and the timetable's next departures. No live data.
+class MuniSel extends MapSel {
+  const MuniSel(this.card);
+  final MuniCard card;
+}
+
+// A stop of a municipal line: the lines through it, with their next departures from where they are timed.
+class MuniStopSel extends MapSel {
+  const MuniStopSel(this.id, this.stop);
+  final String id;
+  final MuniStop stop;
+}
+
 final mapSel = ValueNotifier<MapSel?>(null)..addListener(_track);
 
 // What was open before, for back (the sheet's arrow and the phone's back button). Another direction of
@@ -74,6 +88,7 @@ void _track() {
 bool _same(MapSel a, MapSel b) => switch ((a, b)) {
       (LineSel(line: final x), LineSel(line: final y)) => x == y,
       (BusSel(line: final l1, vehicleId: final v1), BusSel(line: final l2, vehicleId: final v2)) => l1 == l2 && v1 == v2,
+      (MuniSel(card: final x), MuniSel(card: final y)) => x.id == y.id,
       _ => false,
     };
 
@@ -88,6 +103,8 @@ String backLabel() {
     StopSel(:final stop) => titleCase(stop.name),
     BusSel(:final line) || LineSel(:final line) => 'Γραμμή $line',
     StationSel(:final name) || PlaceSel(:final name) => titleCase(name),
+    MuniSel(:final card) => card.ref == null ? card.name : 'Γραμμή ${card.ref}',
+    MuniStopSel(:final stop) => stop.name ?? 'Στάση',
   };
 }
 
