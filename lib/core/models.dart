@@ -219,8 +219,9 @@ class TripIndex {
   // [] or [bearing or null, ...indexes into dn]. Empty in a file from before `d`.
   final List<String> dn;
   final List<List<int?>> ds;
+  final List<String> ids; // per stop, its GTFS stop id (the 4th field of `s`), '' when missing
 
-  const TripIndex({required this.v, required this.s, required this.l, this.dn = const [], this.ds = const []});
+  const TripIndex({required this.v, required this.s, required this.l, this.dn = const [], this.ds = const [], this.ids = const []});
 
   factory TripIndex.fromJson(Map<String, dynamic> j) => TripIndex(
         v: (j['v'] as String?) ?? '',
@@ -235,6 +236,7 @@ class TripIndex {
                 ve.key as String: [for (final k in ve.value as List) (k as num).toInt()],
             },
         },
+        ids: [for (final e in (j['s'] as List? ?? const [])) (e as List).length > 3 ? '${e[3]}' : ''],
         dn: [for (final n in (j['d'] as Map?)?['n'] as List? ?? const []) n as String],
         ds: [
           for (final e in (j['d'] as Map?)?['s'] as List? ?? const []) [for (final x in e as List) (x as num?)?.toInt()],

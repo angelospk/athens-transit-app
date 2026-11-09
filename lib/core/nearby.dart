@@ -269,8 +269,8 @@ Toward? towardOf(TripIndex ix, int k) {
   return (bearing: e.first, names: names);
 }
 
-/// The direction of the stop named [name] nearest to the point, within 40 m (one side of the road).
-Toward? towardAt(TripIndex ix, String name, double lat, double lon) {
+/// The stop named [name] nearest to the point, within 40 m (one side of the road): its index, or null.
+int? stopIndexAt(TripIndex ix, String name, double lat, double lon) {
   int? best;
   var bestM = 40.0;
   for (var i = 0; i < ix.s.length; i++) {
@@ -279,7 +279,19 @@ Toward? towardAt(TripIndex ix, String name, double lat, double lon) {
     final m = distM((s.$2, s.$3), (lat, lon));
     if (m <= bestM) (best, bestM) = (i, m);
   }
-  return best == null ? null : towardOf(ix, best);
+  return best;
+}
+
+/// The direction of the stop at the point (see [stopIndexAt]).
+Toward? towardAt(TripIndex ix, String name, double lat, double lon) {
+  final k = stopIndexAt(ix, name, lat, lon);
+  return k == null ? null : towardOf(ix, k);
+}
+
+/// The GTFS id of the stop at the point (see [stopIndexAt]), or null.
+String? stopIdAt(TripIndex ix, String name, double lat, double lon) {
+  final k = stopIndexAt(ix, name, lat, lon);
+  return k == null || k >= ix.ids.length || ix.ids[k].isEmpty ? null : ix.ids[k];
 }
 
 String towardText(Toward t) => t.names.isEmpty ? '' : 'προς ${t.names.join(' · ')}';

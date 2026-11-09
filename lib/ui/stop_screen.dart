@@ -11,11 +11,13 @@ import '../core/models.dart';
 import '../core/nearby.dart';
 import '../core/rules.dart';
 import '../data/live.dart';
+import '../data/stopfix_store.dart';
 import '../data/store.dart';
 import 'alert_sheet.dart';
 import 'lines_picker.dart';
 import 'theme.dart';
 import 'map_sel.dart';
+import 'stopfix_bar.dart';
 import 'widgets.dart';
 
 class StopRef {
@@ -207,6 +209,11 @@ class _StopPanelState extends State<StopPanel> {
       builder: (context, _) {
         final fav = d.store.favNear(s.name, s.lat, s.lon);
         final toward = _ix == null ? null : towardAt(_ix!, s.name, s.lat, s.lon);
+        // The stop as trips.json has it (GTFS id, position): what «Λάθος θέση στάσης;» reports.
+        final k = _ix == null ? null : stopIndexAt(_ix!, s.name, s.lat, s.lon);
+        final fix = k == null || k >= _ix!.ids.length || _ix!.ids[k].isEmpty
+            ? null
+            : StopFix(id: _ix!.ids[k], name: s.name, from: (_ix!.s[k].$2, _ix!.s[k].$3), at: (_ix!.s[k].$2, _ix!.s[k].$3));
         final arrivals = _arrivals(true);
         final groups = groupArrivals(arrivals);
         // One list: the starred lines pinned on top, the others by arrival, 6 rows until «Όλες».
@@ -340,6 +347,23 @@ class _StopPanelState extends State<StopPanel> {
               const SizedBox(height: 12),
               Text('Χωρίς λεωφορείο κοντά τώρα: ${quiet.join(', ')}', style: TextStyle(fontSize: 13, color: t.muted)),
             ],
+            // «Λάθος θέση στάσης;» (as the web): the map takes a tap where the pole stands. One report per phone per stop.
+            if (fix != null)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: reported(d.store.prefs, fix.id)
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text('Έστειλες διόρθωση θέσης για αυτή τη στάση. Ευχαριστούμε!',
+                            style: TextStyle(fontSize: 12.5, color: t.muted)),
+                      )
+                    : TextButton.icon(
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                        icon: const Icon(Icons.wrong_location_outlined, size: 18),
+                        label: const Text('Λάθος θέση στάσης;'),
+                        onPressed: () => stopFix.value = fix,
+                      ),
+              ),
             const SizedBox(height: 16),
             const LiveNote(),
           ]);

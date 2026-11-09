@@ -80,6 +80,7 @@ class AppStore extends ChangeNotifier {
   }
 
   final SharedPreferences _prefs;
+  SharedPreferences get prefs => _prefs; // for small flags kept outside the state blob (stopfix_store.dart)
 
   List<FavStop> favs = [];
   List<SavedPlace> places = []; // «Μέρη»

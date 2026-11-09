@@ -22,6 +22,10 @@ const statsBase = 'https://raw.githubusercontent.com/angelospk/staseis-rt/stats/
 const statsUrl = '$statsBase/latest.json'; // newest day, once a day
 const pushBase = 'https://push.haroldpoi.dev';
 const railUrl = 'https://railway.gov.gr/api/public'; // suburban rail boards (docs/research/rail-data.md)
+// The web's feedback endpoint (athens-transit-map docs/feedback/Code.gs: a Google Apps Script that writes a
+// Sheet row). Public: the web's bundle carries it too. App reports come without the web's bot check.
+const feedbackUrl =
+    'https://script.google.com/macros/s/AKfycbzZH84suueqVGCinNzSDdd8oCplE2_w3jH8xkXB2GZ21TgS6U1tvQll0qmXFzdl2GezWw/exec';
 const placesUrl = 'https://photon.komoot.io/api/'; // OSM geocoder: addresses, areas, shops, landmarks
 
 // Photon answers 403 to the default "Dart/x (dart:io)" agent.
@@ -50,6 +54,22 @@ class Api {
   final DiskCache _cache;
 
   Future<void> clearCache() => _cache.clear();
+
+  /// Feedback to the web's Apps Script. It answers a POST with a redirect to its reply (Dart does not follow
+  /// it for a POST): the reply must say {ok: true}. false on any failure.
+  Future<bool> sendFeedback({required String text, required String version, required String page, required String ua}) async {
+    try {
+      final body = jsonEncode({'text': text.trim(), 'version': version, 'page': page, 'ua': ua});
+      var r = await _client.post(Uri.parse(feedbackUrl), headers: {..._ua, 'content-type': 'text/plain'}, body: body).timeout(const Duration(seconds: 20));
+      final loc = r.headers['location'];
+      if (r.statusCode >= 300 && r.statusCode < 400 && loc != null) {
+        r = await _client.get(Uri.parse(loc), headers: _ua).timeout(const Duration(seconds: 20));
+      }
+      return r.statusCode == 200 && (jsonDecode(r.body) as Map?)?['ok'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<dynamic> _get(String url) async {
     final r = await _client.get(Uri.parse(url), headers: _ua).timeout(const Duration(seconds: 15));

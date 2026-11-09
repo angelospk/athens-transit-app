@@ -6,10 +6,12 @@
 // grouped by stop) and «Αγαπημένα». The layers and «πού είμαι» buttons show only with the sheet down.
 
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/athens_time.dart';
@@ -24,8 +26,10 @@ import '../core/motion.dart';
 import '../core/near_home.dart';
 import '../core/nearby.dart';
 import '../core/rail.dart';
+import '../core/stopfix.dart';
 import '../data/basemap.dart';
 import '../data/locate.dart';
+import '../data/stopfix_store.dart';
 import '../data/store.dart';
 import 'go_home_card.dart';
 import 'help.dart';
@@ -37,6 +41,7 @@ import 'rules_screen.dart' show hm;
 import 'search.dart';
 import 'station_panel.dart';
 import 'stop_screen.dart';
+import 'stopfix_bar.dart';
 import 'theme.dart';
 import 'vehicle_screen.dart';
 import 'widgets.dart';
@@ -94,6 +99,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       if (mounted && j != null) setState(() => _dark = j);
     });
     mapSel.addListener(_onSel);
+    stopFix.addListener(_onFix);
     WidgetsBinding.instance.addObserver(this);
     knownPosition().then((p) {
       if (!mounted) return;
@@ -109,6 +115,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     mapSel.removeListener(_onSel);
+    stopFix.removeListener(_onFix);
+    stopFix.value = null;
     WidgetsBinding.instance.removeObserver(this);
     _refresh?.cancel();
     _glide?.cancel();
@@ -137,6 +145,43 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   // A new selection: the sheet opens to half and the map moves to it.
+  // «Λάθος θέση στάσης;»: the blue pin follows the fix; at its start the map closes in on the stop.
+  StopFix? _fixWas;
+  void _onFix() {
+    final f = stopFix.value;
+    if (f != null && _fixWas == null) _map?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(f.from.$1, f.from.$2), 18));
+    _fixWas = f;
+    _map?.setGeoJsonSource('fixpin', {
+      'type': 'FeatureCollection',
+      'features': [
+        if (f != null) {'type': 'Feature', 'properties': <String, Object>{}, 'geometry': {'type': 'Point', 'coordinates': [f.at.$2, f.at.$1]}},
+      ],
+    });
+    if (mounted) setState(() {});
+  }
+
+  // A tap on the map while fixing a stop moves the pin there, and does nothing else.
+  bool _fixTap(LatLng at) {
+    final f = stopFix.value;
+    if (f == null) return false;
+    stopFix.value = f.moved((at.latitude, at.longitude));
+    return true;
+  }
+
+  Future<bool> _sendFix(StopFix f) async {
+    final d = Deps.of(context);
+    final info = await PackageInfo.fromPlatform();
+    final prefs = d.store.prefs;
+    final ok = await d.api.sendFeedback(
+      text: stopReportText(stop: f.id, name: f.name, from: f.from, at: f.at, device: deviceId(prefs)),
+      version: '${info.version}+${info.buildNumber}',
+      page: 'app/stop/${f.id}',
+      ua: 'Στάσεις app · ${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+    );
+    if (ok) await markReported(prefs, f.id);
+    return ok;
+  }
+
   void _onSel() {
     if (!mounted) return;
     setState(() {});
@@ -291,6 +336,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     await m.addGeoJsonSource('picked', _empty);
     await m.addCircleLayer('picked', 'picked-stop',
         const CircleLayerProperties(circleRadius: 7, circleColor: '#FFFFFF', circleStrokeColor: '#1A1C1E', circleStrokeWidth: 3),
+        enableInteraction: false);
+    await m.addGeoJsonSource('fixpin', _empty); // «Λάθος θέση στάσης;»: where the user says the pole stands
+    await m.addCircleLayer('fixpin', 'fixpin-dot',
+        const CircleLayerProperties(circleRadius: 9, circleColor: '#1A73E8', circleStrokeColor: '#FFFFFF', circleStrokeWidth: 3),
         enableInteraction: false);
     await m.addCircleLayer('rail', 'rail-station',
         const CircleLayerProperties(circleRadius: ['interpolate', ['linear'], ['zoom'], 9, 2.5, 15, 7], circleColor: '#FFFFFF', circleStrokeColor: ['get', 'color'], circleStrokeWidth: 3),
@@ -694,6 +743,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   void _tap(Point<double> point, LatLng at, String id, String layer, Annotation? annotation) {
+    if (_fixTap(at)) return;
     if (id.startsWith('r|')) {
       Deps.of(context).api.suburban().then((sub) {
         final st = sub.stations[id.substring(2)];
@@ -747,6 +797,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         canPop: atHome(),
         onPopInvokedWithResult: (popped, _) {
           if (popped) return;
+          if (stopFix.value != null) return stopFix.value = null; // back leaves the fix first
           final menu = Scaffold.maybeOf(context);
           if (menu != null && menu.isDrawerOpen) return menu.closeDrawer(); // back closes the menu first
           mapBack();
@@ -777,7 +828,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 c.onFeatureTapped.add(_tap);
               },
               // An empty spot closes what is open, as on the web.
-              onMapClick: (_, _) {
+              onMapClick: (_, at) {
+                if (_fixTap(at)) return;
                 if (mapSel.value != null) {
                   mapSel.value = null;
                 } else if (_sheet.isAttached && _sheet.size > _half + .05) {
@@ -810,7 +862,35 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
-            NotificationListener<DraggableScrollableNotification>(
+            // While fixing a stop, the sheet stays (hidden) and the fix bar sits at the bottom.
+            if (stopFix.value case final f?)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Material(
+                  color: t.ground,
+                  elevation: 8,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  child: SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: StopFixBar(
+                        key: ValueKey(f.id),
+                        name: titleCase(f.name),
+                        from: f.from,
+                        at: f.at,
+                        send: () => _sendFix(f),
+                        onClose: () => stopFix.value = null,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            Offstage(
+              offstage: stopFix.value != null,
+              child: NotificationListener<DraggableScrollableNotification>(
               onNotification: (n) {
                 if ((n.extent - _extent).abs() > .01) setState(() => _extent = n.extent);
                 return false;
@@ -853,8 +933,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
+            ),
             // Last, so the search results lie over the map buttons and the sheet.
-            if (_extent < .8)
+            if (_extent < .8 && stopFix.value == null)
               SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
