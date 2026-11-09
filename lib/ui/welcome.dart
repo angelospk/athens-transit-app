@@ -16,14 +16,16 @@ bool needsWelcome(SharedPreferences p) => p.getBool(welcomeKey) != true && p.get
 
 Future<void> markWelcomed(SharedPreferences p) => p.setBool(welcomeKey, true);
 
+// A screenshot of the feature on each card (assets/welcome, from docs/store/screenshots/src), and the
+// part of it to show: the map, or the sheet at the bottom.
 const _cards = [
-  (Icons.directions_bus, 'Καλώς ήρθες στις Στάσεις',
+  ('home', Alignment.center, 'Καλώς ήρθες στις Στάσεις',
       'Κάθε λεωφορείο της Αθήνας στον χάρτη, ζωντανά. Το χρώμα του δείχνει αν αργεί σε σχέση με το πρόγραμμα.'),
-  (Icons.place_outlined, 'Στάσεις και αγαπημένα',
-      'Πάτα μια στάση για να δεις τι έρχεται και σε πόσα λεπτά. Με το αστέρι κρατάς τις γραμμές σου πάνω πάνω.'),
-  (Icons.notifications_outlined, 'Πες μου πότε να φύγω',
-      'Βάλε ειδοποίηση σε ένα λεωφορείο: σου λέω πότε να ξεκινήσεις για να το προλάβεις. Ή φτιάξε κανόνα για κάθε πρωί.'),
-  (Icons.directions, 'Από εδώ ως εκεί',
+  ('stop', Alignment.bottomCenter, 'Στάσεις και αγαπημένα',
+      'Πάτα μια στάση για να δεις τι έρχεται και σε πόσα λεπτά. Με το αστέρι την κρατάς στα αγαπημένα.'),
+  ('alert', Alignment.bottomCenter, 'Πες μου πότε να φύγω',
+      'Πάτα το καμπανάκι δίπλα σε ένα λεωφορείο: σε ειδοποιώ λίγο πριν φτάσει. Ή φτιάξε κανόνα για κάθε πρωί.'),
+  ('plan', Alignment.topCenter, 'Από εδώ ως εκεί',
       'Η «Διαδρομή» στο μενού βρίσκει πώς πας κάπου, με τις αλλαγές και τους χρόνους από τα λεωφορεία που κινούνται τώρα.'),
 ];
 
@@ -76,7 +78,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               controller: _pages,
               onPageChanged: (i) => setState(() => _at = i),
               children: [
-                for (final (icon, title, body) in _cards) _Card(icon: icon, title: title, body: body),
+                for (final (shot, part, title, body) in _cards) _Card(shot: shot, part: part, title: title, body: body),
                 _permissions(t),
               ],
             ),
@@ -138,27 +140,34 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 }
 
 class _Card extends StatelessWidget {
-  const _Card({required this.icon, required this.title, required this.body});
-  final IconData icon;
-  final String title, body;
+  const _Card({required this.shot, required this.part, required this.title, required this.body});
+  final String shot, title, body;
+  final Alignment part;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(color: t.accent.withValues(alpha: .12), borderRadius: BorderRadius.circular(20)),
-          child: Icon(icon, size: 36, color: t.accent),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // A phone-shaped frame: as large as the screen allows above the text.
+        Expanded(
+          child: Center(
+            child: AspectRatio(
+              aspectRatio: .62,
+              child: Container(
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(24), border: Border.all(color: t.rule, width: 1.5)),
+                clipBehavior: Clip.antiAlias,
+                child: Image.asset('assets/welcome/$shot.webp', fit: BoxFit.cover, alignment: part),
+              ),
+            ),
+          ),
         ),
-        const SizedBox(height: 28),
-        Text(title, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, height: 1.2)),
-        const SizedBox(height: 12),
+        const SizedBox(height: 24),
+        Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, height: 1.2)),
+        const SizedBox(height: 10),
         Text(body, style: TextStyle(fontSize: 16, height: 1.45, color: t.muted)),
-        const SizedBox(height: 48),
+        const SizedBox(height: 8),
       ]),
     );
   }
