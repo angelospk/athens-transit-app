@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/athens_time.dart';
+import '../core/city.dart';
 import '../core/geo.dart';
 import '../core/marker.dart';
 import '../core/rules.dart';
@@ -14,6 +15,10 @@ import '../core/nearby.dart';
 
 const maxLines = 5; // the contract's per-client cap on watched lines
 const stateKey = 'state_v1';
+const cityKey = 'city'; // which city the app shows (the store below is open in a city by its caller)
+
+/// The city the app last showed; a new install, or an unknown id, is Athens.
+City cityOf(SharedPreferences p) => City.byId(p.getString(cityKey));
 
 enum Place { home, work }
 
@@ -70,7 +75,9 @@ Pt approxPoint(Pt p) {
 }
 
 class AppStore extends ChangeNotifier {
-  AppStore(this._prefs) {
+  AppStore(this._prefs, {City city = City.athens}) {
+    _city = city;
+    _cities[City.athens.id] = (favs: [], myLines: [], hidden: {}, onlyMine: false);
     final raw = _prefs.getString(stateKey);
     if (raw != null) {
       try {
@@ -81,6 +88,14 @@ class AppStore extends ChangeNotifier {
 
   final SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs; // for small flags kept outside the state blob (stopfix_store.dart)
+
+  /// The city this store is open in: the per-city fields below are its stops and lines.
+  /// The other cities' slots are kept as loaded, and written back untouched.
+  City get city => _city;
+  City _city = City.athens;
+  // Every city's own stops and lines: the current city's are the fields, the rest stay here
+  // ('athens' is also the top level of the blob, which the alert service and the widget read).
+  final Map<String, ({List<FavStop> favs, List<String> myLines, Set<String> hidden, bool onlyMine})> _cities = {};
 
   List<FavStop> favs = [];
   List<SavedPlace> places = []; // «Μέρη»
@@ -97,13 +112,30 @@ class AppStore extends ChangeNotifier {
   bool lastBusNudge = true; // Friday and Saturday evening: «το τελευταίο προς το σπίτι»
 
   void _load(Map<String, dynamic> j) {
-    favs = [for (final f in j['favs'] as List? ?? const []) FavStop.fromJson(f as Map<String, dynamic>)];
+    // Athens is the top level ('favs', 'myLines', 'hidden', 'onlyMine'); the other cities are in 'cities'.
+    _cities[City.athens.id] = (
+      favs: [for (final f in j['favs'] as List? ?? const []) FavStop.fromJson(f as Map<String, dynamic>)],
+      myLines: [for (final l in j['myLines'] as List? ?? const []) l as String],
+      hidden: {for (final l in j['hidden'] as List? ?? const []) l as String},
+      onlyMine: j['onlyMine'] == true,
+    );
+    final saved = j['cities'];
+    if (saved is Map<String, dynamic>) {
+      for (final e in saved.entries) {
+        final c = e.value;
+        if (c is! Map<String, dynamic>) continue;
+        _cities[e.key] = (
+          favs: [for (final f in c['favs'] as List? ?? const []) FavStop.fromJson(f as Map<String, dynamic>)],
+          myLines: [for (final l in c['myLines'] as List? ?? const []) l as String],
+          hidden: {for (final l in c['hidden'] as List? ?? const []) l as String},
+          onlyMine: c['onlyMine'] == true,
+        );
+      }
+    }
+    _showCity(city.id);
     places = [
       for (final p in j['places'] as List? ?? [?j['home']]) SavedPlace.fromJson(p as Map<String, dynamic>), // 'home': before «Μέρη»
     ];
-    myLines = [for (final l in j['myLines'] as List? ?? const []) l as String];
-    hiddenLines = {for (final l in j['hidden'] as List? ?? const []) l as String};
-    onlyMine = j['onlyMine'] == true;
     theme = ThemeMode.values.where((t) => t.name == j['theme']).firstOrNull ?? ThemeMode.system;
     rules = [for (final r in j['rules'] as List? ?? const []) Rule.fromJson(r as Map<String, dynamic>)];
     walkMin = j['walkMin'] as int? ?? 4;
@@ -118,34 +150,71 @@ class AppStore extends ChangeNotifier {
     lastBusNudge = j['lastBusNudge'] != false;
   }
 
-  Map<String, dynamic> toJson() => {
-        'favs': [for (final f in favs) f.toJson()],
-        'places': [for (final p in places) p.toJson()],
-        'myLines': myLines,
-        'hidden': hiddenLines.toList(),
-        'onlyMine': onlyMine,
-        'theme': theme.name,
-        'rules': [for (final r in rules) r.toJson()],
-        'walkMin': walkMin,
-        'lastBusNudge': lastBusNudge,
-        'showMetro': showMetro,
-        'showTram': showTram,
-        'showRail': showRail,
-        'others': others.name,
-        'onlyFresh': onlyFresh,
-        'onlyOnTime': onlyOnTime,
-        'showAges': showAges,
-        'liveDefault': liveDefault,
-      };
+  /// Shows [id]'s per-city fields (empty when it has none); the caller keeps the old ones in their slot.
+  void _showCity(String id) {
+    final c = _cities[id];
+    favs = c == null ? [] : [...c.favs];
+    myLines = c == null ? [] : [...c.myLines];
+    hiddenLines = c == null ? {} : {...c.hidden};
+    onlyMine = c?.onlyMine ?? false;
+  }
+
+  void _keepCity() => _cities[_city.id] = (favs: favs, myLines: myLines, hidden: hiddenLines, onlyMine: onlyMine);
+
+  Map<String, dynamic> toJson() {
+    _keepCity();
+    final ath = _cities[City.athens.id]!;
+    return {
+      'favs': [for (final f in ath.favs) f.toJson()],
+      'places': [for (final p in places) p.toJson()],
+      'myLines': ath.myLines,
+      'hidden': ath.hidden.toList(),
+      'onlyMine': ath.onlyMine,
+      if (_cities.length > 1)
+        'cities': {
+          for (final e in _cities.entries)
+            if (e.key != City.athens.id)
+              e.key: {
+                'favs': [for (final f in e.value.favs) f.toJson()],
+                'myLines': e.value.myLines,
+                'hidden': e.value.hidden.toList(),
+                'onlyMine': e.value.onlyMine,
+              },
+        },
+      'theme': theme.name,
+      'rules': [for (final r in rules) r.toJson()],
+      'walkMin': walkMin,
+      'lastBusNudge': lastBusNudge,
+      'showMetro': showMetro,
+      'showTram': showTram,
+      'showRail': showRail,
+      'others': others.name,
+      'onlyFresh': onlyFresh,
+      'onlyOnTime': onlyOnTime,
+      'showAges': showAges,
+      'liveDefault': liveDefault,
+    };
+  }
 
   void _save() {
     _prefs.setString(stateKey, jsonEncode(toJson()));
     notifyListeners();
   }
 
+  /// Shows another city: this one's stops and lines stay in their slot, the new one's come back.
+  void setCity(City c) {
+    _keepCity();
+    _city = c;
+    _showCity(c.id);
+    _prefs.setString(cityKey, c.id);
+    _save();
+  }
+
   /// «Διαγραφή όλων των δεδομένων»: every saved choice and flag, as on a new install.
   Future<void> reset() async {
     await _prefs.clear();
+    _cities.clear();
+    _city = City.athens;
     _load(const {});
     notifyListeners();
   }

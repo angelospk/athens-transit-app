@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 
+import '../core/city.dart';
 import '../core/geo.dart';
 import '../core/models.dart';
 import '../core/muni.dart';
@@ -14,10 +15,9 @@ import '../core/rail.dart';
 import '../core/stats.dart';
 import 'cache.dart';
 
-// `--dart-define=API_BASE=http://127.0.0.1:18095` points a debug build at a local backend (QA).
-const apiBase = String.fromEnvironment('API_BASE', defaultValue: 'https://transit.haroldpoi.dev');
-const staticBase = 'https://angelospk.github.io/staseis-rt/static/v1';
-const tripsUrl = 'https://bus.haroldpoi.dev/trips.json';
+// The three URLs Athens uses stay where the other code imports them from: city.dart holds them.
+export '../core/city.dart' show apiBase, staticBase, tripsUrl;
+
 const metroUrl = 'https://bus.haroldpoi.dev/metro.json'; // metro, ISAP, tram: STASY GTFS + OSM tracks
 const statsBase = 'https://raw.githubusercontent.com/angelospk/staseis-rt/stats/v1';
 const statsUrl = '$statsBase/latest.json'; // newest day, once a day
@@ -51,12 +51,16 @@ class ApiError implements Exception {
 }
 
 class Api {
-  Api({http.Client? client, DiskCache? cache})
+  Api({http.Client? client, DiskCache? cache, this.city = City.athens})
       : _client = client ?? http.Client(),
         _cache = cache ?? DiskCache();
 
   final http.Client _client;
   final DiskCache _cache;
+  final City city;
+
+  // One disk cache for every city: Athens keeps the file names it had, the others get their own.
+  String _key(String key) => city == City.athens ? key : '${city.id}_$key';
 
   Future<void> clearCache() => _cache.clear();
 
@@ -84,13 +88,14 @@ class Api {
 
   // Static files change only with a new GTFS: serve the disk copy at once and refresh it behind.
   Future<dynamic> _static(String key, String url) async {
-    final saved = await _cache.read(key);
+    final k = _key(key);
+    final saved = await _cache.read(k);
     if (saved != null) {
-      _get(url).then((j) => _cache.write(key, j)).ignore();
+      _get(url).then((j) => _cache.write(k, j)).ignore();
       return saved;
     }
     final j = await _get(url);
-    await _cache.write(key, j);
+    await _cache.write(k, j);
     return j;
   }
 
@@ -104,16 +109,16 @@ class Api {
     return f;
   }
 
-  Future<List<LineInfo>> lines() => _once('lines', () => _static('lines', '$staticBase/lines.json').then(parseLines));
+  Future<List<LineInfo>> lines() => _once('lines', () => _static('lines', '${city.static}/lines.json').then(parseLines));
 
   // A new day every day: the network first (each time the screen opens), the disk copy only without one.
   Future<DayStats> stats() async {
     Object? raw;
     try {
       raw = await _get(statsUrl);
-      await _cache.write('stats', raw);
+      await _cache.write(_key('stats'), raw);
     } catch (_) {
-      raw = await _cache.read('stats');
+      raw = await _cache.read(_key('stats'));
       if (raw == null) rethrow;
     }
     final j = raw as Map<String, dynamic>;
@@ -135,7 +140,7 @@ class Api {
 
   // A day file as docs/API.md describes it: null when it is missing, broken or partial.
   Future<DayStats?> _storedDay(String date) async {
-    final key = 'stats_day_$date';
+    final key = _key('stats_day_$date');
     Object? j = await _cache.read(key);
     if (j == null) {
       try {
@@ -153,15 +158,15 @@ class Api {
     return complete(d) ? d : null;
   }
 
-  Future<TripIndex> trips() => _once('trips', () => _static('trips', tripsUrl).then((j) => TripIndex.fromJson(j)));
+  Future<TripIndex> trips() => _once('trips', () => _static('trips', city.trips).then((j) => TripIndex.fromJson(j)));
 
   Future<LineStatic> lineStatic(String line) => _once('line_$line',
-      () => _static('line_$line', '$staticBase/lines/${Uri.encodeComponent(line)}.json').then((j) => LineStatic.fromJson(j)));
+      () => _static('line_$line', '${city.static}/lines/${Uri.encodeComponent(line)}.json').then((j) => LineStatic.fromJson(j)));
 
   /// The municipal lines, one card each, with their timetables; null while the backend has no routes.
   /// A timetable file that fails to load leaves the lines without times, never without the lines.
   Future<MuniData?> muni() => _once('muni', () async {
-        final d = parseMunicipal(await _static('municipal', municipalUrl));
+        final d = parseMunicipal(await _static('municipal', '${city.api}/v2/municipal'));
         if (d == null) return null;
         final t = await _static('muni_times', muniTimesUrl).then(parseMuniTimes).catchError((_) => const <MuniTable>[]);
         return (data: d, cards: muniCards(d, t));
@@ -171,19 +176,19 @@ class Api {
   Future<Map<String, dynamic>> metro() => _once('metro', () async => (await _static('metro', metroUrl)) as Map<String, dynamic>);
 
   Future<LineLive> live(String line) async {
-    final j = await _get('$apiBase/v1/lines/${Uri.encodeComponent(line)}');
-    await _cache.write('live_$line', j).catchError((_) {}); // a failed save must not fail the fetch
+    final j = await _get('${city.api}/v1/lines/${Uri.encodeComponent(line)}');
+    await _cache.write(_key('live_$line'), j).catchError((_) {}); // a failed save must not fail the fetch
     return LineLive.fromJson(j);
   }
 
   // The last live copy of a line, for the offline estimate.
   Future<LineLive?> savedLive(String line) async {
-    final j = await _cache.read('live_$line');
+    final j = await _cache.read(_key('live_$line'));
     return j == null ? null : LineLive.fromJson(j);
   }
 
   Future<VehicleTile> tile(int z, int x, int y) async {
-    final j = await _get('$apiBase/v1/vehicles/tiles/$z/$x/$y');
+    final j = await _get('${city.api}/v1/vehicles/tiles/$z/$x/$y');
     return VehicleTile(
       updatedAt: j['updated_at'] as int,
       nextUpdateAt: j['next_update_at'] as int,
@@ -191,9 +196,15 @@ class Api {
     );
   }
 
-  // Places and addresses in Attica that match the text, nearest to the centre first.
+  // Places and addresses in the city that match the text, nearest to the centre first.
   Future<List<Place>> places(String q) async {
-    final u = Uri.parse(placesUrl).replace(queryParameters: {'q': q, 'limit': '6', 'lat': '37.98', 'lon': '23.73', 'bbox': '23.3,37.6,24.2,38.35'});
+    final u = Uri.parse(placesUrl).replace(queryParameters: {
+      'q': q,
+      'limit': '6',
+      'lat': '${city.centre.$1}',
+      'lon': '${city.centre.$2}',
+      'bbox': city.placesBox,
+    });
     final j = await _get(u.toString()) as Map<String, dynamic>;
     final out = <Place>[];
     for (final f in j['features'] as List? ?? const []) {
@@ -233,7 +244,7 @@ class Api {
 
   Future<Map<String, dynamic>?> lineSchedule(String line) async {
     try {
-      return (await _get('$apiBase/v1/lines/${Uri.encodeComponent(line)}/schedule')) as Map<String, dynamic>;
+      return (await _get('${city.api}/v1/lines/${Uri.encodeComponent(line)}/schedule')) as Map<String, dynamic>;
     } on ApiError catch (e) {
       if (e.status == 404 || e.status == 503) return null;
       rethrow;
@@ -243,14 +254,14 @@ class Api {
   // Metro and tram timetable at a station (backend, STASY GTFS): null until the backend serves it.
   Future<Map<String, dynamic>?> stasyDepartures(String stop) async {
     try {
-      return (await _get('$apiBase/v1/rail/stasy/departures?stop=${Uri.encodeQueryComponent(stop)}&n=4')) as Map<String, dynamic>;
+      return (await _get('${city.api}/v1/rail/stasy/departures?stop=${Uri.encodeQueryComponent(stop)}&n=4')) as Map<String, dynamic>;
     } on ApiError catch (e) {
       if (e.status == 404 || e.status == 503) return null;
       rethrow;
     }
   }
 
-  Future<Map<String, dynamic>> status() async => (await _get('$apiBase/v1/status')) as Map<String, dynamic>;
+  Future<Map<String, dynamic>> status() async => (await _get('${city.api}/v1/status')) as Map<String, dynamic>;
 }
 
 class VehicleTile {
