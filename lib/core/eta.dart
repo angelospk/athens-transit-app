@@ -171,17 +171,6 @@ int? bigGap(List<int> gaps) {
   return best < 0 ? null : best;
 }
 
-/// Metres to the first 200 m step ahead whose typical speed (path_speeds, m/s) is under 10 km/h,
-/// within the next 2 km; null if none.
-int? slowAheadM(List<double?>? steps) {
-  if (steps == null) return null;
-  for (var i = 0; i < steps.length && i < 10; i++) {
-    final v = steps[i];
-    if (v != null && v * 3.6 < 10) return i * 200;
-  }
-  return null;
-}
-
 /// The timetable direction (backend /v1/lines/{id}/schedule) that matches [v], or null when none fits
 /// for sure. A GTFS headsign names both ends ("start - via - end"), and the timetable direction is named
 /// after its end. Names are folded and lose notes in brackets ("(Προσωρινή λόγω έργων)"). The only
