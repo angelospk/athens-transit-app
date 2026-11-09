@@ -250,3 +250,58 @@ bool _adjacent(TripIndex ix, int a, int b) {
   return (name: s.$1, lat: s.$2, lon: s.$3, m: bestM.round());
 }
 
+
+/// Which way the buses leave a stop: the bearing to the next stop (null when the lines disagree) and up to
+/// two terminus names.
+typedef Toward = ({int? bearing, List<String> names});
+
+const _bare = {'Ά': 'Α', 'Έ': 'Ε', 'Ή': 'Η', 'Ί': 'Ι', 'Ϊ': 'Ι', 'Ό': 'Ο', 'Ύ': 'Υ', 'Ϋ': 'Υ', 'Ώ': 'Ω'};
+
+// Capitals without accents, as OASA writes names (the web does the same: accentless capitals are correct Greek).
+String _caps(String s) => s.toUpperCase().split('').map((c) => _bare[c] ?? c).join();
+
+/// Stop [k]'s direction from the index (trips.json `d`), or null with no data.
+Toward? towardOf(TripIndex ix, int k) {
+  if (k < 0 || k >= ix.ds.length || ix.ds[k].isEmpty) return null;
+  final e = ix.ds[k];
+  final names = [for (final x in e.skip(1)) if (x != null && x >= 0 && x < ix.dn.length) _caps(ix.dn[x])];
+  if (e.first == null && names.isEmpty) return null;
+  return (bearing: e.first, names: names);
+}
+
+/// The direction of the stop named [name] nearest to the point, within 40 m (one side of the road).
+Toward? towardAt(TripIndex ix, String name, double lat, double lon) {
+  int? best;
+  var bestM = 40.0;
+  for (var i = 0; i < ix.s.length; i++) {
+    final s = ix.s[i];
+    if (s.$1 != name) continue;
+    final m = distM((s.$2, s.$3), (lat, lon));
+    if (m <= bestM) (best, bestM) = (i, m);
+  }
+  return best == null ? null : towardOf(ix, best);
+}
+
+String towardText(Toward t) => t.names.isEmpty ? '' : 'προς ${t.names.join(' · ')}';
+
+/// The lines of stop [k] alone (not its twin across the road).
+List<String> linesOfStop(TripIndex ix, int k) => k < 0 || k >= ix.s.length ? const [] : sortLines(_linesPerStop(ix)[k]);
+
+/// Search: the stops whose name matches [q], each side of the road its own hit: for each new name, the
+/// same-name stops within 150 m of its first stop. At most [max].
+List<int> stopHits(TripIndex ix, String q, {int max = 6}) {
+  final out = <int>[];
+  final taken = <int>{};
+  for (var i = 0; i < ix.s.length && out.length < max; i++) {
+    final s = ix.s[i];
+    if (taken.contains(i) || !nameMatches(s.$1, q)) continue;
+    for (var k = i; k < ix.s.length && out.length < max; k++) {
+      final o = ix.s[k];
+      if (o.$1 == s.$1 && !taken.contains(k) && distM((o.$2, o.$3), (s.$2, s.$3)) <= 150) {
+        taken.add(k);
+        out.add(k);
+      }
+    }
+  }
+  return out;
+}

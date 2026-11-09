@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../core/athens_time.dart';
 import '../core/eta.dart';
+import '../core/nearby.dart';
 import '../data/api.dart';
 import '../data/live.dart';
 import '../data/store.dart';
@@ -295,4 +298,24 @@ class LineButton extends StatelessWidget {
 String clockIn(int s) {
   final w = athensWall(DateTime.now().toUtc().add(Duration(seconds: s)));
   return '${w.hour.toString().padLeft(2, '0')}:${w.minute.toString().padLeft(2, '0')}';
+}
+
+/// «↗ προς ΜΟΥΣΕΙΟ · ΠΟΛΥΓΩΝΟ»: which way the buses leave a stop. The arrow points to the bearing (north up);
+/// no bearing, no arrow.
+class TowardRow extends StatelessWidget {
+  const TowardRow(this.toward, {super.key, this.size = 13});
+  final Toward toward;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(fontSize: size, color: context.tones.muted);
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      if (toward.bearing case final b?) ...[
+        Transform.rotate(angle: b * pi / 180, child: Icon(Icons.north, size: size + 1, color: context.tones.muted)),
+        const SizedBox(width: 3),
+      ],
+      Flexible(child: Text(towardText(toward), style: style, maxLines: 1, overflow: TextOverflow.ellipsis)),
+    ]);
+  }
 }

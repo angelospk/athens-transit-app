@@ -30,7 +30,7 @@ class _SearchFieldState extends State<SearchField> {
   final _focus = FocusNode();
   List<LineInfo> _lines = [];
   List<LineInfo> _lineHits = [];
-  List<NearbyStop> _stopHits = [];
+  List<int> _stopHits = []; // stop indexes in ix: each side of the road its own row
   List<Place> _placeHits = [];
   List<_Station> _stations = [];
   List<_Station> _stationHits = [];
@@ -130,14 +130,7 @@ class _SearchFieldState extends State<SearchField> {
     }
     final lines = _lines.where((l) => fold(l.id).startsWith(f) || (f.length > 2 && nameMatches(l.name, q))).take(5).toList();
     final stations = f.length > 1 ? _stations.where((st) => nameMatches(st.name, q)).toList() : <_Station>[];
-    final stops = <NearbyStop>[];
-    if (ix != null && f.length > 2) {
-      final seen = <String>{};
-      for (var i = 0; i < ix.s.length && stops.length < 6; i++) {
-        final s = ix.s[i];
-        if (nameMatches(s.$1, q) && seen.add(s.$1)) stops.addAll(nearbyStops(ix, (s.$2, s.$3), radiusM: 50, max: 1));
-      }
-    }
+    final stops = ix != null && f.length > 2 ? stopHits(ix, q) : <int>[];
     final shownStations = [for (final st in stations) if (_on(st.mode)) st];
     setState(() {
       _lineHits = _buses ? lines : [];
@@ -238,16 +231,21 @@ class _SearchFieldState extends State<SearchField> {
                     mapSel.value = StationSel(st.name, (st.lat, st.lon), lines: st.lines, railId: st.railId);
                   },
                 ),
-              for (final s in _stopHits)
-                ListTile(
-                  leading: const Icon(Icons.directions_bus_outlined),
-                  title: Text(titleCase(s.name)),
-                  subtitle: Text(s.lines.join(', '), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  onTap: () {
-                    _clear();
-                    mapSel.value = StopSel(StopRef(name: s.name, lat: s.lat, lon: s.lon, lines: linesAt(widget.ix!, s.name, s.lat, s.lon)));
-                  },
-                ),
+              for (final k in _stopHits)
+                if (widget.ix case final ix? when k < ix.s.length)
+                  ListTile(
+                    leading: const Icon(Icons.directions_bus_outlined),
+                    title: Text(titleCase(ix.s[k].$1)),
+                    subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      if (towardOf(ix, k) case final w?) TowardRow(w),
+                      Text(linesOfStop(ix, k).join(', '), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ]),
+                    onTap: () {
+                      _clear();
+                      final (name, lat, lon) = ix.s[k];
+                      mapSel.value = StopSel(StopRef(name: name, lat: lat, lon: lon, lines: linesAt(ix, name, lat, lon)));
+                    },
+                  ),
               for (final p in _placeHits)
                 ListTile(
                   leading: const Icon(Icons.place_outlined),

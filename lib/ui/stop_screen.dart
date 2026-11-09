@@ -206,6 +206,7 @@ class _StopPanelState extends State<StopPanel> {
       listenable: Listenable.merge([d.store, d.live]),
       builder: (context, _) {
         final fav = d.store.favNear(s.name, s.lat, s.lon);
+        final toward = _ix == null ? null : towardAt(_ix!, s.name, s.lat, s.lon);
         final arrivals = _arrivals(true);
         final groups = groupArrivals(arrivals);
         // One list: the starred lines pinned on top, the others by arrival, 6 rows until «Όλες».
@@ -239,8 +240,14 @@ class _StopPanelState extends State<StopPanel> {
                   Wrap(
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Text([if (fav?.place == Place.home) 'Σπίτι', if (fav?.place == Place.work) 'Δουλειά', '${s.lines.length} γραμμές'].join(' · '),
-                          style: TextStyle(fontSize: 13, color: t.muted)),
+                      // Which way the buses leave here (as the web) in place of the line count; the count without it.
+                      if ([if (fav?.place == Place.home) 'Σπίτι', if (fav?.place == Place.work) 'Δουλειά', if (toward == null) '${s.lines.length} γραμμές']
+                          case final words when words.isNotEmpty)
+                        Text(words.join(' · '), style: TextStyle(fontSize: 13, color: t.muted)),
+                      if (toward != null) ...[
+                        if (fav?.place != null) Text(' · ', style: TextStyle(fontSize: 13, color: t.muted)),
+                        TowardRow(toward),
+                      ],
                       if (_across case final a?) ...[
                         Text(' · ', style: TextStyle(fontSize: 13, color: t.muted)),
                         GestureDetector(

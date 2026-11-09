@@ -243,11 +243,15 @@ class _FavCardState extends State<_FavCard> {
     super.dispose();
   }
 
+  Toward? _toward; // which way the buses leave this stop
+
   // The other lines of the stop, from the citywide tiles (they are not watched).
   Future<void> _load() async {
     final d = Deps.of(context);
     try {
-      if (_all.isEmpty) _all = linesAt(await d.api.trips(), fav.name, fav.lat, fav.lon);
+      final ix = await d.api.trips();
+      if (_toward == null && mounted) setState(() => _toward = towardAt(ix, fav.name, fav.lat, fav.lon));
+      if (_all.isEmpty) _all = linesAt(ix, fav.name, fav.lat, fav.lon);
       final rest = _all.where((l) => !fav.lines.contains(l));
       if (rest.isEmpty) return;
       final got = await d.live.nearbyLives(fav.lat, fav.lon, rest);
@@ -295,6 +299,7 @@ class _FavCardState extends State<_FavCard> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(titleCase(fav.name), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
                 if (place != null) Text(place, style: TextStyle(fontSize: 13, color: t.muted)),
+                if (_toward case final w?) Padding(padding: const EdgeInsets.only(top: 2), child: TowardRow(w)),
               ]),
             ),
             PopupMenuButton<String>(

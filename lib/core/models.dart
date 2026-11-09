@@ -215,8 +215,12 @@ class TripIndex {
   final String v;
   final List<(String, double, double)> s;
   final Map<String, Map<String, List<int>>> l;
+  // Which way the buses leave each stop (web towards.ts, trips.json `d`): dn the terminus names; ds per stop
+  // [] or [bearing or null, ...indexes into dn]. Empty in a file from before `d`.
+  final List<String> dn;
+  final List<List<int?>> ds;
 
-  const TripIndex({required this.v, required this.s, required this.l});
+  const TripIndex({required this.v, required this.s, required this.l, this.dn = const [], this.ds = const []});
 
   factory TripIndex.fromJson(Map<String, dynamic> j) => TripIndex(
         v: (j['v'] as String?) ?? '',
@@ -231,5 +235,9 @@ class TripIndex {
                 ve.key as String: [for (final k in ve.value as List) (k as num).toInt()],
             },
         },
+        dn: [for (final n in (j['d'] as Map?)?['n'] as List? ?? const []) n as String],
+        ds: [
+          for (final e in (j['d'] as Map?)?['s'] as List? ?? const []) [for (final x in e as List) (x as num?)?.toInt()],
+        ],
       );
 }
