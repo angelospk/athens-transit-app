@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../core/city.dart';
 import '../core/athens_time.dart';
 import '../core/eta.dart';
 import '../core/models.dart';
@@ -211,7 +212,8 @@ class _StopPanelState extends State<StopPanel> {
         final toward = _ix == null ? null : towardAt(_ix!, s.name, s.lat, s.lon);
         // The stop as trips.json has it (GTFS id, position): what «Λάθος θέση στάσης;» reports.
         final k = _ix == null ? null : stopIndexAt(_ix!, s.name, s.lat, s.lon);
-        final fix = k == null || k >= _ix!.ids.length || _ix!.ids[k].isEmpty
+        // The report's #stopfix line names no city: Athens only, as the web's stop ids are Athens's.
+        final fix = k == null || d.store.city != City.athens || k >= _ix!.ids.length || _ix!.ids[k].isEmpty
             ? null
             : StopFix(id: _ix!.ids[k], name: s.name, from: (_ix!.s[k].$2, _ix!.s[k].$3), at: (_ix!.s[k].$2, _ix!.s[k].$3));
         final arrivals = _arrivals(true);
@@ -229,7 +231,7 @@ class _StopPanelState extends State<StopPanel> {
                 then: g.$2,
                 estimate: estimate,
                 onTap: () => mapSel.value = BusSel(g.$1.line, g.$1.vehicleId, stop: s),
-                trailing: _bell(context, s, g.$1),
+                trailing: d.store.city.alerts ? _bell(context, s, g.$1) : null, // stop alerts: Athens only
               ),
             );
         Widget head(String x) => Padding(
@@ -314,10 +316,11 @@ class _StopPanelState extends State<StopPanel> {
                   Expanded(
                     child: Text('→ ${titleCase(m.headsign)} · των ${m.t}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: t.muted)),
                   ),
-                  TextButton(
-                    onPressed: () => showPlanner(from: (label: s.name, pts: [(s.lat, s.lon)]), to: m.end),
-                    child: const Text('Άλλη επιλογή'),
-                  ),
+                  if (d.store.city.plan)
+                    TextButton(
+                      onPressed: () => showPlanner(from: (label: s.name, pts: [(s.lat, s.lon)]), to: m.end),
+                      child: const Text('Άλλη επιλογή'),
+                    ),
                 ]),
             ],
             if (planned.isNotEmpty) ...[

@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 
+import '../core/city.dart';
 import '../core/go_home.dart';
 import '../data/live.dart';
 import '../data/store.dart';
@@ -20,7 +21,7 @@ int _lastPush = 0;
 bool get _widgets => defaultTargetPlatform == TargetPlatform.android;
 
 Future<void> pushWidget(AppStore store, LiveHub live, {bool force = false}) async {
-  if (!_widgets) return;
+  if (!_widgets || store.city != City.athens) return; // the widget shows Athens's stops (alerts are Athens only)
   final now = live.nowS;
   if (!force && now - _lastPush < 60) return;
   _lastPush = now;

@@ -55,7 +55,11 @@ class _SmartCardState extends State<SmartCard> {
     final me = widget.me, ix = widget.ix;
     final store = Deps.of(context).store;
     final home = store.homePt, work = store.workPt;
-    final kind = pickSmart(utc: DateTime.now().toUtc(), me: me, home: home, work: work, hasFav: store.favs.any((f) => f.lines.isNotEmpty));
+    final hasFav = store.favs.any((f) => f.lines.isNotEmpty);
+    // The trip cards plan the trip: in a city without the planner, only the next bus of a saved stop.
+    final kind = !store.city.plan
+        ? (hasFav ? Smart.nextFav : Smart.none)
+        : pickSmart(utc: DateTime.now().toUtc(), me: me, home: home, work: work, hasFav: hasFav);
     final card = switch (kind) {
       Smart.toWork => TripCard(key: const ValueKey('work'), me: me!, ix: ix, to: work!, home: false),
       Smart.goHome => TripCard(key: const ValueKey('home'), me: me!, ix: ix, to: home!, home: true),

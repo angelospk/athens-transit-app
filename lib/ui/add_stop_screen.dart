@@ -37,7 +37,7 @@ class _AddStopScreenState extends State<AddStopScreen> {
     if (!mounted) return;
     setState(() {
       noLocation = p == null;
-      stops = nearbyStops(ix, p ?? athensCentre, radiusM: 800, max: 6);
+      stops = nearbyStops(ix, p ?? d.api.city.centre, radiusM: 800, max: 6);
     });
   }
 

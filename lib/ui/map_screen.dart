@@ -50,7 +50,6 @@ import 'vehicle_screen.dart';
 import 'widgets.dart';
 
 const _style = 'https://tiles.openfreemap.org/styles/';
-const _box = (s: 37.5, w: 22.9, n: 38.5, e: 24.5); // tiles exist only here
 const _lanePx = 3.0; // each direction drawn to the right of its travel direction (two lanes), as on the web
 const _peek = .24, _half = .5, _full = .92; // _peek: the sheet down, its smart card still shows
 
@@ -112,9 +111,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         _me = p ?? _me;
       });
       if (p == null) return;
-      if (mapSel.value == null) _map?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(p.$1, p.$2), 15));
+      if (mapSel.value == null && _inCity(p)) _map?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(p.$1, p.$2), 15));
     });
   }
+
+  // The location counts for the map's start only in the open city: from Athens, Thessaloniki starts at its centre.
+  bool _inCity(Pt p) => distM(p, Deps.of(context).api.city.centre) < 60000;
 
   @override
   void dispose() {
@@ -467,8 +469,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (z != _z) _tiles.clear();
     _z = z;
     const pad = 0.003;
-    final s = max(b.southwest.latitude - pad, _box.s), n = min(b.northeast.latitude + pad, _box.n);
-    final w = max(b.southwest.longitude - pad, _box.w), e = min(b.northeast.longitude + pad, _box.e);
+    final box = api.city.box; // tiles exist only here
+    final s = max(b.southwest.latitude - pad, box.s), n = min(b.northeast.latitude + pad, box.n);
+    final w = max(b.southwest.longitude - pad, box.w), e = min(b.northeast.longitude + pad, box.e);
     if (s >= n || w >= e) return;
     final (x0, y0) = _tile(n, w, z);
     final (x1, y1) = _tile(s, e, z);
@@ -670,7 +673,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       _followedAt = null;
     }
     await _drawRoutes(m, store, sel);
-    final rail = (store.showMetro, store.showTram, store.showRail);
+    final c = store.city.rail; // metro, tram and rail: Athens only
+    final rail = (store.showMetro && c, store.showTram && c, store.showRail && c);
     if (rail != _rail) {
       _rail = rail;
       for (final id in ['rail-track', 'rail-station', 'rail-name']) {
@@ -808,7 +812,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final style = dark ? _dark ?? '${_style}dark' : '${_style}positron';
     if (_styleFor != null && _styleFor != style) _styled = false;
     _styleFor = style;
-    final start = _me ?? athensCentre;
+    final start = _me != null && _inCity(_me!) ? _me! : d.api.city.centre;
     final sel = mapSel.value;
     // Back pops one sheet level, then «Αγαπημένα» goes to «Κοντά σου»; only from there it leaves the app.
     return ValueListenableBuilder(
@@ -1030,7 +1034,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     ]),
                   ],
                   const SizedBox(height: 12),
-                  Wrap(spacing: 8, runSpacing: 8, children: [
+                  if (store.city.rail) Wrap(spacing: 8, runSpacing: 8, children: [
                     FilterChip(avatar: const Icon(Icons.subway_outlined, size: 18), label: const Text('Μετρό'), selected: store.showMetro, onSelected: (v) => store.setRail(metro: v)),
                     FilterChip(avatar: const Icon(Icons.tram_outlined, size: 18), label: const Text('Τραμ'), selected: store.showTram, onSelected: (v) => store.setRail(tram: v)),
                     FilterChip(avatar: const Icon(Icons.train_outlined, size: 18), label: const Text('Προαστιακός'), selected: store.showRail, onSelected: (v) => store.setRail(rail: v)),
@@ -1196,7 +1200,7 @@ class _HomeSheet extends StatelessWidget {
     }
     final shown = [
       for (final s in stations)
-        if (s.railId != null ? d.store.showRail : s.lines.every((l) => l.startsWith('T')) ? d.store.showTram : d.store.showMetro) s,
+        if (d.store.city.rail && (s.railId != null ? d.store.showRail : s.lines.every((l) => l.startsWith('T')) ? d.store.showTram : d.store.showMetro)) s,
     ];
     final groups = homeGroups(memo.places(ix, shown, here), d.store.myLines);
     if (groups.isEmpty) {

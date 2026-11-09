@@ -48,8 +48,8 @@ class _SearchFieldState extends State<SearchField> {
     super.didChangeDependencies();
     final api = Deps.of(context).api;
     if (_lines.isEmpty) api.lines().then((l) => mounted ? setState(() => _lines = l) : null).ignore();
-    if (_muni.isEmpty) api.muni().then((m) => mounted && m != null ? setState(() => _muni = m.cards) : null, onError: (_) => null).ignore();
-    if (_stations.isEmpty) {
+    if (_muni.isEmpty && api.city.muni) api.muni().then((m) => mounted && m != null ? setState(() => _muni = m.cards) : null, onError: (_) => null).ignore();
+    if (_stations.isEmpty && api.city.rail) {
       Future.wait([
         api.metro().then((j) => [
               for (final st in j['stations'] as List)
@@ -185,6 +185,7 @@ class _SearchFieldState extends State<SearchField> {
           scrollDirection: Axis.horizontal,
           child: Row(children: [
             for (final m in _Mode.values)
+              if (m == _Mode.bus || Deps.of(context).api.city.rail) // metro, tram, rail: Athens only
               Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: FilterChip(

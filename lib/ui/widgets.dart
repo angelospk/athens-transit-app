@@ -22,7 +22,7 @@ class Deps extends InheritedWidget {
   static Deps of(BuildContext c) => c.dependOnInheritedWidgetOfExactType<Deps>()!;
 
   @override
-  bool updateShouldNotify(Deps old) => false;
+  bool updateShouldNotify(Deps old) => old.api != api || old.live != live; // a city switch
 }
 
 // A line keeps its palette slot by its place among the user's lines; other lines are neutral.

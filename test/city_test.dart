@@ -39,6 +39,10 @@ void main() {
     expect(City.thessaloniki.centre.$1, closeTo(40.63, .02));
     expect(City.thessaloniki.centre.$2, closeTo(22.94, .02));
 
+    // The vehicle tiles each backend serves (a tile outside is a 404): the map asks only inside.
+    expect(City.athens.box, (s: 37.5, w: 22.9, n: 38.5, e: 24.5));
+    expect(City.thessaloniki.box, (s: 40.3, w: 22.6, n: 41.0, e: 23.4));
+
     // What only Athens has: metro/tram/rail, «Δημοτικά», the planner, stop alerts, the statistics.
     for (final c in City.values) {
       final a = c == City.athens;

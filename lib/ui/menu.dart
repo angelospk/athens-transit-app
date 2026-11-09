@@ -7,6 +7,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../core/city.dart';
 import '../background/widget.dart';
 import '../core/models.dart';
 import '../core/nearby.dart';
@@ -25,6 +26,8 @@ class AppMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final store = Deps.of(context).store;
+    final city = store.city;
     void go(String title, Widget page) {
       Scaffold.of(context).closeDrawer();
       openPage(title, page);
@@ -44,15 +47,28 @@ class AppMenu extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
             child: Text('Στάσεις', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
           ),
-          item(Icons.directions, 'Διαδρομή', () => go('Διαδρομή', const PlannerScreen())),
+          ListTile(
+            minTileHeight: 52,
+            leading: const Icon(Icons.location_city_outlined),
+            title: const Text('Πόλη', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            subtitle: Text(city.name),
+            onTap: () {
+              Scaffold.of(context).closeDrawer();
+              pickCity(context);
+            },
+          ),
+          // What only Athens has (City flags): the planner, OASA's notices, stop alerts, the statistics.
+          if (city.plan) item(Icons.directions, 'Διαδρομή', () => go('Διαδρομή', const PlannerScreen())),
           item(Icons.format_list_bulleted, 'Γραμμές', () => go('Γραμμές', const LinesScreen())),
-          item(Icons.campaign_outlined, 'Ενημερώσεις', () => go('Ενημερώσεις', const _Updates())),
-          item(Icons.notifications_outlined, 'Ειδοποιήσεις', () => go('Ειδοποιήσεις', const RulesScreen())),
+          if (city == City.athens) item(Icons.campaign_outlined, 'Ενημερώσεις', () => go('Ενημερώσεις', const _Updates())),
+          if (city.alerts) item(Icons.notifications_outlined, 'Ειδοποιήσεις', () => go('Ειδοποιήσεις', const RulesScreen())),
           item(Icons.place_outlined, 'Μέρη', () => go('Μέρη', const PlacesScreen())),
           // Home-screen widgets exist only on Android.
-          if (defaultTargetPlatform == TargetPlatform.android)
+          // The widget shows Athens's saved stops (pushWidget), like the alerts.
+          if (defaultTargetPlatform == TargetPlatform.android && city == City.athens)
             item(Icons.widgets_outlined, 'Widgets', () => go('Widgets', const _Widgets())),
-          item(Icons.query_stats, 'Στατιστικά', () {
+          if (city.stats)
+            item(Icons.query_stats, 'Στατιστικά', () {
             Scaffold.of(context).closeDrawer();
             navKey.currentState?.push(MaterialPageRoute<void>(
               settings: const RouteSettings(name: 'Στατιστικά'),
@@ -72,6 +88,31 @@ class AppMenu extends StatelessWidget {
       ),
     );
   }
+}
+
+/// «Πόλη»: the cities the app knows. A pick opens the map of that city (main.dart CityRoot).
+Future<void> pickCity(BuildContext context) async {
+  final store = Deps.of(context).store;
+  final c = await showModalBottomSheet<City>(
+    context: context,
+    builder: (c) => SafeArea(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Align(alignment: Alignment.centerLeft, child: Text('Πόλη', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
+        ),
+        for (final city in City.values)
+          ListTile(
+            leading: Icon(city == store.city ? Icons.radio_button_checked : Icons.radio_button_unchecked),
+            title: Text(city.name),
+            subtitle: Text(city.rail ? '${city.agency} · Μετρό · Τραμ · Προαστιακός' : '${city.agency} · λεωφορεία'),
+            onTap: () => Navigator.pop(c, city),
+          ),
+        const SizedBox(height: 8),
+      ]),
+    ),
+  );
+  if (c != null && c != store.city) store.setCity(c);
 }
 
 // Every line, with a filter; a tap opens the line on the map.

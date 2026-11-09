@@ -19,6 +19,7 @@ enum City {
     static: staticBase,
     trips: tripsUrl,
     placesBox: '23.3,37.6,24.2,38.35',
+    box: (s: 37.5, w: 22.9, n: 38.5, e: 24.5),
     rail: true,
     muni: true,
     plan: true,
@@ -35,6 +36,7 @@ enum City {
     static: 'https://transit-thess.haroldpoi.dev/static/v1',
     trips: 'https://staseis.gr/trips-thessaloniki.json',
     placesBox: '22.70,40.45,23.20,40.80',
+    box: (s: 40.3, w: 22.6, n: 41.0, e: 23.4),
     rail: false,
     muni: false,
     plan: false,
@@ -52,6 +54,7 @@ enum City {
     required this.static,
     required this.trips,
     required this.placesBox,
+    required this.box,
     required this.rail,
     required this.muni,
     required this.plan,
@@ -63,6 +66,7 @@ enum City {
   final (double, double) centre; // (lat, lon): where the map starts without a location
   final String api, static, trips; // backend, static files (GitHub Pages), stop index (trips.json)
   final String placesBox; // the search's bbox 'west,south,east,north' (Photon)
+  final ({double s, double w, double n, double e}) box; // where its backend has vehicle tiles (web cities.ts)
   final bool rail, muni, plan, alerts, stats; // what only Athens has
 
   /// The city of a saved id; a city this version does not know is Athens.

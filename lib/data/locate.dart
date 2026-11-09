@@ -4,7 +4,6 @@ import 'package:geolocator/geolocator.dart';
 
 import '../core/geo.dart';
 
-const athensCentre = (37.9755, 23.7348); // Syntagma
 
 // fresh: a new fix, never the last known one (an old one may be far from here).
 Future<Pt?> myPosition({bool fresh = false}) async {
