@@ -25,7 +25,8 @@ Future<void> main() async {
   await AlertService.init(store, onOpen: (o) => openBus(api, o));
   live.addListener(() => pushWidget(store, live));
   store.addListener(() => pushWidget(store, live, force: true)); // a removed or reordered stop shows at once
-  runApp(Deps(store: store, live: live, api: api, child: TransitApp(prefs: prefs, welcome: needsWelcome(prefs))));
+  showWelcome.value = needsWelcome(prefs);
+  runApp(Deps(store: store, live: live, api: api, child: TransitApp(prefs: prefs)));
 }
 
 // A tapped notification: its bus on the map, on the way to the alert's stop (back opens the stop).
@@ -40,9 +41,8 @@ Future<void> openBus(Api api, OpenBus o) async {
 }
 
 class TransitApp extends StatelessWidget {
-  const TransitApp({super.key, required this.prefs, required this.welcome});
+  const TransitApp({super.key, required this.prefs});
   final SharedPreferences prefs;
-  final bool welcome; // a new install: the welcome first, then the map
 
   @override
   Widget build(BuildContext context) {
@@ -60,31 +60,28 @@ class TransitApp extends StatelessWidget {
         locale: const Locale('el'),
         supportedLocales: const [Locale('el'), Locale('en')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: welcome ? _Welcome(prefs) : const Shell(),
+        home: _Start(prefs),
       ),
     );
   }
 }
 
-// The welcome, then the map. The map starts only after it, so it finds the location just allowed.
-class _Welcome extends StatefulWidget {
-  const _Welcome(this.prefs);
+// The welcome, then the map (showWelcome). The map starts only after it, so it finds the location
+// just allowed. «Διαγραφή όλων» brings the welcome back.
+class _Start extends StatelessWidget {
+  const _Start(this.prefs);
   final SharedPreferences prefs;
 
   @override
-  State<_Welcome> createState() => _WelcomeState();
-}
-
-class _WelcomeState extends State<_Welcome> {
-  bool _done = false;
-
-  @override
-  Widget build(BuildContext context) => _done
-      ? const Shell()
-      : WelcomeScreen(onDone: () {
-          markWelcomed(widget.prefs);
-          setState(() => _done = true);
-        });
+  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
+        valueListenable: showWelcome,
+        builder: (context, welcome, _) => welcome
+            ? WelcomeScreen(onDone: () {
+                markWelcomed(prefs);
+                showWelcome.value = false;
+              })
+            : const Shell(),
+      );
 }
 
 // One screen (docs/DESIGN-home.md): the map with its sheet, and the menu from the left. No bottom bar.

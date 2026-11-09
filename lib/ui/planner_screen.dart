@@ -706,7 +706,7 @@ class _PlacePickerState extends State<_PlacePicker> {
                   if (widget.home)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                      child: Text('Αρκεί μια περιοχή κοντά. Ανώνυμο: μένει μόνο στο κινητό.', style: TextStyle(fontSize: 13, color: t.muted)),
+                      child: Text('Αρκεί μια περιοχή κοντά. Δεν κρατάμε τίποτα: το μέρος μένει μόνο στο κινητό σου.', style: TextStyle(fontSize: 13, color: t.muted)),
                     ),
                   ListTile(
                     leading: const Icon(Icons.my_location),

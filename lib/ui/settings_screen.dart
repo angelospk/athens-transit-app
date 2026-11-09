@@ -1,10 +1,13 @@
-// «Ρυθμίσεις» in the menu: theme, walking time to the home stop, live cards, how the map reads.
+// «Ρυθμίσεις» in the menu: theme, walking time to the home stop, live cards, how the map reads, and
+// «Διαγραφή όλων των δεδομένων».
 
 import 'package:flutter/material.dart';
 
 import '../background/service.dart';
 import 'help.dart';
+import 'map_sel.dart';
 import 'theme.dart';
+import 'welcome.dart';
 import 'widgets.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -69,8 +72,47 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('Χρώματα, σύμβολα, από πού έρχονται οι χρόνοι'),
             onTap: () => showMapHelp(context),
           ),
+          Divider(color: t.rule),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            iconColor: Theme.of(context).colorScheme.error,
+            textColor: Theme.of(context).colorScheme.error,
+            leading: const Icon(Icons.delete_forever_outlined),
+            title: const Text('Διαγραφή όλων των δεδομένων'),
+            subtitle: const Text('Αγαπημένα, μέρη, ειδοποιήσεις, ρυθμίσεις. Η εφαρμογή ξεκινά από την αρχή.'),
+            onTap: () => _deleteAll(context),
+          ),
         ]),
       ),
     );
   }
+}
+
+// Asks first. Then: every saved choice, the rules and their alarms, our notifications and the saved
+// network answers go, and the welcome opens as on a new install.
+Future<void> _deleteAll(BuildContext context) async {
+  final d = Deps.of(context);
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: const Text('Διαγραφή όλων των δεδομένων;'),
+      content: const Text('Σβήνω από αυτό το κινητό τα αγαπημένα, τα μέρη, τις ειδοποιήσεις και τις ρυθμίσεις. Δεν αναιρείται.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Άκυρο')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error, foregroundColor: Theme.of(c).colorScheme.onError),
+          onPressed: () => Navigator.pop(c, true),
+          child: const Text('Διαγραφή'),
+        ),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  await d.store.reset();
+  try {
+    await AlertService.forgetAll(d.store);
+  } catch (_) {/* no notification plugins (tests): nothing runs */}
+  await d.api.clearCache();
+  navKey.currentState?.popUntil((r) => r.isFirst);
+  showWelcome.value = true;
 }

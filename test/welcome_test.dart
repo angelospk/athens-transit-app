@@ -37,8 +37,11 @@ void main() {
     }
     expect(find.text('Δύο άδειες'), findsOneWidget);
     expect(find.text('Επόμενο'), findsNothing);
+    expect(find.text('Δεν κρατάμε τίποτα από σένα'), findsOneWidget);
 
     await t.tap(button('ask-location'));
+    await t.pumpAndSettle();
+    await t.ensureVisible(button('ask-notifications'));
     await t.pumpAndSettle();
     await t.tap(button('ask-notifications'));
     await t.pumpAndSettle();

@@ -27,6 +27,14 @@ class DiskCache {
     }
   }
 
+  /// «Διαγραφή όλων»: every saved answer. The next read asks the network again.
+  Future<void> clear() async {
+    try {
+      final d = (await _file('_')).parent;
+      if (await d.exists()) await d.delete(recursive: true);
+    } catch (_) {/* nothing to clear */}
+  }
+
   Future<void> write(String key, Object? json) async {
     final f = await _file(key);
     // Own temp name per write: the UI and the alert service isolates may write the same key.

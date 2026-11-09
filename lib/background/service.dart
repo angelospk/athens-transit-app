@@ -236,6 +236,13 @@ class AlertService {
     await _scheduleNext(store.rules, now);
   }
 
+  /// After «Διαγραφή όλων»: no rule runs or waits, and no notification of ours stays on screen.
+  static Future<void> forgetAll(AppStore store) async {
+    await sync(store); // no rules: stops the service and its next start
+    await syncNudge(store);
+    await _notes.cancelAll();
+  }
+
   /// Rule ids stopped from the live card until later today (the rules screen says so).
   static Future<Set<String>> stoppedNow() async {
     final p = await SharedPreferences.getInstance();

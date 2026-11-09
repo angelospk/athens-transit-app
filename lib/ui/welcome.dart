@@ -11,6 +11,9 @@ import 'theme.dart';
 
 const welcomeKey = 'welcome_v1';
 
+/// true: the app shows the welcome instead of the map (a new install, or after «Διαγραφή όλων»).
+final showWelcome = ValueNotifier<bool>(false);
+
 /// A new install: no saved state from before the welcome existed, and the welcome not finished yet.
 bool needsWelcome(SharedPreferences p) => p.getBool(welcomeKey) != true && p.getString(stateKey) == null;
 
@@ -112,7 +115,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         const SizedBox(height: 8),
         Text('Και οι δύο είναι προαιρετικές. Τις αλλάζεις όποτε θέλεις από τις ρυθμίσεις του κινητού.',
             style: TextStyle(fontSize: 15, height: 1.4, color: t.muted)),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: t.accent.withValues(alpha: .08), borderRadius: BorderRadius.circular(16)),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Icon(Icons.lock_outline, color: t.accent),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Δεν κρατάμε τίποτα από σένα', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('Χωρίς λογαριασμό, διαφημίσεις ή tracking. Η θέση σου, το σπίτι, η δουλειά και τα αγαπημένα μένουν μόνο στο κινητό σου.',
+                    style: TextStyle(fontSize: 13.5, height: 1.35, color: t.muted)),
+              ]),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 12),
         _Permission(
           key: const ValueKey('ask-location'),
           icon: Icons.my_location,

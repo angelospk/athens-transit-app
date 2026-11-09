@@ -49,6 +49,8 @@ class Api {
   final http.Client _client;
   final DiskCache _cache;
 
+  Future<void> clearCache() => _cache.clear();
+
   Future<dynamic> _get(String url) async {
     final r = await _client.get(Uri.parse(url), headers: _ua).timeout(const Duration(seconds: 15));
     if (r.statusCode != 200) throw ApiError(r.statusCode, url);

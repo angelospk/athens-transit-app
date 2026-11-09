@@ -4,6 +4,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../background/widget.dart';
@@ -59,7 +60,7 @@ class AppMenu extends StatelessWidget {
             ));
           }),
           item(Icons.settings_outlined, 'Ρυθμίσεις', () => go('Ρυθμίσεις', const SettingsScreen())),
-          item(Icons.info_outline, 'Σχετικά', () => go('Σχετικά', const _About())),
+          item(Icons.info_outline, 'Σχετικά', () => go('Σχετικά', const AboutScreen())),
           item(Icons.help_outline, 'Πώς δουλεύει', () {
             Scaffold.of(context).closeDrawer();
             navKey.currentState?.push(MaterialPageRoute<void>(
@@ -180,7 +181,7 @@ class PlacesScreen extends StatelessWidget {
           ListTile(leading: const Icon(Icons.add_location_alt_outlined), title: const Text('Άλλο μέρος'), onTap: () => _addOther(context)),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Text('Αρκεί μια περιοχή. Τα μέρη μένουν μόνο στο κινητό. Με «Σπίτι» βλέπεις πώς γυρνάς· με «Δουλειά», τα πρωινά, πώς πας.',
+            child: Text('Αρκεί μια περιοχή. Δεν κρατάμε κανένα δεδομένο: τα μέρη μένουν μόνο στο κινητό σου. Με «Σπίτι» βλέπεις πώς γυρνάς· με «Δουλειά», τα πρωινά, πώς πας.',
                 style: TextStyle(fontSize: 13, color: t.muted)),
           ),
         ]);
@@ -250,21 +251,52 @@ const _links = [
   ('Ο χάρτης στο web', 'https://bus.haroldpoi.dev', Icons.public),
 ];
 
-class _About extends StatelessWidget {
-  const _About();
+// The site's legal pages (athens-transit-map: staseis.gr).
+const termsUrl = 'https://staseis.gr/terms', privacyUrl = 'https://staseis.gr/privacy';
+
+/// «Σχετικά»: the version, links, the terms, the privacy policy and the open-source licenses.
+class AboutScreen extends StatelessWidget {
+  const AboutScreen({super.key});
+
   @override
-  Widget build(BuildContext context) => ListView(padding: const EdgeInsets.fromLTRB(8, 8, 8, 24), children: [
-        for (final (label, url, icon) in _links)
-          ListTile(
-            leading: Icon(icon),
-            title: Text(label),
-            trailing: const Icon(Icons.open_in_new, size: 18),
-            onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    Widget link(String label, String url, IconData icon) => ListTile(
+          leading: Icon(icon),
+          title: Text(label),
+          trailing: const Icon(Icons.open_in_new, size: 18),
+          onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+        );
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snap) {
+        final v = snap.data == null ? null : '${snap.data!.version} (${snap.data!.buildNumber})';
+        return ListView(padding: const EdgeInsets.fromLTRB(8, 8, 8, 24), children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Στάσεις', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Text(v == null ? ' ' : 'Έκδοση $v', style: TextStyle(fontSize: 14, color: t.muted)),
+            ]),
           ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text('Δεδομένα: ΟΑΣΑ (GTFS, telematics) · Χάρτης: OpenFreeMap, © OpenStreetMap contributors',
-              style: TextStyle(fontSize: 12, color: context.tones.muted)),
-        ),
-      ]);
+          for (final (label, url, icon) in _links) link(label, url, icon),
+          Divider(color: t.rule),
+          link('Όροι χρήσης', termsUrl, Icons.description_outlined),
+          link('Πολιτική απορρήτου', privacyUrl, Icons.lock_outline),
+          ListTile(
+            leading: const Icon(Icons.code),
+            title: const Text('Άδειες ανοιχτού κώδικα'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showLicensePage(context: context, applicationName: 'Στάσεις', applicationVersion: v),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text('Δεδομένα: ΟΑΣΑ (GTFS, telematics) · Χάρτης: OpenFreeMap, © OpenStreetMap contributors',
+                style: TextStyle(fontSize: 12, color: t.muted)),
+          ),
+        ]);
+      },
+    );
+  }
 }

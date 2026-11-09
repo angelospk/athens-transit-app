@@ -142,6 +142,13 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// «Διαγραφή όλων των δεδομένων»: every saved choice and flag, as on a new install.
+  Future<void> reset() async {
+    await _prefs.clear();
+    _load(const {});
+    notifyListeners();
+  }
+
   bool isFav(String name, double lat, double lon) => favs.any((f) => f.name == name && distTo(f, lat, lon) < 200);
 
   FavStop? favNear(String name, double lat, double lon) =>
