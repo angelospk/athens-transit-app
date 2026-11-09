@@ -13,6 +13,7 @@ import 'ui/map_sel.dart';
 import 'ui/menu.dart';
 import 'ui/stop_screen.dart';
 import 'ui/theme.dart';
+import 'ui/welcome.dart';
 import 'ui/widgets.dart';
 
 Future<void> main() async {
@@ -24,7 +25,7 @@ Future<void> main() async {
   await AlertService.init(store, onOpen: (o) => openBus(api, o));
   live.addListener(() => pushWidget(store, live));
   store.addListener(() => pushWidget(store, live, force: true)); // a removed or reordered stop shows at once
-  runApp(Deps(store: store, live: live, api: api, child: const TransitApp()));
+  runApp(Deps(store: store, live: live, api: api, child: TransitApp(prefs: prefs, welcome: needsWelcome(prefs))));
 }
 
 // A tapped notification: its bus on the map, on the way to the alert's stop (back opens the stop).
@@ -39,7 +40,9 @@ Future<void> openBus(Api api, OpenBus o) async {
 }
 
 class TransitApp extends StatelessWidget {
-  const TransitApp({super.key});
+  const TransitApp({super.key, required this.prefs, required this.welcome});
+  final SharedPreferences prefs;
+  final bool welcome; // a new install: the welcome first, then the map
 
   @override
   Widget build(BuildContext context) {
@@ -57,10 +60,31 @@ class TransitApp extends StatelessWidget {
         locale: const Locale('el'),
         supportedLocales: const [Locale('el'), Locale('en')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        home: const Shell(), // no first-run screen: the map asks for location with a reason
+        home: welcome ? _Welcome(prefs) : const Shell(),
       ),
     );
   }
+}
+
+// The welcome, then the map. The map starts only after it, so it finds the location just allowed.
+class _Welcome extends StatefulWidget {
+  const _Welcome(this.prefs);
+  final SharedPreferences prefs;
+
+  @override
+  State<_Welcome> createState() => _WelcomeState();
+}
+
+class _WelcomeState extends State<_Welcome> {
+  bool _done = false;
+
+  @override
+  Widget build(BuildContext context) => _done
+      ? const Shell()
+      : WelcomeScreen(onDone: () {
+          markWelcomed(widget.prefs);
+          setState(() => _done = true);
+        });
 }
 
 // One screen (docs/DESIGN-home.md): the map with its sheet, and the menu from the left. No bottom bar.

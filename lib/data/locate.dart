@@ -69,6 +69,19 @@ Future<Pt?> askPosition() async {
   return myPosition(fresh: true);
 }
 
+// The welcome's «Επίτρεψε»: the system question only, no fix. When Android no longer asks (refused for
+// good), it opens the app's settings. true: allowed.
+Future<bool> askLocationPermission() async {
+  try {
+    var p = await Geolocator.checkPermission();
+    if (p == LocationPermission.denied) p = await _request();
+    if (p == LocationPermission.deniedForever) await Geolocator.openAppSettings();
+    return p == LocationPermission.whileInUse || p == LocationPermission.always;
+  } catch (_) {
+    return false;
+  }
+}
+
 // A fresh fix only when the user already allowed location: never asks, for checks that run by
 // themselves (is the user on a bus?).
 Future<Pt?> quietPosition() async {

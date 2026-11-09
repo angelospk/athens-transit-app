@@ -16,6 +16,7 @@ import 'rules_screen.dart';
 import 'settings_screen.dart';
 import 'stats_screen.dart';
 import 'theme.dart';
+import 'welcome.dart';
 import 'widgets.dart';
 
 class AppMenu extends StatelessWidget {
@@ -59,6 +60,13 @@ class AppMenu extends StatelessWidget {
           }),
           item(Icons.settings_outlined, 'Ρυθμίσεις', () => go('Ρυθμίσεις', const SettingsScreen())),
           item(Icons.info_outline, 'Σχετικά', () => go('Σχετικά', const _About())),
+          item(Icons.help_outline, 'Πώς δουλεύει', () {
+            Scaffold.of(context).closeDrawer();
+            navKey.currentState?.push(MaterialPageRoute<void>(
+              settings: const RouteSettings(name: 'Πώς δουλεύει'),
+              builder: (c) => WelcomeScreen(onDone: () => Navigator.pop(c)), // full screen, no bar
+            ));
+          }),
         ]),
       ),
     );

@@ -173,8 +173,7 @@ class AlertService {
   // Notifications (Android 13+), and exact alarms when a weekly rule needs them. false when
   // notifications are refused.
   static Future<bool> ensurePermissions(BuildContext context, {bool weekly = false}) async {
-    var p = await FlutterForegroundTask.checkNotificationPermission();
-    if (p != NotificationPermission.granted) p = await FlutterForegroundTask.requestNotificationPermission();
+    final p = await askNotifications();
     final android = _notes.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     // Exact alarms open a settings page, not a question: say why first, and let the user skip it (the
     // rule still starts, maybe some minutes late).
@@ -193,6 +192,13 @@ class AlertService {
       );
       if (go == true) await android.requestExactAlarmsPermission();
     }
+    return p;
+  }
+
+  // Notifications only (Android 13+, iOS): the system question when not allowed yet. true: allowed.
+  static Future<bool> askNotifications() async {
+    var p = await FlutterForegroundTask.checkNotificationPermission();
+    if (p != NotificationPermission.granted) p = await FlutterForegroundTask.requestNotificationPermission();
     return p == NotificationPermission.granted;
   }
 
