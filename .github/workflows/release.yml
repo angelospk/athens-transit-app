@@ -1,16 +1,20 @@
 # A version tag (v0.1.0) builds signed release APKs and publishes them as a GitHub pre-release.
-# The annotated tag's message becomes the release notes.
+# The annotated tag's message becomes the release notes. An unsigned IPA joins the release, for
+# sideloading (AltStore, Sideloadly sign it with the user's Apple ID). Run by hand, only the IPA
+# builds, as a workflow artifact.
 name: Release APK
 
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   apk:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     env:
       # Public certificate digest of the release key; the job fails if an APK is signed with anything else.
@@ -64,3 +68,37 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" out/* --prerelease --verify-tag --notes-from-tag --title "Στάσεις $GITHUB_REF_NAME"
+
+  ipa:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Build (unsigned)
+        run: |
+          flutter build ios --release --no-codesign
+          mkdir -p out/Payload
+          cp -R build/ios/iphoneos/Runner.app out/Payload/
+          (cd out && zip -qry "athens-transit-${GITHUB_REF_NAME//\//-}-unsigned.ipa" Payload && rm -rf Payload)
+
+      - if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipa
+          path: out/*.ipa
+
+      # The apk job creates the release; wait for it, then add the IPA.
+      - if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 60); do gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 && break; sleep 20; done
+          gh release upload "$GITHUB_REF_NAME" out/*.ipa
