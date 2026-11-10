@@ -72,3 +72,7 @@ enum City {
   /// The city of a saved id; a city this version does not know is Athens.
   static City byId(String? id) => values.where((c) => c.id == id).firstOrNull ?? athens;
 }
+
+/// A location inside one of the cities' boxes: elsewhere (an emulator's default, abroad) it says nothing useful.
+bool inAnyCity(double lat, double lon) =>
+    City.values.any((c) => lat >= c.box.s && lat <= c.box.n && lon >= c.box.w && lon <= c.box.e);

@@ -1,7 +1,9 @@
-// The user's position in Attica, or null (no permission, location off, no fix within 10 s, or elsewhere).
+// The user's position in one of the app's cities, or null (no permission, location off, no fix within 10 s,
+// or elsewhere).
 
 import 'package:geolocator/geolocator.dart';
 
+import '../core/city.dart';
 import '../core/geo.dart';
 
 
@@ -14,11 +16,11 @@ Future<Pt?> myPosition({bool fresh = false}) async {
     if (p == LocationPermission.denied || p == LocationPermission.deniedForever) return null;
     final last = fresh ? null : await Geolocator.getLastKnownPosition();
     // An old last fix (yesterday, elsewhere) is not where the user is: then ask for a new one.
-    final pos = last != null && DateTime.now().difference(last.timestamp) < lastFixMaxAge && _inAttica(last)
+    final pos = last != null && DateTime.now().difference(last.timestamp) < lastFixMaxAge && _inCity(last)
         ? last
         : await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(timeLimit: Duration(seconds: 10)));
-    // Outside Attica (an emulator's default, abroad) says nothing useful for this map.
-    if (!_inAttica(pos)) return null;
+    // Outside the cities (an emulator's default, abroad) says nothing useful for this map.
+    if (!_inCity(pos)) return null;
     return (pos.latitude, pos.longitude);
   } catch (_) {
     return null;
@@ -44,7 +46,7 @@ Future<LocationPermission> _request() => _asking ??= Geolocator.requestPermissio
 
 const lastFixMaxAge = Duration(minutes: 2);
 
-bool _inAttica(Position p) => p.latitude >= 37.5 && p.latitude <= 38.5 && p.longitude >= 22.9 && p.longitude <= 24.5;
+bool _inCity(Position p) => inAnyCity(p.latitude, p.longitude);
 
 // The user pressed "allow location": it asks again, and when Android no longer shows the question
 // (refused for good: checkPermission still says "denied" then) or location is off, it opens the phone's
@@ -89,7 +91,7 @@ Future<Pt?> quietPosition() async {
     if (p != LocationPermission.always && p != LocationPermission.whileInUse) return null;
     if (!await Geolocator.isLocationServiceEnabled()) return null;
     final pos = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(timeLimit: Duration(seconds: 8)));
-    if (pos.latitude < 37.5 || pos.latitude > 38.5 || pos.longitude < 22.9 || pos.longitude > 24.5) return null;
+    if (!_inCity(pos)) return null;
     return (pos.latitude, pos.longitude);
   } catch (_) {
     return null;

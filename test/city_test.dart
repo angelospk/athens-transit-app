@@ -143,4 +143,11 @@ void main() {
       expect(store.favs, isEmpty);
     });
   });
+
+  test('a location is kept in any city the app knows, not only in Attica (app#21)', () {
+    expect(inAnyCity(37.9755, 23.7348), isTrue); // Syntagma
+    expect(inAnyCity(40.6401, 22.9444), isTrue); // Thessaloniki, Aristotelous
+    expect(inAnyCity(39.6650, 20.8537), isFalse); // Ioannina: no city here
+    expect(inAnyCity(37.4219, -122.084), isFalse); // the emulator's default
+  });
 }
