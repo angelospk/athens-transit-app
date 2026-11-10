@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'background/service.dart';
 import 'background/widget.dart';
 import 'core/city.dart';
+import 'core/names.dart';
 import 'core/nearby.dart';
 import 'data/api.dart';
 import 'data/live.dart';
@@ -19,6 +20,7 @@ import 'ui/widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await loadAccents(); // stop and line names with their accents from the first frame
   final prefs = await SharedPreferences.getInstance();
   final store = AppStore(prefs, city: cityOf(prefs));
   await AlertService.init(store, onOpen: (o) => openBus(store, o));

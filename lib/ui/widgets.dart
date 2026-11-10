@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 
 import '../core/athens_time.dart';
 import '../core/eta.dart';
+import '../core/names.dart';
 import '../core/nearby.dart';
 import '../data/api.dart';
 import '../data/live.dart';
 import '../data/store.dart';
 import 'map_sel.dart';
 import 'theme.dart';
+
+export '../core/names.dart' show titleCase;
 
 // The app's services, reachable from any screen.
 class Deps extends InheritedWidget {
@@ -150,14 +153,6 @@ List<(Arrival, List<Arrival>)> groupArrivals(List<Arrival> all) {
   final out = [for (final g in by.values) (g.first, g.sublist(1))];
   out.sort((a, b) => a.$1.etaS.compareTo(b.$1.etaS));
   return out;
-}
-
-// OASA names are upper case: "ΠΑΝΕΠΙΣΤΗΜΙΟ" -> "Πανεπιστήμιο" is not reversible (accents are lost),
-// so names stay as they are except for a gentler case.
-String titleCase(String s) {
-  final low = s.toLowerCase();
-  final words = low.split(' ').map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1)).join(' ');
-  return words.replaceAll(RegExp(r'σ(?=$|[\s.,)\-])'), 'ς');
 }
 
 // Where the bus goes: the headsign, or on a loop after the turn, the way back.

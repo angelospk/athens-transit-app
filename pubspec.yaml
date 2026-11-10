@@ -35,5 +35,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/accents.json
     - assets/suburban.json
     - assets/welcome/
