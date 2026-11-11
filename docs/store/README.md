@@ -7,7 +7,26 @@
 - `listing.md`: τίτλοι, περιγραφές, keywords, γραφικά που λείπουν.
 - `declarations.md`: Data safety, foreground service, App Privacy, review notes, λογαριασμός.
 
-## Σειρά βημάτων
+## Κατάσταση (2026-11-11)
+
+Έτοιμα:
+
+- Πολιτική απορρήτου στο https://staseis.gr/privacy/ (ίδια με το `privacy-policy.md`).
+- Data safety, App Privacy και `ios/Runner/PrivacyInfo.xcprivacy` δηλώνουν την αναφορά «Λάθος θέση;».
+- Υπογεγραμμένο `.aab` χτίζεται (`flutter build appbundle --release`, upload key από
+  `~/.config/athens-transit-app/key.properties`). Αντίγραφο: `~/staseis-store/app-release.aab` (v0.3.0+9).
+- Βίντεο για το foreground service (55 s, emulator): `~/staseis-store/staseis-fgs-demo.mp4`. Δείχνει
+  στάση → «Ειδοποίησέ με» → η κάρτα → η ειδοποίηση «Το 040 έρχεται» στο shade. Αν ο reviewer το θέλει
+  πιο καθαρό, ξαναγράψ' το σε κινητό, με την εφαρμογή κλειστή πριν φτάσει το λεωφορείο.
+- Screenshots (`screenshots/play`, `screenshots/ios`) και κείμενα (`listing.md`).
+
+Μένουν (θέλουν εσένα):
+
+1. Πρόσβαση στο Play Console και στο App Store Connect από τον φίλο.
+2. `shorebird login` (browser) και `shorebird init`, πριν από το πρώτο ανέβασμα.
+3. Δοκιμή σε κινητό με `docs/TEST-CHECKLIST.md` (#2, #17).
+4. Το βίντεο unlisted στο YouTube και το link στο Play Console.
+
 
 ### Πριν από όλα (μία φορά)
 
