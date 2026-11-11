@@ -1,18 +1,29 @@
 # Δηλώσεις και σημειώσεις για το review
 
-Πηγή των απαντήσεων: ο κώδικας στις 2026-11-06. Η θέση χρησιμοποιείται μόνο τοπικά
+Πηγή των απαντήσεων: ο κώδικας στις 2026-11-11. Η ακριβής θέση χρησιμοποιείται μόνο τοπικά
 (`lib/background/service.dart`). Το geocoder στέλνει μόνο το κείμενο της αναζήτησης
-(`lib/data/api.dart:160`). Αν αλλάξει κάτι από αυτά, ξαναδές αυτό το αρχείο.
+(`Api.places` στο `lib/data/api.dart`). Το «Λάθος θέση;» στέλνει αναφορά με έναν τυχαίο κωδικό
+εφαρμογής (`Api.sendFeedback`, `lib/core/stopfix.dart`, `lib/data/stopfix_store.dart`). Αν αλλάξει
+κάτι από αυτά, ξαναδές αυτό το αρχείο, την πολιτική απορρήτου και το
+`ios/Runner/PrivacyInfo.xcprivacy`.
 
 ## Google Play · Data safety
 
-- Συλλέγει ή μοιράζεται η εφαρμογή δεδομένα χρηστών; **Όχι.**
-  - Η θέση δεν φεύγει από τη συσκευή, άρα δεν μετρά ως «συλλογή» για το Play.
+- Συλλέγει ή μοιράζεται η εφαρμογή δεδομένα χρηστών; **Ναι**, μόνο με την αναφορά «Λάθος θέση;»,
+  που τη στέλνει ο χρήστης:
+  - **App activity → Other user-generated content**: η αναφορά (στάση, το σημείο που έδειξε στον
+    χάρτη, έκδοση εφαρμογής και λειτουργικού). Collected, **όχι** Shared (το Google Apps Script
+    είναι service provider μας). Προαιρετικό. Σκοπός: App functionality. Όχι ephemeral.
+  - **Device or other IDs**: ο τυχαίος κωδικός της εφαρμογής (12 hex, `stopfix.dev`). Collected,
+    όχι Shared, προαιρετικό, App functionality. Δεν είναι το Android ID ούτε advertising ID.
+  - **Location: Όχι.** Το σημείο της αναφοράς είναι η θέση της στάσης που δείχνει ο χρήστης, όχι η
+    θέση του. Η θέση του χρήστη δεν φεύγει από τη συσκευή.
   - Το κείμενο αναζήτησης διευθύνσεων πάει στο Photon χωρίς στοιχεία χρήστη. Αν ο reviewer το
     αμφισβητήσει, δήλωσε: App activity → «Other user-generated content», **Shared**, όχι
     υποχρεωτικό, σκοπός App functionality, ephemeral.
 - Κρυπτογράφηση κατά τη μεταφορά: **Ναι** (μόνο HTTPS).
-- Διαγραφή δεδομένων: δεν υπάρχουν δεδομένα στους διακομιστές· όλα σβήνονται με την απεγκατάσταση.
+- Διαγραφή δεδομένων: ο χρήστης ζητά διαγραφή των αναφορών του από την επαφή της πολιτικής απορρήτου.
+  Όλα τα άλλα μένουν στο κινητό και σβήνονται με την απεγκατάσταση ή το «Διαγραφή όλων».
 
 ## Google Play · Foreground service (Play Console → App content)
 
@@ -49,9 +60,13 @@
 
 ## App Store · App Privacy (nutrition labels)
 
-- Data types: **Search History** → not linked to user, not used for tracking, App Functionality.
+- Data types, όλα not linked to user, not used for tracking, App Functionality:
+  - **Search History**: το κείμενο της αναζήτησης διευθύνσεων (Photon).
+  - **Other User Content**: η αναφορά «Λάθος θέση;».
+  - **Device ID**: ο τυχαίος κωδικός της εφαρμογής στην αναφορά.
   Ταιριάζει με το `ios/Runner/PrivacyInfo.xcprivacy`.
-- Τίποτα άλλο. Location: **Not collected** (δεν φεύγει από τη συσκευή).
+- Τίποτα άλλο. Location: **Not collected** (η θέση του χρήστη δεν φεύγει από τη συσκευή· το σημείο της
+  αναφοράς είναι η θέση της στάσης).
 - Export compliance: `ITSAppUsesNonExemptEncryption = false` στο `Info.plist` (μόνο HTTPS). Δεν θα
   ρωτά σε κάθε build.
 
