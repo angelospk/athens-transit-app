@@ -63,7 +63,8 @@ Future<String> remindLast(BuildContext context,
       'Σε λίγο περνά το τελευταίο $line',
       'Από ${titleCase(stopName)} ~${dayClock(r.atStopS)} (φεύγει ${gtfsClock(r.t)} από την αφετηρία).',
     );
-    return 'Θα σε ειδοποιήσω $beforeMin′ πριν: το τελευταίο $line περνά ~${dayClock(r.atStopS)}.';
+    final day = lastRunDayLabel(now, at);
+    return 'Θα σε ειδοποιήσω $beforeMin′ πριν: το τελευταίο $line περνά ${day == null ? '' : '$day '}~${dayClock(r.atStopS)}.';
   } catch (_) {
     return 'Δεν φόρτωσε το πρόγραμμα. Δοκίμασε ξανά με σύνδεση.';
   }

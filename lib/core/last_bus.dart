@@ -49,6 +49,15 @@ DateTime athensDayUtc(DateTime utc, int s) {
   return at;
 }
 
+/// The Athens weekday ("την Πέμπτη") when [atUtc], a last run, is more than a day after [nowUtc]; else
+/// null. After Athens midnight the timetable is the new day's: its last run is the next night's, not
+/// one of the previous day's runs still on the road (past 24:00), which the app does not see.
+String? lastRunDayLabel(DateTime nowUtc, DateTime atUtc) {
+  if (atUtc.difference(nowUtc) <= const Duration(hours: 24)) return null;
+  const days = ['τη Δευτέρα', 'την Τρίτη', 'την Τετάρτη', 'την Πέμπτη', 'την Παρασκευή', 'το Σάββατο', 'την Κυριακή'];
+  return days[athensWall(atUtc).weekday - 1];
+}
+
 /// The next Friday or Saturday at [nudgeHour] Athens, strictly after [nowUtc].
 DateTime nextNudgeUtc(DateTime nowUtc) {
   final wall = athensWall(nowUtc);

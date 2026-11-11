@@ -70,4 +70,17 @@ void main() {
     expect(athensDayUtc(DateTime.utc(2026, 10, 25, 12), 23 * 3600), DateTime.utc(2026, 10, 25, 21));
     expect(athensDayUtc(DateTime.utc(2026, 10, 25, 12), 0), DateTime.utc(2026, 10, 24, 21));
   });
+
+  test('remind the last run: after Athens midnight the timetable is the new day\'s, so its last run is the next night\'s', () {
+    // Wed 2026-11-11 00:30 Athens (EET) = 2026-11-10 22:30 UTC; last run passes at 25:10.
+    final now = DateTime.utc(2026, 11, 10, 22, 30);
+    final at = athensDayUtc(now, 25 * 3600 + 10 * 60);
+    expect(at, DateTime.utc(2026, 11, 11, 23, 10)); // Thu 01:10 Athens, not tonight's 01:10
+    expect(lastRunDayLabel(now, at), 'την Πέμπτη');
+    // Wed 23:50 Athens, run at 24:20: tonight, 30 minutes ahead, no day named.
+    final late = DateTime.utc(2026, 11, 11, 21, 50);
+    final at2 = athensDayUtc(late, 24 * 3600 + 20 * 60);
+    expect(at2, DateTime.utc(2026, 11, 11, 22, 20));
+    expect(lastRunDayLabel(late, at2), isNull);
+  });
 }
