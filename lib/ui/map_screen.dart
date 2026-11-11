@@ -799,7 +799,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       if (sel is BusSel) {
         final v = _vehicles(Deps.of(context).store).where((x) => x.id == sel.vehicleId && x.line == sel.line).firstOrNull;
         final vv = v?.variant ?? sel.variant;
-        mapSel.value = LineSel(sel.line, variants: vv == null ? null : {vv});
+        mapSel.value = LineSel(sel.line, variants: vv == null ? null : {vv}, stop: sel.stop);
       }
     }
   }
@@ -936,7 +936,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     StopSel(:final stop) => StopPanel(key: ObjectKey(stop), stop: stop, scroll: scroll),
                     BusSel(:final line, :final vehicleId, :final stop) =>
                       VehiclePanel(key: ValueKey('$line|$vehicleId'), line: line, vehicleId: vehicleId, stop: stop, scroll: scroll),
-                    LineSel(:final line, :final variants) => LinePanel(key: ValueKey(line), line: line, variants: variants, scroll: scroll),
+                    LineSel(:final line, :final variants, :final stop) => LinePanel(key: ValueKey(line), line: line, variants: variants, from: stop, scroll: scroll),
                     PlaceSel(:final name, :final at) => _PlacePanel(name: name, at: at, ix: _ix, scroll: scroll),
                     StationSel() => StationPanel(key: ObjectKey(sel), sel: sel, ix: _ix, scroll: scroll),
                     MuniSel(:final card) => MuniPanel(key: ValueKey(card.id), card: card, scroll: scroll),
@@ -1565,7 +1565,7 @@ class _StationNextState extends State<_StationNext> {
           key: ValueKey('${d.line}|${d.towards}'),
           badge: _PillBadge(line: d.line, bg: c == null ? t.ink : Color(0xFF000000 | c), fg: Colors.white),
           towards: titleCase(d.towards),
-          when: mins(d.inS),
+          when: departureClock(d.inS, d.t) ?? mins(d.inS),
         ));
       }
     }

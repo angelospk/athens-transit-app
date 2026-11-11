@@ -232,6 +232,7 @@ class _StopPanelState extends State<StopPanel> {
                 estimate: estimate,
                 onTap: () => mapSel.value = BusSel(g.$1.line, g.$1.vehicleId, stop: s),
                 trailing: d.store.city.alerts ? _bell(context, s, g.$1) : null, // stop alerts: Athens only
+                oasa: d.store.city == City.athens,
               ),
             );
         Widget head(String x) => Padding(
@@ -279,6 +280,28 @@ class _StopPanelState extends State<StopPanel> {
               ),
               const CloseSel(),
             ]),
+            // «Πώς πάω εκεί» / «Ταξίδι από εδώ» (as the web): the planner with this stop as its end or start.
+            if (d.store.city.plan)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.directions, size: 18),
+                      label: const Text('Πώς πάω εκεί'),
+                      onPressed: () => showPlanner(to: (label: titleCase(s.name), pts: [(s.lat, s.lon)])),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.trip_origin, size: 18),
+                      label: const Text('Ταξίδι από εδώ'),
+                      onPressed: () => showPlanner(from: (label: titleCase(s.name), pts: [(s.lat, s.lon)])),
+                    ),
+                  ),
+                ]),
+              ),
             const SizedBox(height: 4),
             if (estimate && groups.isNotEmpty)
               Container(
@@ -311,7 +334,7 @@ class _StopPanelState extends State<StopPanel> {
               ),
               for (final m in missed)
                 Row(children: [
-                  LineBadge(m.line),
+                  LineBadge(m.line, oasa: d.store.city == City.athens),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text('→ ${titleCase(m.headsign)} · των ${m.t}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: t.muted)),
@@ -330,11 +353,11 @@ class _StopPanelState extends State<StopPanel> {
               ),
               for (final (line, h, eta) in planned)
                 InkWell(
-                  onTap: () => mapSel.value = LineSel(line),
+                  onTap: () => mapSel.value = LineSel(line, stop: s),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Row(children: [
-                      LineBadge(line),
+                      LineBadge(line, oasa: d.store.city == City.athens),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text('→ ${titleCase(h)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: t.muted)),
@@ -350,7 +373,7 @@ class _StopPanelState extends State<StopPanel> {
               const SizedBox(height: 12),
               Text('Χωρίς λεωφορείο κοντά τώρα: ${quiet.join(', ')}', style: TextStyle(fontSize: 13, color: t.muted)),
             ],
-            // «Λάθος θέση στάσης;» (as the web): the map takes a tap where the pole stands. One report per phone per stop.
+            // «Λάθος θέση;» (as the web): the map takes a tap where the pole stands. One report per phone per stop.
             if (fix != null)
               Align(
                 alignment: Alignment.centerLeft,
@@ -360,11 +383,13 @@ class _StopPanelState extends State<StopPanel> {
                         child: Text('Έστειλες διόρθωση θέσης για αυτή τη στάση. Ευχαριστούμε!',
                             style: TextStyle(fontSize: 12.5, color: t.muted)),
                       )
-                    : TextButton.icon(
-                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                        icon: const Icon(Icons.wrong_location_outlined, size: 18),
-                        label: const Text('Λάθος θέση στάσης;'),
-                        onPressed: () => stopFix.value = fix,
+                    : Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.place_outlined, size: 18),
+                          label: const Text('Λάθος θέση;'),
+                          onPressed: () => stopFix.value = fix,
+                        ),
                       ),
               ),
             const SizedBox(height: 16),

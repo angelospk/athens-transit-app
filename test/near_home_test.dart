@@ -160,6 +160,20 @@ void main() {
       expect(got.map((d) => d.towards), ['Πικροδάφνη']);
     });
 
+    // Issue #7: after the last train a pill said 250′ (the first train of the morning) or 1435′ (a
+    // direction that runs only late in the evening): an hour or more away, the clock says it better.
+    test('an hour or more away: the clock time, not minutes', () {
+      expect(departureClock(3599, '05:30'), isNull);
+      expect(departureClock(3600, '05:30'), '05:30');
+      expect(departureClock(86040, '23:59'), '23:59');
+      expect(departureClock(90000, '24:30'), '00:30'); // GTFS past midnight
+      expect(departureClock(9000, null), isNull);
+      final got = nextByDirection([
+        [dep('M1', 'ΚΗΦΙΣΙΑ', 15000)],
+      ], elapsedS: 0);
+      expect(got.single.t, '18:00');
+    });
+
     test('at most max rows', () {
       final got = nextByDirection([
         [for (var i = 0; i < 9; i++) dep('M$i', 'X', i * 10)],

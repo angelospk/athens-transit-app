@@ -142,6 +142,13 @@ class LiveHub extends ChangeNotifier {
   // Every line near a point from the citywide snapshot tiles (z 13, ~3.9 km): arrivals for lines the
   // user does not watch, without asking the backend to watch them. No next_stop_id there, so the stop
   // counts are unknown and the ETA comes from the position alone.
+  /// A fetch outside the hub's own polling worked (a stop's other lines, a line card's line): the time
+  /// «Τελευταία ενημέρωση» shows.
+  void markOk() {
+    lastOkAt = nowS;
+    notifyListeners();
+  }
+
   Future<Map<String, LineLive>> nearbyLives(double lat, double lon, Iterable<String> lines) async {
     final n = 1 << 13;
     final x = ((lon + 180) / 360 * n).floor();
@@ -150,10 +157,12 @@ class LiveHub extends ChangeNotifier {
     final want = lines.toSet();
     final byLine = <String, List<Vehicle>>{};
     var updated = 0, next = 0;
+    var ok = false;
     await Future.wait([
       for (var dx = -1; dx <= 1; dx++)
         for (var dy = -1; dy <= 1; dy++)
           api.tile(13, x + dx, y + dy).then((t) {
+            ok = true;
             updated = max(updated, t.updatedAt);
             next = max(next, t.nextUpdateAt);
             for (final v in t.vehicles) {
@@ -166,6 +175,7 @@ class LiveHub extends ChangeNotifier {
         statics[l] ??= await api.lineStatic(l);
       } catch (_) {}
     }
+    if (ok) markOk();
     return {for (final e in byLine.entries) e.key: LineLive(line: e.key, updatedAt: updated, nextUpdateAt: next, vehicles: e.value)};
   }
 

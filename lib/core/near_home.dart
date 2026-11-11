@@ -3,6 +3,7 @@
 
 import 'dart:math';
 
+import 'athens_time.dart';
 import 'geo.dart';
 import 'models.dart';
 import 'nearby.dart';
@@ -102,9 +103,10 @@ String distLabel(double m) {
 }
 
 class StationDep {
-  const StationDep({required this.line, required this.towards, required this.inS, this.color});
+  const StationDep({required this.line, required this.towards, required this.inS, this.color, this.t});
   final String line, towards;
   final int inS;
+  final String? t; // the timetable's "HH:MM" (GTFS: "24:30" past midnight)
   final String? color; // "#rrggbb" from the timetable
 }
 
@@ -118,13 +120,17 @@ List<StationDep> nextByDirection(List<List<Map<String, dynamic>>> answers, {requ
     for (final d in deps) {
       final inS = ((d['in_s'] as num?) ?? 0).toInt() - elapsedS;
       if (inS < 0 || ends.contains(fold('${d['headsign'] ?? ''}'))) continue;
-      final dep = StationDep(line: '${d['line'] ?? ''}', towards: '${d['headsign'] ?? ''}', inS: inS, color: d['route_color'] as String?);
+      final dep = StationDep(line: '${d['line'] ?? ''}', towards: '${d['headsign'] ?? ''}', inS: inS, color: d['route_color'] as String?, t: d['t'] as String?);
       final k = '${dep.line}|${dep.towards}';
       if (first[k] == null || inS < first[k]!.inS) first[k] = dep;
     }
   }
   return (first.values.toList()..sort((a, b) => a.inS.compareTo(b.inS))).take(max).toList();
 }
+
+/// A departure an hour or more away as the clock reads it ("05:30"; the morning's first train, or a
+/// direction that runs only late in the evening), else null: minutes then. Issue #7: 250′, 1435′.
+String? departureClock(int inS, String? t) => inS >= 3600 && t != null && t.isNotEmpty ? gtfsClock(t) : null;
 
 /// Suburban: the next trains that have not left and are not completed, soonest first.
 List<RailDeparture> nextTrains(List<RailDeparture> all, DateTime now, {int max = 2}) => (all

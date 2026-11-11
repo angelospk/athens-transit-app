@@ -2,24 +2,36 @@
 // makes it one of "my lines". The map draws every direction with its arrows; a direction chip keeps
 // one direction on the map, with its buses and its stops (a stop opens in the sheet), as on the web.
 // «Δρομολόγια»: today's timetable by direction, the runs already gone marked as seen or missed.
+// A line with two named directions (as the web): «προς X» / «από Y» and one ⇅ that turns it round, one
+// direction always picked; under it the rider's own stop (core/line_stop.dart) with this line's next buses.
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 import '../core/athens_time.dart';
 import '../core/eta.dart';
+import '../core/geo.dart';
+import '../core/leave.dart' show walkMinutes;
+import '../core/line_stop.dart';
 import '../core/models.dart';
 import '../core/nearby.dart';
+import '../core/rules.dart' show hasAlert;
+import '../data/live.dart';
+import '../data/locate.dart';
+import 'alert_sheet.dart';
 import 'map_sel.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
 class LinePanel extends StatefulWidget {
-  const LinePanel({super.key, required this.line, this.variants, required this.scroll});
+  const LinePanel({super.key, required this.line, this.variants, this.from, required this.scroll});
   final String line;
   final Set<String>? variants; // the direction on the map; null: all
+  final StopRef? from; // the stop the card was opened from
   final ScrollController scroll;
 
   @override
@@ -33,12 +45,18 @@ class _LinePanelState extends State<LinePanel> {
   Timer? _timer;
   bool _timetable = false;
   Future<Map<String, dynamic>?>? _sched;
+  Pt? _me; // the user, when location is already allowed: the nearest stop and the walk
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _timer ??= Timer.periodic(const Duration(seconds: 30), (_) => _loadLive());
     if (st == null) _load();
+    if (_me == null) {
+      knownPosition().then((p) {
+        if (mounted && p != null) setState(() => _me = p);
+      });
+    }
   }
 
   @override
@@ -78,6 +96,7 @@ class _LinePanelState extends State<LinePanel> {
     if (d.store.myLines.contains(line)) return; // one of my lines: the hub polls it
     try {
       final l = await d.api.live(line);
+      d.live.markOk();
       if (mounted && line == widget.line) setState(() => live = l);
     } catch (_) {/* kept until the next poll */}
   }
@@ -131,7 +150,7 @@ class _LinePanelState extends State<LinePanel> {
           const SizedBox(height: 8),
           if (_timetable) _schedule(t),
           if (!_timetable && s == null) const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator())),
-          if (!_timetable && s != null) ..._directions(t, s, vs),
+          if (!_timetable && s != null) ..._directions(t, s, vs, mine ? d.live.lives[widget.line] ?? live : live),
           const SizedBox(height: 16),
           const LiveNote(),
         ]);
@@ -141,20 +160,57 @@ class _LinePanelState extends State<LinePanel> {
 
   // Directions by headsign (a line may run several variants to the same end). All of them: each with
   // its buses. One picked: its buses and every stop on its way.
-  List<Widget> _directions(Tones t, LineStatic s, List<Vehicle> vs) {
+  List<Widget> _directions(Tones t, LineStatic s, List<Vehicle> vs, LineLive? lineLive) {
     final groups = <String, Set<String>>{};
     for (final e in s.variants.entries) {
       (groups[e.value.headsign] ??= {}).add(e.key);
     }
     final picked = widget.variants;
-    final on = picked == null ? null : groups.entries.where((g) => g.value.any(picked.contains)).firstOrNull;
-    void pick(Set<String>? v) => mapSel.value = LineSel(widget.line, variants: v);
-    final chips = Wrap(spacing: 8, runSpacing: 4, children: [
-      ChoiceChip(label: const Text('Όλες'), selected: on == null, onSelected: (_) => pick(null)),
-      for (final g in groups.entries)
-        ChoiceChip(label: Text('→ ${titleCase(g.key)}'), selected: on?.key == g.key, onSelected: (_) => pick(g.value)),
-    ]);
-    if (on == null) {
+    var on = picked == null ? null : groups.entries.where((g) => g.value.any(picked.contains)).firstOrNull;
+    void pick(Set<String>? v) => mapSel.value = LineSel(widget.line, variants: v, stop: widget.from);
+    final two = groups.length == 2;
+    if (two && on == null) {
+      // Two directions: one is always picked. The one through the stop the card came from, else the first;
+      // the map follows after this frame (another direction of one line replaces the step back).
+      final from = widget.from;
+      final at = from == null ? const <String>{} : stopIdsNear(s, from.name, from.lat, from.lon).toSet();
+      on = groups.entries.where((g) => g.value.any((v) => s.variants[v]!.stops.any(at.contains))).firstOrNull ?? groups.entries.first;
+      final v = on.value;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.variants == null && mapSel.value is LineSel) pick(v);
+      });
+    }
+    final shown = on;
+    final Widget chips;
+    if (two) {
+      final cur = shown!, other = groups.entries.firstWhere((g) => g.key != cur.key);
+      // As the web: a direction by its terminus (the last stop of its longest variant), not the route's name.
+      String end(MapEntry<String, Set<String>> g) {
+        final v = g.value.map((id) => s.variants[id]!).reduce((a, b) => a.stops.length >= b.stops.length ? a : b);
+        return s.stops[v.stops.lastOrNull]?.name ?? g.key;
+      }
+
+      chips = Row(children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('προς ${titleCase(end(cur))}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+            Text('από ${titleCase(end(other))}', style: TextStyle(fontSize: 13, color: t.muted)),
+          ]),
+        ),
+        IconButton.filledTonal(
+          tooltip: 'Η άλλη κατεύθυνση: προς ${titleCase(end(other))}',
+          icon: const Icon(Icons.swap_vert),
+          onPressed: () => pick(other.value),
+        ),
+      ]);
+    } else {
+      chips = Wrap(spacing: 8, runSpacing: 4, children: [
+        ChoiceChip(label: const Text('Όλες'), selected: shown == null, onSelected: (_) => pick(null)),
+        for (final g in groups.entries)
+          ChoiceChip(label: Text('→ ${titleCase(g.key)}'), selected: shown?.key == g.key, onSelected: (_) => pick(g.value)),
+      ]);
+    }
+    if (shown == null) {
       return [
         chips,
         for (final g in groups.entries) ...[
@@ -173,9 +229,10 @@ class _LinePanelState extends State<LinePanel> {
         ],
       ];
     }
+    final dir = shown.value;
     // The longest variant of the direction lists its stops; a bus shows at the stop it goes to next.
-    final main = on.value.reduce((a, b) => s.variants[a]!.stops.length >= s.variants[b]!.stops.length ? a : b);
-    final mine = vs.where((v) => on.value.contains(v.variant)).toList();
+    final main = dir.reduce((a, b) => s.variants[a]!.stops.length >= s.variants[b]!.stops.length ? a : b);
+    final mine = vs.where((v) => dir.contains(v.variant)).toList();
     final busAt = {for (final v in mine) ?v.nextStopId};
     final order = s.variants[main]!.stops;
     int at(Vehicle v) => v.nextStopId == null ? -1 : order.indexOf(v.nextStopId!);
@@ -184,6 +241,7 @@ class _LinePanelState extends State<LinePanel> {
     final big = bigGap(gaps);
     return [
       chips,
+      _LineStopBox(line: widget.line, st: s, variants: dir, live: lineLive, from: widget.from, me: _me),
       const SizedBox(height: 8),
       ..._buses(t, s, mine),
       if (gaps.isNotEmpty)
@@ -306,7 +364,7 @@ class _LinePanelState extends State<LinePanel> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  v.nextStopId == null ? 'λεωφορείο #${v.id}' : 'επόμενη: ${titleCase(s.stops[v.nextStopId]?.name ?? '')}',
+                  v.nextStopId == null ? 'στη διαδρομή' : 'επόμενη: ${titleCase(s.stops[v.nextStopId]?.name ?? '')}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -317,5 +375,144 @@ class _LinePanelState extends State<LinePanel> {
           ),
         ),
     ];
+  }
+}
+
+// The rider's stop in the picked direction: its name (it opens the stop), the walk there, this line's next
+// buses there (from the line's live data, refreshed with it; a delay in orange), a bell for this line at
+// this stop, and walking directions in the phone's map. No stop near and none the card came from: nothing.
+class _LineStopBox extends StatelessWidget {
+  const _LineStopBox({required this.line, required this.st, required this.variants, required this.live, required this.from, required this.me});
+  final String line;
+  final LineStatic st;
+  final Set<String> variants;
+  final LineLive? live;
+  final StopRef? from;
+  final Pt? me;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = Deps.of(context);
+    final t = context.tones;
+    final f = from;
+    final fromIds = f == null ? const <String>{} : stopIdsNear(st, f.name, f.lat, f.lon).toSet();
+    final at = lineStopFor(st, variants, fromIds: fromIds, pos: me);
+    final stop = at == null ? null : st.stops[at.id];
+    if (at == null || stop == null) return const SizedBox.shrink();
+    final walkM = at.m?.toDouble() ?? (me == null ? null : distM(me!, (stop.lat, stop.lon)));
+    // Every pole of this stop on the direction (two variants may list two ids for one place).
+    final ids = stopIdsNear(st, stop.name, stop.lat, stop.lon).toSet();
+    final l = live;
+    final arrivals = l == null
+        ? <Arrival>[]
+        : ([
+            for (final id in ids) ...arrivalsAt(id, {line: st}, {line: l}, d.live.nowS),
+          ].where((a) => variants.contains(a.variant)).toList()..sort((a, b) => a.etaS.compareTo(b.etaS)));
+    // Two ids of one place on one variant would list a bus twice: its soonest only.
+    final seen = <String>{};
+    arrivals.retainWhere((a) => seen.add(a.vehicleId));
+    final first = arrivals.firstOrNull;
+    final late = first?.delayS != null && first!.delayS! >= 120 ? (first.delayS! / 60).round() : 0;
+    final ref = f != null && fromIds.contains(at.id) ? f : StopRef(name: stop.name, lat: stop.lat, lon: stop.lon, lines: [line]);
+    final ios = Theme.of(context).platform == TargetPlatform.iOS;
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.fromLTRB(12, 6, 6, 8),
+      decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () async {
+              // Every line through the stop, as the card's stop list opens it (the one it came from has them).
+              if (ref != f) {
+                try {
+                  final ix = await d.api.trips();
+                  final all = linesAt(ix, ref.name, ref.lat, ref.lon);
+                  if (all.isNotEmpty) {
+                    mapSel.value = StopSel(StopRef(name: ref.name, lat: ref.lat, lon: ref.lon, lines: all));
+                    return;
+                  }
+                } catch (_) {/* no index: the stop opens with this line */}
+              }
+              mapSel.value = StopSel(ref);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  Icon(Icons.place_outlined, size: 18, color: t.muted),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      titleCase(stop.name),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  if (walkM != null) ...[
+                    Icon(Icons.directions_walk, size: 16, color: t.muted),
+                    Text(
+                      '${walkMinutes(walkM)}′',
+                      style: TextStyle(fontSize: 13, color: t.muted, fontFeatures: const [FontFeature.tabularFigures()]),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: first == null
+                    ? Text(l == null ? 'Φόρτωση…' : 'Κανένα καθ’ οδόν τώρα', style: TextStyle(fontSize: 13, color: t.muted))
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            mins(first.etaS),
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()]),
+                          ),
+                          if (late > 0) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              '+$late′',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: t.late),
+                            ),
+                          ],
+                          if (arrivals.length > 1) ...[
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                arrivals.skip(1).take(3).map((a) => mins(a.etaS)).join(' · '),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 12.5, color: t.muted),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+              ),
+              if (d.store.city.alerts && first != null)
+                IconButton(
+                  tooltip: 'Ειδοποίηση για το $line στη στάση ${titleCase(stop.name)}',
+                  icon: Icon(hasAlert(d.store.rules, line, ref.name, d.live.nowS) ? Icons.notifications_active : Icons.notifications_outlined),
+                  onPressed: () => showAlertSheet(context, stop: ref, arrival: first),
+                ),
+              IconButton(
+                tooltip: 'Οδηγίες με τα πόδια ως τη στάση',
+                icon: const Icon(Icons.directions),
+                onPressed: () => launchUrl(walkUrl(stop.lat, stop.lon, ios: ios), mode: LaunchMode.externalApplication),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

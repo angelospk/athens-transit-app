@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/athens_time.dart';
+import '../core/near_home.dart' show departureClock;
 import '../core/models.dart';
 import '../core/nearby.dart';
 import '../core/rail.dart';
@@ -262,8 +263,13 @@ class _StationPanelState extends State<StationPanel> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(mins(((d['in_s'] as num?) ?? 0).toInt()), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                    Text(gtfsClock('${d['t'] ?? ''}'), style: TextStyle(fontSize: 12, color: t.muted)),
+                    // An hour or more away (the morning's first train): the clock alone, not 250′ (#7).
+                    if (departureClock(((d['in_s'] as num?) ?? 0).toInt(), d['t'] as String?) case final far?)
+                      Text(far, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700))
+                    else ...[
+                      Text(mins(((d['in_s'] as num?) ?? 0).toInt()), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                      Text(gtfsClock('${d['t'] ?? ''}'), style: TextStyle(fontSize: 12, color: t.muted)),
+                    ],
                   ],
                 ),
               ],

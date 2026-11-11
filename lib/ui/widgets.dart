@@ -10,6 +10,7 @@ import '../data/api.dart';
 import '../data/live.dart';
 import '../data/store.dart';
 import 'map_sel.dart';
+import 'stop_screen.dart' show StopRef;
 import 'theme.dart';
 
 export '../core/names.dart' show titleCase;
@@ -35,21 +36,43 @@ LineColor lineColor(AppStore store, String line) {
 }
 
 class LineBadge extends StatelessWidget {
-  const LineBadge(this.line, {super.key, this.big = false});
+  const LineBadge(this.line, {super.key, this.big = false, this.oasa = false});
   final String line;
   final bool big;
+  final bool oasa; // OASA's mark in a white disc before the number (Athens, as the web's LineChip)
 
   @override
   Widget build(BuildContext context) {
     final c = lineColor(Deps.of(context).store, line);
+    final size = big ? 17.0 : 15.0;
+    final text = Text(line, textAlign: TextAlign.center, style: TextStyle(color: c.fg, fontSize: size, fontWeight: FontWeight.w700));
     return Container(
       constraints: BoxConstraints(minWidth: big ? 52 : 48),
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: big ? 7 : 6),
+      padding: EdgeInsets.fromLTRB(oasa ? 4 : 6, big ? 7 : 6, 6, big ? 7 : 6),
       decoration: BoxDecoration(color: c.bg, borderRadius: BorderRadius.circular(8)),
       // No alignment: it would stretch the badge to all the width it is offered (a ListTile's leading).
-      child: Text(line, textAlign: TextAlign.center, style: TextStyle(color: c.fg, fontSize: big ? 17 : 15, fontWeight: FontWeight.w700)),
+      child: !oasa
+          ? text
+          : Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                width: size + 2,
+                height: size + 2,
+                padding: EdgeInsets.all((size + 2) * .18),
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: Image.asset('assets/icons/oasa.png', excludeFromSemantics: true),
+              ),
+              const SizedBox(width: 5),
+              text,
+            ]),
     );
   }
+}
+
+// "23:08:14": the Athens clock at Unix time s, to the second.
+String clockAt(int s) {
+  final w = athensWall(DateTime.fromMillisecondsSinceEpoch(s * 1000, isUtc: true));
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(w.hour)}:${two(w.minute)}:${two(w.second)}';
 }
 
 // "8″" under a minute, "4′" after.
@@ -74,7 +97,7 @@ String delayWords(int delayS) => delayS >= 90
 
 // One line at a stop: badge, headsign, note, the next arrival big and the one after.
 class ArrivalRow extends StatelessWidget {
-  const ArrivalRow({super.key, required this.first, this.then = const [], this.estimate = false, this.trailing, this.onTap, this.big = false});
+  const ArrivalRow({super.key, required this.first, this.then = const [], this.estimate = false, this.trailing, this.onTap, this.big = false, this.oasa = false});
 
   final Arrival first;
   final List<Arrival> then;
@@ -82,6 +105,7 @@ class ArrivalRow extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
   final bool big;
+  final bool oasa; // the line badge with OASA's mark (Athens)
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +128,7 @@ class ArrivalRow extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(children: [
-          LineBadge(first.line, big: big),
+          LineBadge(first.line, big: big, oasa: oasa),
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -190,7 +214,7 @@ class Dot extends StatelessWidget {
       Container(width: size, height: size, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
 }
 
-// "Live · ενημέρωση πριν 8″" or the offline note.
+// «Τελευταία ενημέρωση 23:08:14» (the last fetch that worked; it changes with each automatic refresh) or the offline note.
 class LiveNote extends StatelessWidget {
   const LiveNote({super.key});
   @override
@@ -209,7 +233,7 @@ class LiveNote extends StatelessWidget {
         return Row(children: [
           Dot(t.onTime),
           const SizedBox(width: 6),
-          Text(at == null ? 'Live' : 'Live · ενημέρωση πριν ${ago(live.nowS - at)}', style: TextStyle(fontSize: 12, color: t.muted)),
+          Text(at == null ? 'Live' : 'Τελευταία ενημέρωση ${clockAt(at)}', style: TextStyle(fontSize: 12, color: t.muted)),
         ]);
       },
     );
@@ -261,9 +285,10 @@ class BackSel extends StatelessWidget {
 
 // A line's badge that opens the line: the badge with a small arrow, so it reads as a button.
 class LineButton extends StatelessWidget {
-  const LineButton(this.line, {super.key, this.variants});
+  const LineButton(this.line, {super.key, this.variants, this.stop});
   final String line;
   final Set<String>? variants;
+  final StopRef? stop; // the stop the bus was opened from: the line card's own stop
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +300,7 @@ class LineButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () => mapSel.value = LineSel(line, variants: variants),
+          onTap: () => mapSel.value = LineSel(line, variants: variants, stop: stop),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 6, 2, 6),
             child: Row(mainAxisSize: MainAxisSize.min, children: [

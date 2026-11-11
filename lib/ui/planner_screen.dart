@@ -60,7 +60,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
     super.dispose();
   }
 
-  // Another screen asks for a trip (a run that did not start: «Άλλη επιλογή»).
+  // Another screen asks for a trip (a run that did not start: «Άλλη επιλογή»; a stop's «Πώς πάω εκεί» /
+  // «Ταξίδι από εδώ»). A start alone clears the old end: it belonged to another trip.
   void _request() {
     final r = planRequest.value;
     // A planner still closing (back from the map during the pop animation) leaves it to the new one.

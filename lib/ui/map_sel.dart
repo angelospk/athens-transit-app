@@ -29,9 +29,10 @@ class BusSel extends MapSel {
 }
 
 class LineSel extends MapSel {
-  const LineSel(this.line, {this.variants});
+  const LineSel(this.line, {this.variants, this.stop});
   final String line;
   final Set<String>? variants; // one direction picked in the line's sheet; null: all
+  final StopRef? stop; // the stop it was opened from: the card's own stop when the direction serves it
 }
 
 // A metro, ISAP or tram station (railId null), or a suburban rail station (railId: railway.gov.gr id).
@@ -193,11 +194,12 @@ Future<void> openPage(String title, Widget body) =>
 
 void _toMap() => navKey.currentState?.popUntil((r) => r.isFirst);
 
-/// A trip for the planner to plan: its ends (label and points); a null start keeps the planner's.
+/// A trip for the planner to plan: its ends (label and points). A null start keeps the planner's; a null
+/// end («Ταξίδι από εδώ») leaves the end for the user to pick.
 typedef PlanEnd = ({String label, List<Pt> pts});
-final planRequest = ValueNotifier<({PlanEnd? from, PlanEnd to})?>(null);
+final planRequest = ValueNotifier<({PlanEnd? from, PlanEnd? to})?>(null);
 
-void showPlanner({PlanEnd? from, required PlanEnd to}) {
+void showPlanner({PlanEnd? from, PlanEnd? to}) {
   planRequest.value = (from: from, to: to);
   _toMap();
   openPage('Διαδρομή', const PlannerScreen());

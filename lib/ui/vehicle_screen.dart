@@ -104,7 +104,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
                         : 'Το λεωφορείο #${widget.vehicleId} δεν στέλνει θέση τώρα: μάλλον τελείωσε το δρομολόγιό του.',
                     style: TextStyle(fontSize: 15, color: t.muted)),
               ),
-              FilledButton.tonal(onPressed: () => mapSel.value = LineSel(widget.line), child: Text('Δες τα λεωφορεία του ${widget.line}')),
+              FilledButton.tonal(onPressed: () => mapSel.value = LineSel(widget.line, stop: widget.stop), child: Text('Δες τα λεωφορεία του ${widget.line}')),
             ],
           ]);
         }
@@ -138,7 +138,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
       const SheetHandle(),
       Row(children: [
         const BackSel(),
-        LineButton(widget.line, variants: variants),
+        LineButton(widget.line, variants: variants, stop: widget.stop),
         const SizedBox(width: 12),
         Expanded(
           child: Text('→ ${titleCase(variant?.headsign ?? '')}', maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleLarge),
