@@ -159,6 +159,9 @@ class AppStore extends ChangeNotifier {
     onlyMine = c?.onlyMine ?? false;
   }
 
+  /// Athens's stops, whatever city is on screen (the last-bus alarm is Athens-only).
+  List<FavStop> get athensFavs => _city == City.athens ? favs : _cities[City.athens.id]!.favs;
+
   void _keepCity() => _cities[_city.id] = (favs: favs, myLines: myLines, hidden: hiddenLines, onlyMine: onlyMine);
 
   Map<String, dynamic> toJson() {

@@ -1,4 +1,5 @@
 import 'package:athens_transit/background/service.dart';
+import 'package:athens_transit/core/city.dart';
 import 'package:athens_transit/data/store.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,5 +48,14 @@ void main() {
     store.addFav(other); // takes the home place
     store.removeFav(home.copyWith(lines: ['A2', '040']));
     expect(calls, greaterThanOrEqualTo(3), reason: 'another home stop');
+  });
+
+  test('another city on screen keeps the Athens alarm: the last bus is Athens-only', () {
+    store.addFav(home);
+    expect(calls, 1);
+    store.setCity(City.thessaloniki); // no home stop there
+    expect(calls, 1, reason: 'the Athens home stop still wants the alarm');
+    store.addFav(const FavStop(name: 'ΚΑΜΑΡΑ', lat: 40.632, lon: 22.951, place: Place.home, lines: ['31']));
+    expect(calls, 1, reason: 'a Thessaloniki home stop is not the alarm\'s');
   });
 }

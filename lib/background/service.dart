@@ -163,7 +163,7 @@ class AlertService {
 
   static bool _hasHome(AppStore store) => _home(store) != null;
 
-  static FavStop? _home(AppStore store) => store.favs.where((f) => f.place == Place.home && f.lines.isNotEmpty).firstOrNull;
+  static FavStop? _home(AppStore store) => store.athensFavs.where((f) => f.place == Place.home && f.lines.isNotEmpty).firstOrNull;
 
   /// The live card's bus, when a tap on the card opened the app.
   static Future<void> takeOpen(void Function(OpenBus) onOpen) async {
