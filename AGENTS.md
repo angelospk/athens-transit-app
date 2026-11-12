@@ -1,5 +1,12 @@
 # Agent rules
 
+## Quality of service
+
+Before you show service quality (line, vehicle or segment colours; headways, OTP, frequency), read
+`docs/QUALITY.md` in the backend repo (https://github.com/angelospk/staseis-rt/blob/main/docs/QUALITY.md,
+locally `~/athens-transit-rt/docs/QUALITY.md`). It holds the agreed design and the status per city.
+Update it when the display changes.
+
 ## Task board
 
 All work on Athens Transit (backend `athens-transit-rt`, app `athens-transit-app`, web
