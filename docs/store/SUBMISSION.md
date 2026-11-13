@@ -7,7 +7,8 @@
 
 ## 1. Στοιχεία επικοινωνίας: τι να βάλεις
 
-Συμπληρώνει ο Άγγελος τα `<...>` **πριν** το στείλει.
+Το email και το τηλέφωνο **δεν** είναι σε αυτό το δημόσιο repo. Ο Άγγελος τα στέλνει ιδιωτικά
+(αρχείο `~/staseis-store/CONTACT.md`, μαζί με το `.aab`).
 
 | Πεδίο | Τιμή | Πού |
 |---|---|---|
@@ -15,9 +16,9 @@
 | Website | https://staseis.gr | Play (Website), App Store (Marketing URL) |
 | Support URL | `<https://staseis.gr/support>` (ΔΕΝ υπάρχει ακόμα· βλ. §5) | App Store (υποχρεωτικό) |
 | Privacy policy URL | https://staseis.gr/privacy/ (200, ελέγχθηκε 2026-11-14) | Play + App Store |
-| Email επικοινωνίας | `<support@staseis.gr ή άλλο>` | Play (Developer contact + Store listing), App Store (Review contact) |
-| Τηλέφωνο | `<τηλέφωνο με +30>` | Play (επαλήθευση λογαριασμού), App Store (Review contact, ιδιωτικό) |
-| Copyright | © 2026 `<όνομα>` | App Store |
+| Email επικοινωνίας | στο ιδιωτικό `CONTACT.md` (§4) | Play (Developer contact + Store listing), App Store (Review contact) |
+| Τηλέφωνο | στο ιδιωτικό `CONTACT.md` (§4) | Play (επαλήθευση λογαριασμού), App Store (Review contact, ιδιωτικό) |
+| Εκδότης / Copyright | Άγγελος Παπαμιχαήλ · © 2026 Άγγελος Παπαμιχαήλ | App Store |
 | Τιμή | Δωρεάν, χωρίς αγορές μέσα στην εφαρμογή, χωρίς διαφημίσεις | και τα δύο |
 | Χώρες | Ελλάδα (ή όλες) | και τα δύο |
 
@@ -28,9 +29,9 @@
 - **Τηλέφωνο**: ζητείται για επαλήθευση και για επαφή του review. Σε δωρεάν εφαρμογή χωρίς εμπορική
   δραστηριότητα επίλεξε **non-trader** στο EU/DSA (Play και App Store). Έτσι δεν δημοσιεύονται
   διεύθυνση και τηλέφωνο. Έλεγξε τη δήλωση στο Console, γιατί τα πεδία αλλάζουν.
-- **Εκδότης**: η πολιτική απορρήτου γράφει «Εκδότης: Άγγελος Παπαμιχαήλ». Στο store θα φαίνεται το
-  όνομα του λογαριασμού του φίλου. Αποφασίστε ποιος είναι ο εκδότης και ταιριάξτε πολιτική, copyright
-  και όνομα προγραμματιστή (αλλαγή στο `docs/store/privacy-policy.md` και στο `athens-transit-map`).
+- **Εκδότης**: ο Άγγελος Παπαμιχαήλ (όπως στην πολιτική απορρήτου). Στο store θα φαίνεται το όνομα
+  του λογαριασμού που ανεβάζει. Αν είναι του φίλου, το «Developer name» θα είναι το δικό του, και η
+  πολιτική πρέπει να το λέει.
 
 ## 2. Κείμενα και δηλώσεις (links)
 
@@ -84,6 +85,7 @@ Raw (κατεβάζονται απευθείας), π.χ.:
 |---|---|---|
 | Υπογεγραμμένο `app-release.aab` (v0.3.0+9, 73 MB) | mini PC `~/staseis-store/app-release.aab` | ο Άγγελος το στέλνει (Drive / AirDrop). Δεν μπαίνει στο git: έχει υπογραφή. |
 | Βίντεο foreground service (55 s) | mini PC `~/staseis-store/staseis-fgs-demo.mp4` | ο Άγγελος το ανεβάζει unlisted στο YouTube και δίνει το link για το Play Console |
+| Στοιχεία επικοινωνίας (email, τηλέφωνο) | mini PC `~/staseis-store/CONTACT.md` | ο Άγγελος τα στέλνει ιδιωτικά, όχι από το GitHub |
 | iOS build | χτίζεται από Mac (`flutter build ipa`) | με το team του φίλου στο Xcode (`docs/store/README.md` → iOS) |
 
 Το upload key του Android είναι μόνο στο mini PC του Άγγελου. Το Play App Signing κρατά το κλειδί
@@ -91,15 +93,14 @@ Raw (κατεβάζονται απευθείας), π.χ.:
 
 ## 5. Τι λείπει ακόμα (σειρά προτεραιότητας)
 
-1. **Email και τηλέφωνο** (§1). Χωρίς αυτά δεν κλείνει ο λογαριασμός.
-2. **Σελίδα support** στο `staseis.gr/support`: σήμερα 404. Η Apple θέλει Support URL με τρόπο
+1. **Σελίδα support** στο `staseis.gr/support`: σήμερα 404. Η Apple θέλει Support URL με τρόπο
    επικοινωνίας. Μικρή σελίδα στο `athens-transit-map` (email + GitHub issues). Μέχρι τότε: https://staseis.gr.
-3. **Feature graphic 1024×500** (Play) και **icon 512×512** (Play, από το 1024). Δεν υπάρχουν.
-4. **Πρόσβαση** του Άγγελου στο Play Console (Admin ή Release manager) και στο App Store Connect
+2. **Feature graphic 1024×500** (Play) και **icon 512×512** (Play, από το 1024). Δεν υπάρχουν.
+3. **Πρόσβαση** του Άγγελου στο Play Console (Admin ή Release manager) και στο App Store Connect
    (App Manager), και στο developer team για το Xcode.
-5. **Δοκιμή σε κινητό** (`docs/TEST-CHECKLIST.md` #2, #17) και σε iPhone με κλειδωμένη οθόνη (καρέ 03).
-6. **Έλεγχος ονόματος**: ψάξε «Στάσεις» / «Staseis» στα δύο stores για ίδιο όνομα.
-7. **Play, λογαριασμός προσωπικός μετά τις 13/11/2023**: closed test με 12 testers για 14 μέρες πριν το
+4. **Δοκιμή σε κινητό** (`docs/TEST-CHECKLIST.md` #2, #17) και σε iPhone με κλειδωμένη οθόνη (καρέ 03).
+5. **Έλεγχος ονόματος**: ψάξε «Στάσεις» / «Staseis» στα δύο stores για ίδιο όνομα.
+6. **Play, λογαριασμός προσωπικός μετά τις 13/11/2023**: closed test με 12 testers για 14 μέρες πριν το
    production.
 
 ## 6. Γνωστοί κίνδυνοι στο review
