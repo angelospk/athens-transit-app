@@ -15,13 +15,16 @@ import '../core/athens_time.dart';
 import '../core/eta.dart';
 import '../core/geo.dart';
 import '../core/leave.dart' show walkMinutes;
+import '../core/held.dart';
 import '../core/line_stop.dart';
+import '../core/live_quality.dart';
 import '../core/models.dart';
 import '../core/nearby.dart';
 import '../core/rules.dart' show hasAlert;
 import '../data/live.dart';
 import '../data/locate.dart';
 import 'alert_sheet.dart';
+import 'levels.dart';
 import 'map_sel.dart';
 import 'quality_pill.dart';
 import 'stop_screen.dart';
@@ -94,6 +97,7 @@ class _LinePanelState extends State<LinePanel> {
   Future<void> _loadLive() async {
     final d = Deps.of(context);
     final line = widget.line;
+    d.live.loadQuality([line]); // the levels of its buses (the hub asks a line at most every 10 s)
     if (d.store.myLines.contains(line)) return; // one of my lines: the hub polls it
     try {
       final l = await d.api.live(line);
@@ -357,7 +361,11 @@ class _LinePanelState extends State<LinePanel> {
 
   List<Widget> _buses(Tones t, LineStatic s, List<Vehicle> vs) {
     if (vs.isEmpty) return [Text('Κανένα λεωφορείο με GPS τώρα.', style: TextStyle(fontSize: 13, color: t.muted))];
+    final held = Deps.of(context).live.qualityOf(widget.line);
+    final note = heldNote(held, DateTime.now().millisecondsSinceEpoch);
     return [
+      // The live levels are the last good answer; while a refresh fails or warms up, a note says how old (web v0.2.38).
+      if (note != null) Padding(padding: const EdgeInsets.only(bottom: 4), child: Text(note, style: TextStyle(fontSize: 12, color: t.muted))),
       for (final v in vs)
         InkWell(
           onTap: () => mapSel.value = BusSel(widget.line, v.id, at: (v.lat, v.lon), variant: v.variant),
@@ -373,7 +381,12 @@ class _LinePanelState extends State<LinePanel> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (delayNote(context, v.delayS) case final n?) Text(n.$1, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: n.$2)),
+              // The words of the live level in its colour («12′ μετά», «κολλητά», «+7′», «νωρίτερα 2′», «—»); without a
+              // level object (an older backend) the delay as before.
+              if (vehiclePhrase(held?.value.vehicles[v.id], v.delayS) case final ph?)
+                Text(ph.text, style: TextStyle(fontSize: 13, fontWeight: ph.level.live ? FontWeight.w600 : FontWeight.w400, color: levelText(context, ph.level), fontFeatures: const [FontFeature.tabularFigures()]))
+              else if (delayNote(context, v.delayS) case final n?)
+                Text(n.$1, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: n.$2)),
               Icon(Icons.chevron_right, color: t.muted),
             ]),
           ),

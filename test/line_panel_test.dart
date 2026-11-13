@@ -46,6 +46,18 @@ Future<void> _pump(WidgetTester t, {required String Function(http.Request) body}
   ));
 }
 
+/// The levels of the fixture's buses (contract rev 23): a frequent direction's gap, a sparse one's delay, none.
+String _levels() => jsonEncode({
+      'line': 'oasa:040',
+      'vehicles': [
+        {'id': 'oasa:44548', 'quality': {'level': 'much_worse', 'basis': 'headway', 'gap_s': 720, 'usual_headway_s': 300, 'bunched': false, 'early': false}},
+        {'id': 'oasa:44537', 'quality': {'level': 'normal', 'basis': 'schedule', 'bunched': false, 'early': false}},
+        {'id': 'oasa:44549', 'quality': null},
+      ],
+      'segments': <Object>[],
+      'sources': [{'state': 'ok'}],
+    });
+
 String _fixtures(http.Request r) => File('test/fixtures/${r.url.host == 'transit.haroldpoi.dev' ? 'line-040.json' : 'lines-040.json'}').readAsStringSync();
 
 void main() {
@@ -68,5 +80,24 @@ void main() {
     final sel = mapSel.value;
     expect(sel, isA<LineSel>());
     expect((sel as LineSel).variants, isNotEmpty);
+  });
+
+  testWidgets('the vehicle rows say their live level in words, in its colour; a bus without one keeps its delay', (t) async {
+    await _pump(t, body: (r) => r.url.path.startsWith('/v2/') ? _levels() : r.url.host == 'transit.haroldpoi.dev' ? _fixtures(r) : _twoDirections());
+    await settle(t, () => find.text('12′ μετά').evaluate().isNotEmpty);
+    expect(find.text('12′ μετά'), findsOneWidget);
+    expect(find.text('στην ώρα'), findsOneWidget);
+    final worst = t.widget<Text>(find.text('12′ μετά'));
+    expect(worst.style!.color, const Color(0xFFC92A2A)); // much_worse, light theme
+    expect(t.widget<Text>(find.text('στην ώρα')).style!.color, const Color(0xFF1A7F37));
+    // The delay words («αργεί 2′») are gone from the rows of buses that have a level.
+    expect(find.textContaining('αργεί'), findsNothing);
+  });
+
+  testWidgets('an older backend (no v2 answer): the rows keep the delay text', (t) async {
+    await _pump(t, body: (r) => r.url.path.startsWith('/v2/') ? throw const SocketException('offline') : r.url.host == 'transit.haroldpoi.dev' ? _fixtures(r) : _twoDirections());
+    await settle(t, () => find.textContaining('αργεί').evaluate().isNotEmpty);
+    expect(find.textContaining('αργεί'), findsOneWidget); // 44548: 140 s late
+    expect(find.text('12′ μετά'), findsNothing);
   });
 }

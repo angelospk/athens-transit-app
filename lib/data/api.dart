@@ -228,6 +228,23 @@ class Api {
     return j == null ? null : LineLive.fromJson(j);
   }
 
+  /// The line's vehicles with their live levels and its slow segments (contract rev 23, Athens and Thessaloniki):
+  /// the HTTP status (0 for a network error or a timeout) and the decoded body. Never throws: the caller keeps its
+  /// last good answer while this one fails (core/held.dart).
+  Future<({int status, Object? body})> lineQualityRaw(String line) async {
+    final url = '${city.api}/v2/lines/${Uri.encodeComponent('oasa:$line')}/vehicles';
+    try {
+      final r = await _client.get(Uri.parse(url), headers: _ua).timeout(const Duration(seconds: 10));
+      Object? body;
+      try {
+        body = jsonDecode(utf8.decode(r.bodyBytes));
+      } catch (_) {/* an HTML error page */}
+      return (status: r.statusCode, body: body);
+    } catch (_) {
+      return (status: 0, body: null);
+    }
+  }
+
   Future<VehicleTile> tile(int z, int x, int y) async {
     final j = await _get('${city.api}/v1/vehicles/tiles/$z/$x/$y');
     return VehicleTile(

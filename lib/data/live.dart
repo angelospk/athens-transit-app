@@ -8,13 +8,16 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../core/eta.dart';
+import '../core/held.dart';
+import '../core/live_quality.dart';
 import '../core/models.dart';
 import 'api.dart';
 
 class LiveHub extends ChangeNotifier {
-  LiveHub(this.api);
+  LiveHub(this.api, {int Function()? clockMs}) : _clockMs = clockMs ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   final Api api;
+  final int Function() _clockMs;
   final lives = <String, LineLive>{};
   final statics = <String, LineStatic>{};
   final _timers = <String, Timer>{};
@@ -29,6 +32,45 @@ class LiveHub extends ChangeNotifier {
   // Lines whose last fetch failed and whose data is the saved copy.
   final offline = <String>{};
   int? lastOkAt; // Unix s of the last successful fetch
+
+  // Live levels of the lines on the map and in a line card (contract rev 23): the last good answer of each line,
+  // kept marked for up to heldMaxMs while the backend fails or warms up (core/held.dart). A line is asked at most
+  // every 10 s, whoever asks.
+  final _quality = <String, Held<LineQuality>>{};
+  final _qAsked = <String, int>{};
+  final _qBusy = <String>{};
+  int qualityVersion = 0; // changes with every answer: what is drawn from the levels redraws on it
+
+  /// The held levels of [line], null when there are none or the last good answer is too old to be "now".
+  Held<LineQuality>? qualityOf(String line) {
+    final h = _quality[line];
+    return h != null && _clockMs() - h.at < heldMaxMs ? h : null;
+  }
+
+  Future<void> loadQuality(Iterable<String> lines) async {
+    final now = _clockMs();
+    await Future.wait([
+      for (final l in lines.toSet())
+        if (!_qBusy.contains(l) && now - (_qAsked[l] ?? 0) >= 10000)
+          () async {
+            _qBusy.add(l);
+            _qAsked[l] = now;
+            try {
+              final r = await api.lineQualityRaw(l);
+              final h = refreshHeld(_quality[l], r.status, r.body, LineQuality.tryParse, _clockMs());
+              if (h == null) {
+                _quality.remove(l);
+              } else {
+                _quality[l] = h;
+              }
+              qualityVersion++;
+              notifyListeners();
+            } finally {
+              _qBusy.remove(l);
+            }
+          }(),
+    ]);
+  }
 
   bool get isOffline => _watched.isNotEmpty && offline.containsAll(_watched);
 
