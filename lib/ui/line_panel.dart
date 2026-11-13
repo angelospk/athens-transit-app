@@ -183,26 +183,28 @@ class _LinePanelState extends State<LinePanel> {
     final shown = on;
     final Widget chips;
     if (two) {
-      final cur = shown!, other = groups.entries.firstWhere((g) => g.key != cur.key);
+      final cur = shown!;
       // As the web: a direction by its terminus (the last stop of its longest variant), not the route's name.
       String end(MapEntry<String, Set<String>> g) {
         final v = g.value.map((id) => s.variants[id]!).reduce((a, b) => a.stops.length >= b.stops.length ? a : b);
         return s.stops[v.stops.lastOrNull]?.name ?? g.key;
       }
 
-      chips = Row(children: [
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('προς ${titleCase(end(cur))}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-            Text('από ${titleCase(end(other))}', style: TextStyle(fontSize: 13, color: t.muted)),
-          ]),
-        ),
-        IconButton.filledTonal(
-          tooltip: 'Η άλλη κατεύθυνση: προς ${titleCase(end(other))}',
-          icon: const Icon(Icons.swap_vert),
-          onPressed: () => pick(other.value),
-        ),
-      ]);
+      // Web v0.2.37 (2a4f541): the two directions are a two-segment control, an arrow and the terminus each.
+      chips = SegmentedButton<String>(
+        segments: [
+          for (final g in groups.entries)
+            ButtonSegment(
+              value: g.key,
+              icon: const Icon(Icons.arrow_forward, size: 16),
+              label: Text(titleCase(end(g)), maxLines: 1, overflow: TextOverflow.ellipsis),
+              tooltip: titleCase(end(g)),
+            ),
+        ],
+        selected: {cur.key},
+        showSelectedIcon: false,
+        onSelectionChanged: (v) => pick(groups[v.first]),
+      );
     } else {
       chips = Wrap(spacing: 8, runSpacing: 4, children: [
         ChoiceChip(label: const Text('Όλες'), selected: shown == null, onSelected: (_) => pick(null)),

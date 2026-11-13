@@ -214,7 +214,7 @@ class Dot extends StatelessWidget {
       Container(width: size, height: size, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
 }
 
-// «Τελευταία ενημέρωση 23:08:14» (the last fetch that worked; it changes with each automatic refresh) or the offline note.
+// «τελ. ενημέρωση: 23:08:14» (the last fetch that worked; it changes with each automatic refresh) or the offline note.
 class LiveNote extends StatelessWidget {
   const LiveNote({super.key});
   @override
@@ -230,11 +230,9 @@ class LiveNote extends StatelessWidget {
           // No Flexible: the note often sits in a Row beside an Expanded, where its width is unbounded.
           return Row(mainAxisSize: MainAxisSize.min, children: [Dot(t.late), const SizedBox(width: 6), Text('Χωρίς σύνδεση$when', style: TextStyle(fontSize: 12, color: t.muted))]);
         }
-        return Row(children: [
-          Dot(t.onTime),
-          const SizedBox(width: 6),
-          Text(at == null ? 'Live' : 'Τελευταία ενημέρωση ${clockAt(at)}', style: TextStyle(fontSize: 12, color: t.muted)),
-        ]);
+        // As the web (v0.2.37): plain words, no green dot; nothing before the first fetch worked.
+        if (at == null) return const SizedBox.shrink();
+        return Text('τελ. ενημέρωση: ${clockAt(at)}', style: TextStyle(fontSize: 12, color: t.muted));
       },
     );
   }
