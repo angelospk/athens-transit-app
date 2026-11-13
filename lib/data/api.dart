@@ -231,8 +231,13 @@ class Api {
   /// The line's vehicles with their live levels and its slow segments (contract rev 23, Athens and Thessaloniki):
   /// the HTTP status (0 for a network error or a timeout) and the decoded body. Never throws: the caller keeps its
   /// last good answer while this one fails (core/held.dart).
-  Future<({int status, Object? body})> lineQualityRaw(String line) async {
-    final url = '${city.api}/v2/lines/${Uri.encodeComponent('oasa:$line')}/vehicles';
+  Future<({int status, Object? body})> lineQualityRaw(String line) =>
+      _rawGet('${city.api}/v2/lines/${Uri.encodeComponent('oasa:$line')}/vehicles');
+
+  /// A stop's arrival board, `GET /v1/stops/{id}` (the web's fetchStop): the same status/body pair, never throws.
+  Future<({int status, Object? body})> stopBoardRaw(String stopId) => _rawGet('${city.api}/v1/stops/${Uri.encodeComponent(stopId)}');
+
+  Future<({int status, Object? body})> _rawGet(String url) async {
     try {
       final r = await _client.get(Uri.parse(url), headers: _ua).timeout(const Duration(seconds: 10));
       Object? body;
