@@ -399,7 +399,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     // the open line and of my lines. The arrow stays above it.
     await m.addCircleLayer('vehicles', 'veh-ring',
         const CircleLayerProperties(
-          circleRadius: ['interpolate', ['linear'], ['zoom'], 10, 6.5, 13, 10.5, 16, 14.5],
+          // The dot's radius + 4.5: past its stroke (up to 3.5 wide) the ring shows 2.75-3.75 dp, as the web's 2.5 px.
+          circleRadius: ['interpolate', ['linear'], ['zoom'], 10, 7.5, 13, 11.5, 16, 15.5],
           circleColor: ['get', 'lv'],
           circleOpacity: ['get', 'op'],
         ),
