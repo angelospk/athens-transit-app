@@ -14,7 +14,7 @@
 |---|---|---|
 | Όνομα εφαρμογής | Στάσεις | Play + App Store |
 | Website | https://staseis.gr | Play (Website), App Store (Marketing URL) |
-| Support URL | `<https://staseis.gr/support>` (ΔΕΝ υπάρχει ακόμα· βλ. §5) | App Store (υποχρεωτικό) |
+| Support URL | https://staseis.gr/support/ | App Store (υποχρεωτικό) |
 | Privacy policy URL | https://staseis.gr/privacy/ (200, ελέγχθηκε 2026-11-14) | Play + App Store |
 | Email επικοινωνίας | στο ιδιωτικό `CONTACT.md` (§4) | Play (Developer contact + Store listing), App Store (Review contact) |
 | Τηλέφωνο | στο ιδιωτικό `CONTACT.md` (§4) | Play (επαλήθευση λογαριασμού), App Store (Review contact, ιδιωτικό) |
@@ -77,7 +77,7 @@ Raw (κατεβάζονται απευθείας), π.χ.:
 Καρέ (Play): 01 χάρτης live · 02 στάση και αφίξεις · 03 ειδοποίηση πριν έρθει · 04 «Ακόμα και κλειστή» ·
 05 διαδρομή. Το iOS set δεν έχει το 04 (στο iOS δεν τρέχει live κάρτα στο παρασκήνιο).
 
-**Λείπουν** (βλ. §5): Play icon 512×512 και Play feature graphic 1024×500.
+Γραφικά Play (φάκελος `docs/store/graphics/`): εικονίδιο `icon-512.png` (512×512), feature graphic `feature-graphic-1024x500.png`. Πηγή: `feature.html`.
 
 ## 4. Αρχεία που δεν είναι στο GitHub
 
@@ -91,17 +91,18 @@ Raw (κατεβάζονται απευθείας), π.χ.:
 Το upload key του Android είναι μόνο στο mini PC του Άγγελου. Το Play App Signing κρατά το κλειδί
 υπογραφής. Το keystore **δεν** στέλνεται σε κανέναν.
 
-## 5. Τι λείπει ακόμα (σειρά προτεραιότητας)
+## 5. Τι λείπει ακόμα
 
-1. **Σελίδα support** στο `staseis.gr/support`: σήμερα 404. Η Apple θέλει Support URL με τρόπο
-   επικοινωνίας. Μικρή σελίδα στο `athens-transit-map` (email + GitHub issues). Μέχρι τότε: https://staseis.gr.
-2. **Feature graphic 1024×500** (Play) και **icon 512×512** (Play, από το 1024). Δεν υπάρχουν.
-3. **Πρόσβαση** του Άγγελου στο Play Console (Admin ή Release manager) και στο App Store Connect
+1. **Πρόσβαση** του Άγγελου στο Play Console (Admin ή Release manager) και στο App Store Connect
    (App Manager), και στο developer team για το Xcode.
-4. **Δοκιμή σε κινητό** (`docs/TEST-CHECKLIST.md` #2, #17) και σε iPhone με κλειδωμένη οθόνη (καρέ 03).
-5. **Έλεγχος ονόματος**: ψάξε «Στάσεις» / «Staseis» στα δύο stores για ίδιο όνομα.
-6. **Play, λογαριασμός προσωπικός μετά τις 13/11/2023**: closed test με 12 testers για 14 μέρες πριν το
+2. **Βίντεο** foreground service: unlisted στο YouTube, το link στο Play Console (§4).
+3. **Δοκιμή σε κινητό** (`docs/TEST-CHECKLIST.md` #2, #17) και σε iPhone με κλειδωμένη οθόνη (καρέ 03).
+4. **Play, λογαριασμός προσωπικός μετά τις 13/11/2023**: closed test με 12 testers για 14 μέρες πριν το
    production.
+
+Έλεγχος ονόματος (2026-11-14): κανένα ίδιο «Στάσεις» ή «Staseis» εφαρμογής συγκοινωνιών στο App Store GR
+ή στο Play. Ανταγωνιστές με παρόμοιο θέμα: Busmate (Athens Bus & Metro), BusMakro. Το gr.staseis.app δεν
+υπάρχει ακόμα στο Play (404). Ο τίτλος «Στάσεις: Λεωφορεία Αθήνας live» κάνει το όνομα ξεχωριστό.
 
 ## 6. Γνωστοί κίνδυνοι στο review
 
