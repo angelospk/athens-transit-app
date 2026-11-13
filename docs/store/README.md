@@ -4,6 +4,7 @@
 
 - `privacy-policy.md`: πολιτική απορρήτου (EL + EN). Συμπλήρωσε τα `<...>` και ανέβασέ τη σε δημόσιο
   URL (π.χ. `staseis.gr/privacy`). Το URL μπαίνει και στα δύο stores.
+- `SUBMISSION.md`: ένα έγγραφο για τον φίλο που ανεβάζει: στοιχεία επικοινωνίας, links σε όλα, τι λείπει.
 - `listing.md`: τίτλοι, περιγραφές, keywords, γραφικά που λείπουν.
 - `declarations.md`: Data safety, foreground service, App Privacy, review notes, λογαριασμός.
 
