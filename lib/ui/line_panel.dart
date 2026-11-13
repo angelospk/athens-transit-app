@@ -23,6 +23,7 @@ import '../data/live.dart';
 import '../data/locate.dart';
 import 'alert_sheet.dart';
 import 'map_sel.dart';
+import 'quality_pill.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -242,6 +243,7 @@ class _LinePanelState extends State<LinePanel> {
     final gaps = busGaps([for (final v in mine) if (v.nextStopId case final id? when order.contains(id)) order.indexOf(id)]);
     final big = bigGap(gaps);
     return [
+      QualityPill(key: ValueKey(widget.line), line: widget.line, headsign: shown.key),
       chips,
       _LineStopBox(line: widget.line, st: s, variants: dir, live: lineLive, from: widget.from, me: _me),
       const SizedBox(height: 8),

@@ -11,6 +11,7 @@ import '../core/city.dart';
 import '../core/geo.dart';
 import '../core/models.dart';
 import '../core/muni.dart';
+import '../core/quality.dart';
 import '../core/rail.dart';
 import '../core/stats.dart';
 import 'cache.dart';
@@ -158,6 +159,46 @@ class Api {
     return complete(d) ? d : null;
   }
 
+  // The line card's quality pill reads the day files of the city (Athens in v1 itself, Thessaloniki in v1/thessaloniki).
+  // As the web's quality.ts: a day file is fetched once per session and shared by every card (a written day file never
+  // changes); a missing one is asked again after an hour; a failed fetch on the next call.
+  final _dayFiles = <String, _DayEntry>{};
+
+  Future<QualityDay?> dayFile(String date, {DateTime? now}) {
+    final nowMs = (now ?? DateTime.now()).millisecondsSinceEpoch;
+    final base = city == City.athens ? statsBase : '$statsBase/${city.id}';
+    final url = '$base/days/$date.json';
+    final hit = _dayFiles[url];
+    if (hit != null && (hit.found || nowMs - hit.at < 3600000)) return hit.load;
+    Future<QualityDay?> fetch() async {
+      try {
+        final j = await _get(url);
+        return j is Map<String, dynamic> && j['version'] == 1 && j['date'] == date ? QualityDay.fromJson(j) : null;
+      } on ApiError catch (e) {
+        if (e.status == 404) return null;
+        rethrow;
+      }
+    }
+
+    late final _DayEntry entry;
+    entry = _DayEntry(nowMs, fetch().then<QualityDay?>((d) {
+      entry.found = d != null;
+      return d;
+    }, onError: (Object _) {
+      if (identical(_dayFiles[url], entry)) _dayFiles.remove(url);
+      return null;
+    }));
+    return (_dayFiles[url] = entry).load;
+  }
+
+  /// The day the pill shows: yesterday's file, else (only then fetched) the day before's.
+  Future<({QualityDay day, String word, String date})?> shownDay({DateTime? now}) async {
+    final t = now ?? DateTime.now().toUtc();
+    final y = await dayFile(daysAgo(t, 1), now: t);
+    final p = pickDay(y, y != null ? null : await dayFile(daysAgo(t, 2), now: t));
+    return p == null ? null : (day: p.day, word: p.word, date: daysAgo(t, p.back));
+  }
+
   Future<TripIndex> trips() => _once('trips', () => _static('trips', city.trips).then((j) => TripIndex.fromJson(j)));
 
   Future<LineStatic> lineStatic(String line) => _once('line_$line',
@@ -262,6 +303,13 @@ class Api {
   }
 
   Future<Map<String, dynamic>> status() async => (await _get('${city.api}/v1/status')) as Map<String, dynamic>;
+}
+
+class _DayEntry {
+  _DayEntry(this.at, this.load);
+  final int at; // ms epoch of the ask
+  final Future<QualityDay?> load;
+  bool found = false;
 }
 
 class VehicleTile {
