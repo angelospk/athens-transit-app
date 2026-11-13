@@ -172,14 +172,14 @@ List<Pt> subLine(List<Pt> shape, double s0, double s1) {
 /// and much_worse, cut from stop to stop. A segment of a pattern that is not drawn, or of stops that do not follow
 /// each other in it, gets none; the same stop pair of two patterns is drawn once. [only]: the variants drawn per line
 /// (null: all). [tips]: the words of each halo by feature id, for a tap.
-({List<Object> features, Map<String, String> tips}) haloFeatures({
+({List<Object> features, Map<String, ({String text, QualityLevel level})> tips}) haloFeatures({
   required Map<String, LineStatic> statics,
   required Map<String, Set<String>?> only,
   required Map<String, List<Segment>> segs,
   required String Function(String) name,
 }) {
   final features = <Object>[];
-  final tips = <String, String>{};
+  final tips = <String, ({String text, QualityLevel level})>{};
   for (final e in segs.entries) {
     final st = statics[e.key];
     if (st == null || !only.containsKey(e.key)) continue;
@@ -201,7 +201,7 @@ List<Pt> subLine(List<Pt> shape, double s0, double s1) {
       if (pts.length < 2) continue;
       seen.add(pair);
       final id = 'hs|${features.length}';
-      tips[id] = segmentText(name(a.name), name(b.name), s.level, s.speed, s.usualSpeed);
+      tips[id] = (text: segmentText(name(a.name), name(b.name), s.level, s.speed, s.usualSpeed), level: s.level);
       features.add({
         'type': 'Feature',
         'id': id,

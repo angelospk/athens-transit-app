@@ -106,7 +106,7 @@ void main() {
         );
     Segment seg({String pattern = 'oasa:5512', String from = 'oasa:A', String to = 'oasa:B', QualityLevel level = QualityLevel.worse}) =>
         Segment(pattern: pattern, from: from, to: to, level: level, ratio: .7, speed: 3.9, usualSpeed: 5.3, n: 3);
-    ({List<Object> features, Map<String, String> tips}) halos(LineStatic st, List<Segment> segs, {Set<String>? only}) =>
+    ({List<Object> features, Map<String, ({String text, QualityLevel level})> tips}) halos(LineStatic st, List<Segment> segs, {Set<String>? only}) =>
         haloFeatures(statics: {'040': st}, only: {'040': only}, segs: {'040': segs}, name: (s) => s);
 
     test('only worse and much_worse segments get a halo, cut from stop to stop', () {
@@ -117,7 +117,7 @@ void main() {
       final c = ((f['geometry'] as Map)['coordinates'] as List).cast<List<double>>();
       expect(c.first[0], closeTo(0, 1e-6));
       expect(c.last[0], closeTo(0.01, 1e-4)); // stop offsets are in metres: a few metres of rounding
-      expect(r.tips[f['id']], 'ΚΑΛΛΙΘΕΑ → ΦΙΞ · πιο αργό: 14 km/h, συνήθως 19');
+      expect(r.tips[f['id']], (text: 'ΚΑΛΛΙΘΕΑ → ΦΙΞ · πιο αργό: 14 km/h, συνήθως 19', level: QualityLevel.worse));
     });
     test('much_worse too; unknown never', () {
       final r = halos(line({'5512': ['A', 'B', 'C']}), [seg(level: QualityLevel.muchWorse), seg(from: 'oasa:B', to: 'oasa:C', level: QualityLevel.unknown)]);
