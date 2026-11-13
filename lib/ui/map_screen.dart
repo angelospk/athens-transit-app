@@ -899,15 +899,34 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       final s = _routeSt!.stops[id.substring(3)]!;
       mapSel.value = StopSel(StopRef(name: s.name, lat: s.lat, lon: s.lon, lines: _ix == null ? [_routeSt!.id] : linesAt(_ix!, s.name, s.lat, s.lon)));
     } else if (layer == 'route') {
-      // A route opens its line, in the tapped direction (route features have no id: the line comes from
-      // the open selection, the direction from the bus).
-      final sel = mapSel.value;
-      if (sel is BusSel) {
-        final v = _vehicles(Deps.of(context).store).where((x) => x.id == sel.vehicleId && x.line == sel.line).firstOrNull;
-        final vv = v?.variant ?? sel.variant;
-        mapSel.value = LineSel(sel.line, variants: vv == null ? null : {vv}, stop: sel.stop);
-      }
+      // The halo lies under the route, and the map gives a tap to the topmost layer: the route takes every tap on a
+      // slow segment. As the web, the segment's speeds come first.
+      _haloAt(point).then((halo) {
+        if (!mounted) return;
+        if (halo != null) return _showSegment(halo);
+        // A route opens its line, in the tapped direction (route features have no id: the line comes from
+        // the open selection, the direction from the bus).
+        final sel = mapSel.value;
+        if (sel is BusSel) {
+          final v = _vehicles(Deps.of(context).store).where((x) => x.id == sel.vehicleId && x.line == sel.line).firstOrNull;
+          final vv = v?.variant ?? sel.variant;
+          mapSel.value = LineSel(sel.line, variants: vv == null ? null : {vv}, stop: sel.stop);
+        }
+      });
     }
+  }
+
+  // The id of a slow segment's halo near a tap (the plugin's own 10 px box round the point), else null.
+  Future<String?> _haloAt(Point<double> p) async {
+    final m = _map;
+    if (m == null || _haloTips.isEmpty) return null;
+    try {
+      final hits = await m.queryRenderedFeaturesInRect(Rect.fromLTRB(p.x - 10, p.y - 10, p.x + 10, p.y + 10), const ['route-halo'], null);
+      for (final f in hits) {
+        if (f is Map && f['id'] is String && _haloTips.containsKey(f['id'])) return f['id'] as String;
+      }
+    } catch (_) {/* no halo */}
+    return null;
   }
 
   @override
