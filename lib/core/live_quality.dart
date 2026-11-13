@@ -45,10 +45,10 @@ class VehicleQuality {
       ? null
       : VehicleQuality(
           level: QualityLevel.parse(j['level']),
-          basis: j['basis'] as String?,
+          basis: j['basis'] is String ? j['basis'] as String : null,
           gapS: _int(j['gap_s']),
           usualHeadwayS: _int(j['usual_headway_s']),
-          stop: j['stop'] as String?,
+          stop: j['stop'] is String ? j['stop'] as String : null,
           bunched: j['bunched'] == true,
           early: j['early'] == true,
         );

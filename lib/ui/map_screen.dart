@@ -665,7 +665,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   // The slow segments of the routes drawn now, as a halo under them. Only when the levels or the routes change.
   Future<void> _drawHalos(MapLibreMapController m, LiveHub live) async {
-    final key = '${live.qualityVersion}|$_routesKey';
+    // The lines whose levels are still "now" are in the key: held levels older than 10 min drop their halos too.
+    final key = '${live.qualityVersion}|$_routesKey|${[for (final l in _drawnOnly.keys) if (live.qualityOf(l) != null) l]}';
     if (key == _haloKey) return;
     _haloKey = key;
     final segs = {

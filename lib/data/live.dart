@@ -39,6 +39,7 @@ class LiveHub extends ChangeNotifier {
   final _quality = <String, Held<LineQuality>>{};
   final _qAsked = <String, int>{};
   final _qBusy = <String>{};
+  bool _gone = false;
   int qualityVersion = 0; // changes with every answer: what is drawn from the levels redraws on it
 
   /// The held levels of [line], null when there are none or the last good answer is too old to be "now".
@@ -57,6 +58,7 @@ class LiveHub extends ChangeNotifier {
             _qAsked[l] = now;
             try {
               final r = await api.lineQualityRaw(l);
+              if (_gone) return; // the city changed while this was asked: nobody listens any more
               final h = refreshHeld(_quality[l], r.status, r.body, LineQuality.tryParse, _clockMs());
               if (h == null) {
                 _quality.remove(l);
@@ -223,6 +225,7 @@ class LiveHub extends ChangeNotifier {
 
   @override
   void dispose() {
+    _gone = true;
     _recount?.cancel();
     for (final t in _timers.values) {
       t.cancel();

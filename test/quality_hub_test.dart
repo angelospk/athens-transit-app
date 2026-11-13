@@ -1,5 +1,6 @@
 // The hub keeps a line's live levels (contract rev 23) as the web v0.2.38 does: a refresh that fails or says
 // warming_up keeps the last good ones, marked, for up to 10 minutes.
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -86,6 +87,32 @@ void main() {
     now += 11000;
     await hub.loadQuality(['040']);
     expect(hub.qualityOf('040'), isNull);
+  });
+
+  test('an answer that lands after dispose is dropped, no notify on a dead hub', () async {
+    final gate = Completer<void>();
+    final api = Api(
+      client: MockClient((r) async {
+        await gate.future;
+        return json(body('worse'));
+      }),
+      cache: DiskCache(dir: Directory.systemTemp.createTempSync()),
+    );
+    final h = LiveHub(api, clockMs: () => now);
+    final pending = h.loadQuality(['040']);
+    h.dispose();
+    gate.complete();
+    await pending; // would throw "used after being disposed" without the guard
+    expect(h.qualityOf('040'), isNull);
+  });
+
+  test('a quality object with wrong field types is parsed, not thrown on', () {
+    final q = LineQuality.tryParse({
+      'vehicles': [
+        {'id': 'oasa:1', 'quality': {'level': 'worse', 'basis': 7, 'stop': 5}},
+      ],
+    })!;
+    expect(q.levelOf('1'), QualityLevel.worse);
   });
 
   test('a good answer replaces the held ones and the version moves', () async {
