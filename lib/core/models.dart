@@ -220,8 +220,10 @@ class TripIndex {
   final List<String> dn;
   final List<List<int?>> ds;
   final List<String> ids; // per stop, its GTFS stop id (the 4th field of `s`), '' when missing
+  // The end of each variant (web destination.ts, trips.json `d.h`): line -> variant -> index into [dn].
+  final Map<String, Map<String, int>> dh;
 
-  const TripIndex({required this.v, required this.s, required this.l, this.dn = const [], this.ds = const [], this.ids = const []});
+  const TripIndex({required this.v, required this.s, required this.l, this.dn = const [], this.ds = const [], this.ids = const [], this.dh = const {}});
 
   factory TripIndex.fromJson(Map<String, dynamic> j) => TripIndex(
         v: (j['v'] as String?) ?? '',
@@ -241,5 +243,13 @@ class TripIndex {
         ds: [
           for (final e in (j['d'] as Map?)?['s'] as List? ?? const []) [for (final x in e as List) (x as num?)?.toInt()],
         ],
+        dh: {
+          for (final e in ((j['d'] as Map?)?['h'] as Map? ?? const {}).entries)
+            if (e.value is Map)
+              e.key as String: {
+                for (final ve in (e.value as Map).entries)
+                  if (ve.value is num) ve.key as String: (ve.value as num).toInt(),
+              },
+        },
       );
 }

@@ -11,6 +11,7 @@ import '../core/eta.dart';
 import '../core/models.dart';
 import '../core/nearby.dart';
 import '../core/rules.dart';
+import '../core/stop_board.dart';
 import '../data/live.dart';
 import '../data/stopfix_store.dart';
 import '../data/store.dart';
@@ -18,6 +19,7 @@ import 'alert_sheet.dart';
 import 'lines_picker.dart';
 import 'theme.dart';
 import 'map_sel.dart';
+import 'stop_board_view.dart';
 import 'stopfix_bar.dart';
 import 'widgets.dart';
 
@@ -42,29 +44,79 @@ class _StopPanelState extends State<StopPanel> {
   Map<String, LineLive> others = {};
   Map<String, Map<String, dynamic>> _schedules = {}; // line -> today's timetable, when the backend has it
   Timer? _timer;
+  Timer? _tick; // the times count down between boards (every 10 s)
   TripIndex? _ix;
   ({String name, double lat, double lon, int m})? _across; // the stop across the road, another name
   bool _askedAcross = false;
+
+  // The stop's arrival board (backend /v1/stops/{id}), as the web's card: asked every 20 s while the card is open.
+  // Without one (no stop id, the backend or the network down) the card falls back to the estimates the phone makes
+  // from the lines' vehicles and the timetable (the offline design): [_fallback].
+  StopBoard? _board;
+  int? _boardAt; // when the shown board loaded, ms
+  bool _boardFailed = false; // the last ask failed
+  bool _fallback = false;
+  bool _boardStarted = false;
+  Timer? _boardTimer;
+  int _misses = 0, _quick = 0;
 
   StopRef get s => widget.stop;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // The timetable too, now and then: a run that did not start is known only some minutes after it.
-    _timer ??= Timer.periodic(const Duration(seconds: 30), (t) {
-      _loadOthers();
-      if (t.tick % 10 == 0) _loadSchedules();
+    _tick ??= Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) setState(() {});
     });
-    if (others.isEmpty) _loadOthers();
-    if (_schedules.isEmpty) _loadSchedules();
     if (!_askedAcross) {
       _askedAcross = true;
       _loadAcross();
     }
   }
 
-  // The stop across the road, from the planner's index: one fetch, and only this stop's few neighbours.
+  // The estimates are made only while there is no board: the timetable too, now and then (a run that did not start is
+  // known only some minutes after it).
+  void _setFallback(bool on) {
+    if (on == _fallback) return;
+    _fallback = on;
+    if (!on) {
+      _timer?.cancel();
+      _timer = null;
+      return;
+    }
+    _timer ??= Timer.periodic(const Duration(seconds: 30), (t) {
+      _loadOthers();
+      if (t.tick % 10 == 0) _loadSchedules();
+    });
+    if (others.isEmpty) _loadOthers();
+    if (_schedules.isEmpty) _loadSchedules();
+  }
+
+  // The board loop: now, then every 20 s (2 s, at most 3 times, while the server says a new one is on its way).
+  Future<void> _loadBoard(String id) async {
+    final stop = s;
+    final api = Deps.of(context).api;
+    final r = await api.stopBoardRaw(id);
+    if (!mounted || stop != s) return;
+    final b = r.status == 200 ? StopBoard.tryParse(r.body) : null;
+    final quick = b == null && _board == null && _misses == 0 && r.status == 0; // a weak network: once more in 2 s
+    setState(() {
+      if (b != null) {
+        _board = b;
+        _boardAt = Deps.of(context).live.nowS * 1000;
+      }
+      _misses = b != null ? 0 : _misses + 1;
+      _boardFailed = b == null && !quick;
+      _setFallback(_board == null && !quick);
+    });
+    final d = stopDelay(b?.refreshing ?? false, _quick);
+    _quick = d.quick;
+    _boardTimer?.cancel();
+    _boardTimer = Timer(Duration(milliseconds: quick ? 2000 : d.ms), () => _loadBoard(id));
+  }
+
+  // The stop across the road, from the planner's index: one fetch, and only this stop's few neighbours. The index also
+  // names the stop's id, which the board is asked for.
   Future<void> _loadAcross() async {
     final stop = s;
     try {
@@ -74,8 +126,16 @@ class _StopPanelState extends State<StopPanel> {
         _ix = ix;
         _across = acrossStop(ix, stop.name, stop.lat, stop.lon);
       });
+      final id = stopIdAt(ix, stop.name, stop.lat, stop.lon);
+      if (id == null) {
+        setState(() => _setFallback(true)); // an index from before the ids: no board
+      } else if (!_boardStarted) {
+        _boardStarted = true;
+        _loadBoard(id);
+      }
     } catch (_) {
-      // No index: the card keeps its line count alone.
+      // No index: the card keeps its line count alone, and its estimates.
+      if (mounted && stop == s) setState(() => _setFallback(true));
     }
   }
 
@@ -158,8 +218,14 @@ class _StopPanelState extends State<StopPanel> {
       _schedules = {};
       _ix = null;
       _across = null;
-      _loadOthers();
-      _loadSchedules();
+      _boardTimer?.cancel();
+      _board = null;
+      _boardAt = null;
+      _boardFailed = false;
+      _boardStarted = false;
+      _misses = 0;
+      _quick = 0;
+      _setFallback(false);
       _loadAcross();
     }
   }
@@ -167,6 +233,8 @@ class _StopPanelState extends State<StopPanel> {
   @override
   void dispose() {
     _timer?.cancel();
+    _tick?.cancel();
+    _boardTimer?.cancel();
     super.dispose();
   }
 
@@ -216,14 +284,18 @@ class _StopPanelState extends State<StopPanel> {
         final fix = k == null || d.store.city != City.athens || k >= _ix!.ids.length || _ix!.ids[k].isEmpty
             ? null
             : StopFix(id: _ix!.ids[k], name: s.name, from: (_ix!.s[k].$2, _ix!.s[k].$3), at: (_ix!.s[k].$2, _ix!.s[k].$3));
-        final arrivals = _arrivals(true);
+        // The estimates (below) are made only without a board (_fallback).
+        final arrivals = _fallback ? _arrivals(true) : <Arrival>[];
         final groups = groupArrivals(arrivals);
         // One list: the starred lines pinned on top, the others by arrival, 6 rows until «Όλες».
         final rows = stopRows(groups, d.store.myLines.toSet(), all: all);
         final estimate = d.live.isOffline;
         final quiet = s.lines.where((l) => !groups.any((g) => g.$1.line == l)).toList();
         final missed = <_Missed>[];
-        final planned = _planned(s.lines, arrivals, missed).take(6).toList();
+        final planned = _fallback ? _planned(s.lines, arrivals, missed).take(6).toList() : <(String, String, int)>[];
+        final board = _board;
+        final nowMs = d.live.nowS * 1000;
+        final signText = board == null ? null : signCode(board.code, board.id, athens: d.store.city == City.athens);
         Widget row((Arrival, List<Arrival>) g) => DecoratedBox(
               decoration: BoxDecoration(border: Border(bottom: BorderSide(color: t.rule))),
               child: ArrivalRow(
@@ -303,6 +375,43 @@ class _StopPanelState extends State<StopPanel> {
                 ]),
               ),
             const SizedBox(height: 4),
+            if (board != null)
+              StopBoardView(
+                board: board,
+                nowMs: nowMs,
+                lines: s.lines,
+                mine: d.store.myLines.toSet(),
+                all: all,
+                onAll: (v) => setState(() => all = v),
+                onBus: (line, vehicleId) => mapSel.value = vehicleId.isEmpty ? LineSel(line, stop: s) : BusSel(line, vehicleId, stop: s),
+                onLine: (line) => mapSel.value = LineSel(line, stop: s),
+                bell: (g) => d.store.city.alerts && g.variant.isNotEmpty
+                    ? _bell(
+                        context,
+                        s,
+                        Arrival(
+                          line: g.line,
+                          variant: g.variant,
+                          headsign: g.headsign,
+                          vehicleId: g.times.first.vehicle,
+                          etaS: g.times.first.min * 60,
+                          stopsLeft: g.times.first.away,
+                          delayS: g.times.first.late * 60,
+                          positionAt: d.live.nowS,
+                        ))
+                    : null,
+                ix: _ix,
+                stopIx: _ix == null ? null : stopIndexAt(_ix!, s.name, s.lat, s.lon),
+                oasa: d.store.city == City.athens,
+                updatedMs: _boardAt,
+                failed: _boardFailed,
+              )
+            else if (!_fallback)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text('Φόρτωση αφίξεων…', style: TextStyle(color: t.muted)),
+              )
+            else ...[
             if (estimate && groups.isNotEmpty)
               Container(
                 margin: const EdgeInsets.only(top: 8),
@@ -373,6 +482,7 @@ class _StopPanelState extends State<StopPanel> {
               const SizedBox(height: 12),
               Text('Χωρίς λεωφορείο κοντά τώρα: ${quiet.join(', ')}', style: TextStyle(fontSize: 13, color: t.muted)),
             ],
+            ], // the estimates, without a board
             // «Λάθος θέση;» (as the web): the map takes a tap where the pole stands. One report per phone per stop.
             if (fix != null)
               Align(
@@ -392,8 +502,15 @@ class _StopPanelState extends State<StopPanel> {
                         ),
                       ),
               ),
+            // The sign's code (rev 21), so a rider can find the stop.
+            if (signText != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text.rich(TextSpan(text: 'Κωδ. στάσης ', children: [TextSpan(text: signText, style: const TextStyle(fontWeight: FontWeight.w700))]),
+                    style: TextStyle(fontSize: 12.5, color: t.muted)),
+              ),
             const SizedBox(height: 16),
-            const LiveNote(),
+            if (board == null) const LiveNote(), // the board shows its own «τελ. ενημέρωση»
           ]);
       },
     );

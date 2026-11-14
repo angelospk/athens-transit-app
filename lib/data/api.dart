@@ -11,6 +11,7 @@ import '../core/city.dart';
 import '../core/geo.dart';
 import '../core/models.dart';
 import '../core/muni.dart';
+import '../core/quality.dart';
 import '../core/rail.dart';
 import '../core/stats.dart';
 import 'cache.dart';
@@ -158,6 +159,46 @@ class Api {
     return complete(d) ? d : null;
   }
 
+  // The line card's quality pill reads the day files of the city (Athens in v1 itself, Thessaloniki in v1/thessaloniki).
+  // As the web's quality.ts: a day file is fetched once per session and shared by every card (a written day file never
+  // changes); a missing one is asked again after an hour; a failed fetch on the next call.
+  final _dayFiles = <String, _DayEntry>{};
+
+  Future<QualityDay?> dayFile(String date, {DateTime? now}) {
+    final nowMs = (now ?? DateTime.now()).millisecondsSinceEpoch;
+    final base = city == City.athens ? statsBase : '$statsBase/${city.id}';
+    final url = '$base/days/$date.json';
+    final hit = _dayFiles[url];
+    if (hit != null && (hit.found || nowMs - hit.at < 3600000)) return hit.load;
+    Future<QualityDay?> fetch() async {
+      try {
+        final j = await _get(url);
+        return j is Map<String, dynamic> && j['version'] == 1 && j['date'] == date ? QualityDay.fromJson(j) : null;
+      } on ApiError catch (e) {
+        if (e.status == 404) return null;
+        rethrow;
+      }
+    }
+
+    late final _DayEntry entry;
+    entry = _DayEntry(nowMs, fetch().then<QualityDay?>((d) {
+      entry.found = d != null;
+      return d;
+    }, onError: (Object _) {
+      if (identical(_dayFiles[url], entry)) _dayFiles.remove(url);
+      return null;
+    }));
+    return (_dayFiles[url] = entry).load;
+  }
+
+  /// The day the pill shows: yesterday's file, else (only then fetched) the day before's.
+  Future<({QualityDay day, String word, String date})?> shownDay({DateTime? now}) async {
+    final t = now ?? DateTime.now().toUtc();
+    final y = await dayFile(daysAgo(t, 1), now: t);
+    final p = pickDay(y, y != null ? null : await dayFile(daysAgo(t, 2), now: t));
+    return p == null ? null : (day: p.day, word: p.word, date: daysAgo(t, p.back));
+  }
+
   Future<TripIndex> trips() => _once('trips', () => _static('trips', city.trips).then((j) => TripIndex.fromJson(j)));
 
   Future<LineStatic> lineStatic(String line) => _once('line_$line',
@@ -185,6 +226,28 @@ class Api {
   Future<LineLive?> savedLive(String line) async {
     final j = await _cache.read(_key('live_$line'));
     return j == null ? null : LineLive.fromJson(j);
+  }
+
+  /// The line's vehicles with their live levels and its slow segments (contract rev 23, Athens and Thessaloniki):
+  /// the HTTP status (0 for a network error or a timeout) and the decoded body. Never throws: the caller keeps its
+  /// last good answer while this one fails (core/held.dart).
+  Future<({int status, Object? body})> lineQualityRaw(String line) =>
+      _rawGet('${city.api}/v2/lines/${Uri.encodeComponent('oasa:$line')}/vehicles');
+
+  /// A stop's arrival board, `GET /v1/stops/{id}` (the web's fetchStop): the same status/body pair, never throws.
+  Future<({int status, Object? body})> stopBoardRaw(String stopId) => _rawGet('${city.api}/v1/stops/${Uri.encodeComponent(stopId)}');
+
+  Future<({int status, Object? body})> _rawGet(String url) async {
+    try {
+      final r = await _client.get(Uri.parse(url), headers: _ua).timeout(const Duration(seconds: 10));
+      Object? body;
+      try {
+        body = jsonDecode(utf8.decode(r.bodyBytes));
+      } catch (_) {/* an HTML error page */}
+      return (status: r.statusCode, body: body);
+    } catch (_) {
+      return (status: 0, body: null);
+    }
   }
 
   Future<VehicleTile> tile(int z, int x, int y) async {
@@ -262,6 +325,13 @@ class Api {
   }
 
   Future<Map<String, dynamic>> status() async => (await _get('${city.api}/v1/status')) as Map<String, dynamic>;
+}
+
+class _DayEntry {
+  _DayEntry(this.at, this.load);
+  final int at; // ms epoch of the ask
+  final Future<QualityDay?> load;
+  bool found = false;
 }
 
 class VehicleTile {
