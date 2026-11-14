@@ -232,7 +232,6 @@ class _StopPanelState extends State<StopPanel> {
                 estimate: estimate,
                 onTap: () => mapSel.value = BusSel(g.$1.line, g.$1.vehicleId, stop: s),
                 trailing: d.store.city.alerts ? _bell(context, s, g.$1) : null, // stop alerts: Athens only
-                oasa: d.store.city == City.athens,
               ),
             );
         Widget head(String x) => Padding(
@@ -334,7 +333,7 @@ class _StopPanelState extends State<StopPanel> {
               ),
               for (final m in missed)
                 Row(children: [
-                  LineBadge(m.line, oasa: d.store.city == City.athens),
+                  LineBadge(m.line),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text('→ ${titleCase(m.headsign)} · των ${m.t}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: t.muted)),
@@ -357,7 +356,7 @@ class _StopPanelState extends State<StopPanel> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Row(children: [
-                      LineBadge(line, oasa: d.store.city == City.athens),
+                      LineBadge(line),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text('→ ${titleCase(h)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: t.muted)),

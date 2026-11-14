@@ -36,34 +36,20 @@ LineColor lineColor(AppStore store, String line) {
 }
 
 class LineBadge extends StatelessWidget {
-  const LineBadge(this.line, {super.key, this.big = false, this.oasa = false});
+  const LineBadge(this.line, {super.key, this.big = false});
   final String line;
   final bool big;
-  final bool oasa; // OASA's mark in a white disc before the number (Athens, as the web's LineChip)
 
   @override
   Widget build(BuildContext context) {
     final c = lineColor(Deps.of(context).store, line);
     final size = big ? 17.0 : 15.0;
-    final text = Text(line, textAlign: TextAlign.center, style: TextStyle(color: c.fg, fontSize: size, fontWeight: FontWeight.w700));
     return Container(
       constraints: BoxConstraints(minWidth: big ? 52 : 48),
-      padding: EdgeInsets.fromLTRB(oasa ? 4 : 6, big ? 7 : 6, 6, big ? 7 : 6),
+      padding: EdgeInsets.fromLTRB(6, big ? 7 : 6, 6, big ? 7 : 6),
       decoration: BoxDecoration(color: c.bg, borderRadius: BorderRadius.circular(8)),
       // No alignment: it would stretch the badge to all the width it is offered (a ListTile's leading).
-      child: !oasa
-          ? text
-          : Row(mainAxisSize: MainAxisSize.min, children: [
-              Container(
-                width: size + 2,
-                height: size + 2,
-                padding: EdgeInsets.all((size + 2) * .18),
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                child: Image.asset('assets/icons/oasa.png', excludeFromSemantics: true),
-              ),
-              const SizedBox(width: 5),
-              text,
-            ]),
+      child: Text(line, textAlign: TextAlign.center, style: TextStyle(color: c.fg, fontSize: size, fontWeight: FontWeight.w700)),
     );
   }
 }
@@ -97,7 +83,7 @@ String delayWords(int delayS) => delayS >= 90
 
 // One line at a stop: badge, headsign, note, the next arrival big and the one after.
 class ArrivalRow extends StatelessWidget {
-  const ArrivalRow({super.key, required this.first, this.then = const [], this.estimate = false, this.trailing, this.onTap, this.big = false, this.oasa = false});
+  const ArrivalRow({super.key, required this.first, this.then = const [], this.estimate = false, this.trailing, this.onTap, this.big = false});
 
   final Arrival first;
   final List<Arrival> then;
@@ -105,7 +91,6 @@ class ArrivalRow extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
   final bool big;
-  final bool oasa; // the line badge with OASA's mark (Athens)
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +113,7 @@ class ArrivalRow extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(children: [
-          LineBadge(first.line, big: big, oasa: oasa),
+          LineBadge(first.line, big: big),
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
