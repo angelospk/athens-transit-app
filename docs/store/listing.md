@@ -1,22 +1,23 @@
 # Κείμενα για τα stores
 
-Όρια χαρακτήρων στις παρενθέσεις. Όνομα: **Στάσεις** (staseis.gr). Δεν δένεται με πόλη, γιατί θα μπουν κι άλλες πόλεις. Όσο υπάρχει
-μόνο η Αθήνα, ο τίτλος λέει «Αθήνας» για την αναζήτηση· με τη δεύτερη πόλη γίνεται «Στάσεις:
-Λεωφορεία live». Πριν το ανέβασμα: ψάξε «Στάσεις» στα δύο stores για εφαρμογή με ίδιο όνομα.
+Όρια χαρακτήρων στις παρενθέσεις. Όνομα: **Στάσεις** (staseis.gr). Ο τίτλος δεν δένεται με πόλη: η
+εφαρμογή έχει Αθήνα και Θεσσαλονίκη και θα μπουν κι άλλες πόλεις (απόφαση 2026-11-14). Έλεγχος ονόματος
+στα δύο stores: έγινε 2026-11-14, δεν υπάρχει ίδιο όνομα.
 
 ## Google Play
 
-**Τίτλος (30)**: Στάσεις: Λεωφορεία Αθήνας live
+**Τίτλος (30)**: Στάσεις: Live Συγκοινωνίες
 
-**Σύντομη περιγραφή (80)**: Λεωφορεία της Αθήνας live, αφίξεις στη στάση σου και ειδοποιήσεις πριν έρθει.
+**Σύντομη περιγραφή (80)**: Live αφίξεις λεωφορείων και συγκοινωνιών, και ειδοποίηση πριν έρθει το δικό σου.
 
 **Πλήρης περιγραφή (4000)**:
 
 Δες πού είναι το λεωφορείο σου τώρα, πόσο απέχει από τη στάση σου, και πότε πρέπει να φύγεις.
+Αθήνα και Θεσσαλονίκη. Μετρό, διαδρομές και ειδοποιήσεις: μόνο στην Αθήνα, προς το παρόν.
 
 ΧΑΡΤΗΣ LIVE
-• Όλα τα λεωφορεία της Αθήνας στον χάρτη, με χρώμα ανάλογα με την καθυστέρηση
-• Σταθμοί μετρό, τραμ και προαστιακού με τα επόμενα δρομολόγια
+• Όλα τα λεωφορεία της Αθήνας και της Θεσσαλονίκης στον χάρτη, με χρώμα ανάλογα με την καθυστέρηση
+• Αθήνα: σταθμοί μετρό, τραμ και προαστιακού με τα επόμενα δρομολόγια
 
 ΣΤΑΣΕΙΣ ΚΑΙ ΓΡΑΜΜΕΣ
 • Επόμενες αφίξεις live, και τα δρομολόγια που δεν ξεκίνησαν ακόμα από το πρόγραμμα
@@ -40,22 +41,22 @@
 ΑΠΟΡΡΗΤΟ
 Χωρίς λογαριασμό, χωρίς διαφημίσεις, χωρίς tracking. Η θέση σου μένει στο κινητό.
 
-Ανεπίσημη εφαρμογή. Δεν έχει σχέση με τον ΟΑΣΑ, τη ΣΤΑΣΥ ή την Hellenic Train. Τα δεδομένα έρχονται
+Ανεπίσημη εφαρμογή. Δεν έχει σχέση με τον ΟΑΣΑ, τον ΟΑΣΘ, τη ΣΤΑΣΥ ή την Hellenic Train. Τα δεδομένα έρχονται
 από τις δημόσιες πηγές τους.
 
 **Κατηγορία**: Maps & Navigation · **Tags**: Public transit, Navigation
 
 ## App Store
 
-**Όνομα (30)**: Στάσεις: Λεωφορεία Αθήνας live
+**Όνομα (30)**: Στάσεις: Live Συγκοινωνίες
 **Υπότιτλος (30)**: Αφίξεις live και ειδοποιήσεις
-**Λέξεις-κλειδιά (100)**: λεωφορείο,ΟΑΣΑ,αφίξεις,μετρό,τραμ,προαστιακός,Αθήνα,συγκοινωνίες,staseis,bus,athens
+**Λέξεις-κλειδιά (100)**: λεωφορείο,ΟΑΣΑ,αφίξεις,μετρό,τραμ,Αθήνα,Θεσσαλονίκη,συγκοινωνίες,στάσεις,bus,live
 
 > «ΟΑΣΑ» στα keywords: η Apple μπορεί να το θεωρήσει χρήση εμπορικού σήματος (guideline 2.3.7). Αν
 > απορριφθεί, σβήσε το.
 
-**Promotional text (170)**: Όλα τα λεωφορεία της Αθήνας live, αφίξεις στη στάση σου και ειδοποιήσεις
-πριν έρθει το λεωφορείο. Χωρίς λογαριασμό, χωρίς διαφημίσεις.
+**Promotional text (170)**: Λεωφορεία Αθήνας και Θεσσαλονίκης live, αφίξεις στη στάση σου και
+ειδοποιήσεις πριν έρθει το λεωφορείο. Χωρίς λογαριασμό, χωρίς διαφημίσεις.
 
 **Περιγραφή**: η ίδια με το Play, χωρίς την ενότητα «Widgets» (κρυφή στο iOS).
 **Κατηγορία**: Navigation · δευτερεύουσα Travel · **Age rating**: 4+
@@ -64,20 +65,21 @@
 
 The app interface is in Greek. The English page says so, so that visitors are not surprised.
 
-**Title / App Store name (30)**: Staseis: Athens Bus Live
+**Title / App Store name (30)**: Staseis: Live Transit
 **App Store subtitle (30)**: Live arrivals and bus alerts
 **Keywords (100)**: athens,bus,transit,metro,tram,oasa,greece,arrivals,timetable,public transport
-**Short description (80)**: Live Athens buses, arrivals at your stop and alerts before your bus arrives.
-**Promotional text (170)**: Every Athens bus, live. Arrivals at your stop and an alert a few minutes
-before your bus comes. No account, no ads.
+**Short description (80)**: Live bus and transit arrivals, plus an alert before your bus comes.
+**Promotional text (170)**: Live buses in Athens and Thessaloniki. Arrivals at your stop and an alert a
+few minutes before your bus comes. No account, no ads.
 
 **Description**:
 
 See where your bus is right now, how far it is from your stop, and when to leave.
+Athens and Thessaloniki. Metro, trip planner and alerts: Athens only, for now.
 
 LIVE MAP
-• Every Athens bus on the map, coloured by delay
-• Metro, tram and suburban rail stations with their next trains
+• Every Athens and Thessaloniki bus on the map, coloured by delay
+• Athens: metro, tram and suburban rail stations with their next trains
 
 STOPS AND LINES
 • Live arrivals, plus the runs that have not started yet from the timetable
@@ -101,7 +103,7 @@ FAVOURITES AND WIDGETS
 PRIVACY
 No account, no ads, no tracking. Your location stays on your phone.
 
-Interface in Greek for now; English is coming. Unofficial app, not affiliated with OASA, STASY or
+Interface in Greek for now; English is coming. Unofficial app, not affiliated with OASA, OASTH, STASY or
 Hellenic Train. Data comes from their public sources.
 
 ## Γραφικά που λείπουν
