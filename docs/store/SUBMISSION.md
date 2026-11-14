@@ -11,7 +11,7 @@
 |---|---|
 | Όνομα εφαρμογής (Play και App Store) | Στάσεις: Live Συγκοινωνίες (26 χαρακτήρες) |
 | Όνομα EN | Staseis: Live Transit |
-| Εκδότης / Copyright | Άγγελος Παπαμιχαήλ · © 2026 Άγγελος Παπαμιχαήλ |
+| Εκδότης / Copyright | Antonios Freris (λογαριασμοί stores· Play: «frerisdev») και Άγγελος Παπαμιχαήλ, από κοινού υπεύθυνοι επεξεργασίας · © 2026 Άγγελος Παπαμιχαήλ & Antonios Freris |
 | Website / Marketing URL | https://staseis.gr |
 | Support URL | https://staseis.gr/support/ |
 | Privacy policy URL | https://staseis.gr/privacy/ |
@@ -27,8 +27,9 @@
 - **Τηλέφωνο**: ζητείται για επαλήθευση και για επαφή του review. Σε δωρεάν εφαρμογή χωρίς εμπορική
   δραστηριότητα επίλεξε **non-trader** (EU/DSA). Έτσι δεν δημοσιεύονται διεύθυνση και τηλέφωνο. Έλεγξε τη
   δήλωση στο Console, γιατί τα πεδία αλλάζουν.
-- **Εκδότης**: ο Άγγελος Παπαμιχαήλ, όπως στην πολιτική απορρήτου. Αν ανεβάζει ο φίλος με δικό του λογαριασμό,
-  το «Developer name» θα είναι το δικό του, και η πολιτική πρέπει να το λέει.
+- **Εκδότης**: οι εφαρμογές ανεβαίνουν από τους λογαριασμούς του Antonios Freris (App Store: πωλητής το όνομά
+  του· Play: developer «frerisdev»). Η πολιτική απορρήτου, οι όροι, η υποστήριξη και το
+  «Σχετικά» ονομάζουν και τους δύο, ως από κοινού υπεύθυνους επεξεργασίας (απόφαση 2026-11-14).
 
 ## 2. Κείμενα και δηλώσεις
 
@@ -45,13 +46,15 @@
 - **Play**: κατηγορία Maps & Navigation · tags Public transit, Navigation.
 - **App Store**: υπότιτλος «Αφίξεις live και ειδοποιήσεις» · κατηγορία Navigation, δευτερεύουσα Travel · Age
   rating 4+.
-- **Content rating**: IARC όλα «Όχι» → PEGI 3. **Ads**: Όχι. **Target audience**: 18+.
+- **Content rating**: IARC όλα «Όχι» → PEGI 3. **Ads**: Όχι. **Target audience**: 13+ (13-15, 16-17, 18+).
 - **Export compliance**: μόνο HTTPS, `ITSAppUsesNonExemptEncryption = false` (ήδη στο `Info.plist`).
 - **Review notes (App Store, αντιγραφή)**:
   > Staseis shows live public transport in Athens and Thessaloniki, Greece. Outside Greece the map still
   > works: pan to Athens, or use the search to open "Σύνταγμα" (Syntagma), then tap any stop to see live
   > arrivals. No login is needed. Alerts (Athens): open a stop, tap a line, choose "Ειδοποίησέ με" (notify
-  > me). The app is unofficial and uses public data from OASA, OASTH, STASY and Hellenic Train.
+  > me). The app is unofficial and not affiliated with any operator. Data sources: OASA GTFS (CC BY-NC,
+> geodata.gov.gr) and OASA telematics, OASTH GTFS (data.gov.gr), STASY GTFS, Hellenic Train
+> (railway.gov.gr). Map: OpenFreeMap, © OpenStreetMap contributors.
 - **Δεν χρειάζεται demo λογαριασμός**: η εφαρμογή δεν έχει login.
 
 ## 3. Γραφικά
@@ -94,6 +97,9 @@ https://raw.githubusercontent.com/angelospk/athens-transit-app/main/docs/store/s
 υπογραφής. Το keystore **δεν** στέλνεται σε κανέναν.
 
 ## 5. Τι λείπει ακόμα
+
+Πλήρης λίστα μετά τον έλεγχο της 2026-11-14 (ονόματα, GDPR, λογότυπο ΟΑΣΑ):
+https://github.com/angelospk/athens-transit-app/blob/main/docs/store/PRE-PUBLISH.md
 
 1. **Πρόσβαση** του Άγγελου στο Play Console (Admin ή Release manager) και στο App Store Connect
    (App Manager), και στο developer team για το Xcode.

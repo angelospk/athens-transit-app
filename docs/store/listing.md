@@ -50,7 +50,7 @@
 
 **Όνομα (30)**: Στάσεις: Live Συγκοινωνίες
 **Υπότιτλος (30)**: Αφίξεις live και ειδοποιήσεις
-**Λέξεις-κλειδιά (100)**: λεωφορείο,ΟΑΣΑ,αφίξεις,μετρό,τραμ,Αθήνα,Θεσσαλονίκη,συγκοινωνίες,στάσεις,bus,live
+**Λέξεις-κλειδιά (100)**: λεωφορείο,αφίξεις,μετρό,τραμ,Αθήνα,Θεσσαλονίκη,συγκοινωνίες,στάσεις,bus,live
 
 > «ΟΑΣΑ» στα keywords: η Apple μπορεί να το θεωρήσει χρήση εμπορικού σήματος (guideline 2.3.7). Αν
 > απορριφθεί, σβήσε το.
@@ -67,7 +67,7 @@ The app interface is in Greek. The English page says so, so that visitors are no
 
 **Title / App Store name (30)**: Staseis: Live Transit
 **App Store subtitle (30)**: Live arrivals and bus alerts
-**Keywords (100)**: athens,bus,transit,metro,tram,oasa,greece,arrivals,timetable,public transport
+**Keywords (100)**: athens,bus,transit,metro,tram,greece,arrivals,timetable,public transport
 **Short description (80)**: Live bus and transit arrivals, plus an alert before your bus comes.
 **Promotional text (170)**: Live buses in Athens and Thessaloniki. Arrivals at your stop and an alert a
 few minutes before your bus comes. No account, no ads.

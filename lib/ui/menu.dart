@@ -295,6 +295,10 @@ const _links = [
 // The site's legal pages (athens-transit-map: staseis.gr).
 const termsUrl = 'https://staseis.gr/terms/', privacyUrl = 'https://staseis.gr/privacy/';
 
+/// Shown in «Σχετικά» and on the first welcome card: the app must not pass as an operator's official app.
+const unofficialNote = 'Ανεπίσημη εφαρμογή. Δεν έχει σχέση με τον ΟΑΣΑ, τον ΟΑΣΘ, τη ΣΤΑΣΥ ή την Hellenic Train, '
+    'και δεν εκπροσωπεί κανέναν από αυτούς.';
+
 /// «Σχετικά»: the version, links, the terms, the privacy policy and the open-source licenses.
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -333,7 +337,12 @@ class AboutScreen extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text('Δεδομένα: ΟΑΣΑ (GTFS, telematics) · Χάρτης: OpenFreeMap, © OpenStreetMap contributors',
+            child: Text(
+                '$unofficialNote\n\n'
+                'Πηγές δεδομένων: ΟΑΣΑ (GTFS, άδεια CC BY-NC, και δημόσια δεδομένα telematics) · ΟΑΣΘ (δημόσια '
+                'δεδομένα, data.gov.gr) · ΣΤΑΣΥ (GTFS) · Hellenic Train (railway.gov.gr). Χάρτης: OpenFreeMap, '
+                '© OpenStreetMap contributors. Αναζήτηση διευθύνσεων: Photon (komoot), © OpenStreetMap contributors.\n\n'
+                '© 2026 Άγγελος Παπαμιχαήλ & Antonios Freris',
                 style: TextStyle(fontSize: 12, color: t.muted)),
           ),
         ]);

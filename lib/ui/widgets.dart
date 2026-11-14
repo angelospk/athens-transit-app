@@ -39,7 +39,9 @@ class LineBadge extends StatelessWidget {
   const LineBadge(this.line, {super.key, this.big = false, this.oasa = false});
   final String line;
   final bool big;
-  final bool oasa; // OASA's mark in a white disc before the number (Athens, as the web's LineChip)
+  // A generic bus glyph in a white disc before the number (Athens). Not OASA's logo: the app is unofficial
+  // and must not carry the operator's marks (Play impersonation policy, App Store 5.2.1).
+  final bool oasa;
 
   @override
   Widget build(BuildContext context) {
@@ -57,9 +59,9 @@ class LineBadge extends StatelessWidget {
               Container(
                 width: size + 2,
                 height: size + 2,
-                padding: EdgeInsets.all((size + 2) * .18),
+                alignment: Alignment.center,
                 decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                child: Image.asset('assets/icons/oasa.png', excludeFromSemantics: true),
+                child: ExcludeSemantics(child: Icon(Icons.directions_bus, size: (size + 2) * .7, color: c.bg)),
               ),
               const SizedBox(width: 5),
               text,

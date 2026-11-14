@@ -37,7 +37,7 @@ void main() {
     }
     expect(find.text('Δύο άδειες'), findsOneWidget);
     expect(find.text('Επόμενο'), findsNothing);
-    expect(find.text('Δεν κρατάμε τίποτα από σένα'), findsOneWidget);
+    expect(find.text('Χωρίς λογαριασμό, διαφημίσεις ή tracking'), findsOneWidget);
 
     await t.tap(button('ask-location'));
     await t.pumpAndSettle();

@@ -55,7 +55,7 @@ https://youtube.com/shorts/0Y5P6Zeynyg . Δείχνει: στάση → «Ειδ
   ρυθμίσεις· χωρίς αυτό οι κανόνες ξεκινούν λίγο αργά (`lib/ui/rules_screen.dart:191`). Δεν θέλει
   δήλωση· αν τη ζητήσει: «user-set weekly reminders for a bus at a set time».
 - **Content rating**: IARC ερωτηματολόγιο, όλα «Όχι» → PEGI 3 / Everyone.
-- **Ads**: Όχι. **Target audience**: 18+ (απλούστερο, αποφεύγει τους κανόνες Families).
+- **Ads**: Όχι. **Target audience**: 13-15, 16-17, 18+ (όχι κάτω των 13: θα έφερνε τους κανόνες Families· η πολιτική λέει «όχι για παιδιά κάτω των 13»).
 - **Government app**: Όχι. Ανεπίσημη εφαρμογή.
 
 ## App Store · App Privacy (nutrition labels)
@@ -72,10 +72,12 @@ https://youtube.com/shorts/0Y5P6Zeynyg . Δείχνει: στάση → «Ειδ
 
 ## App Store · Review notes
 
-> Staseis shows live public transport in Athens, Greece. Outside Athens the map still works:
-> pan to Athens, or use the search to open "Σύνταγμα" (Syntagma), then tap any stop to see live
-> arrivals. No login is needed. Alerts: open a stop, tap a line, choose "Ειδοποίησέ με" (notify me).
-> The app is unofficial and uses public data from OASA, STASY and Hellenic Train.
+> Staseis shows live public transport in Athens and Thessaloniki, Greece. Outside Greece the map still
+> works: pan to Athens, or use the search to open "Σύνταγμα" (Syntagma), then tap any stop to see live
+> arrivals. No login is needed. Alerts (Athens): open a stop, tap a line, choose "Ειδοποίησέ με" (notify
+> me). The app is unofficial and not affiliated with any operator. Data sources: OASA GTFS (CC BY-NC,
+> geodata.gov.gr) and OASA telematics, OASTH GTFS (data.gov.gr), STASY GTFS, Hellenic Train
+> (railway.gov.gr). Map: OpenFreeMap, © OpenStreetMap contributors.
 
 Ο χάρτης ανοίγει στη θέση του χρήστη (`lib/ui/map_screen.dart:716`). Ένας reviewer στις ΗΠΑ θα δει
 άδειο χάρτη. Έλεγξε σε simulator με θέση στις ΗΠΑ πριν την υποβολή: τι δείχνει το «Κοντά σου»;
