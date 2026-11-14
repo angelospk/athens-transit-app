@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../background/service.dart';
 import '../data/locate.dart';
 import '../data/store.dart';
+import 'menu.dart' show unofficialNote;
 import 'theme.dart';
 
 const welcomeKey = 'welcome_v1';
@@ -124,9 +125,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Δεν κρατάμε τίποτα από σένα', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const Text('Χωρίς λογαριασμό, διαφημίσεις ή tracking', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
-                Text('Χωρίς λογαριασμό, διαφημίσεις ή tracking. Η θέση σου, το σπίτι, η δουλειά και τα αγαπημένα μένουν μόνο στο κινητό σου.',
+                Text('Η θέση σου, το σπίτι, η δουλειά και τα αγαπημένα μένουν μόνο στο κινητό σου.',
                     style: TextStyle(fontSize: 13.5, height: 1.35, color: t.muted)),
               ]),
             ),
@@ -156,6 +157,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             if (mounted) setState(() => _notes = ok);
           },
         ),
+        const SizedBox(height: 20),
+        Text(unofficialNote, style: TextStyle(fontSize: 12.5, height: 1.4, color: t.muted)),
+        const SizedBox(height: 16),
       ]);
 }
 
