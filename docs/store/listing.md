@@ -174,8 +174,7 @@ Store Connect δεν ζητά screenshots iPad. Υποστήριξη iPad μπα
 Apple δεν το επιτρέπει.
 
 Τα iPhone screenshots είναι λήψεις από iPhone 17 Pro Max simulator (iOS 27.2, 2026-11-15:
-`src/ios-*.png`). Το καρέ 04 (διαδρομή) τραβήχτηκε βράδυ με λίγα λεωφορεία και δείχνει «Κανένα
-λεωφορείο με GPS κοντά τώρα»: καλύτερα να ξαναβγεί σε ώρα αιχμής.
+`src/ios-*.png`).
 
 ## English (both stores, locale en-US / en-GB)
 
