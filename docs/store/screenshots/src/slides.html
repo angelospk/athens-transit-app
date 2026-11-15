@@ -46,21 +46,22 @@ p.sub{font-weight:500;font-size:4.2vw;line-height:1.3;margin-top:3vw;opacity:.8;
 <div id="root"></div>
 <script>
 const q = new URLSearchParams(location.search), iphone = q.get('device') === 'iphone';
+const cap = n => iphone ? `ios-${n}.png` : `${n}.png`; // iPhone mode uses real iOS simulator captures
 const bar = (cls='') => iphone
   ? `<div class="ibar"><span>9:41</span><i class="island"></i><svg viewBox="0 0 74 14"><use href="#ios"/></svg></div>`
   : `<div class="bar ${cls}"><span>11:24</span><svg viewBox="0 0 60 16" style="color:#222"><use href="#sig"/></svg></div>`;
 const S = {
   1:{c:'dark',dot:'var(--yellow)',k:'Live χάρτης',h:'Κάθε λεωφορείο της Αθήνας. Τώρα.',p:'Δες πού είναι, και αν αργεί, πριν βγεις από το σπίτι.',
-     scr:`<div class="screen">${bar()}<img src="home.png"></div>`},
+     scr:`<div class="screen">${bar()}<img src="${cap('home')}"></div>`},
   2:{c:'light',dot:'var(--blue)',k:'Η στάση σου',h:'Πόσο απέχει; Μια ματιά αρκεί.',p:'Αφίξεις live, πόσες στάσεις μακριά, και ποιο ακολουθεί.',
-     scr:`<div class="screen">${bar()}<img src="stop.png"></div>`},
+     scr:`<div class="screen">${bar()}<img src="${cap('stop')}"></div>`},
   3:{c:'dark',dot:'var(--green)',k:'Ειδοποιήσεις',h:'Μην περιμένεις στη στάση.',p:'Σε ειδοποιεί λίγα λεπτά πριν φτάσει το λεωφορείο.',
-     scr:`<div class="screen">${bar()}<img src="alert.png"></div>`},
+     scr:`<div class="screen"${iphone ? ' style="background:#f1f3f9"' : ''}>${bar()}<img src="${cap('alert')}"></div>`},
   4:{c:'light',dot:'var(--red)',k:'Με κλειστή εφαρμογή',h:'Σε ενημερώνει live. Ακόμα και κλειστή.',p:'Η κάρτα μετρά αντίστροφα μέχρι να έρθει το λεωφορείο σου.',
      scr:`<div class="screen">${bar()}<img class="dim" src="home.png"><div class="notif"><img src="notif.png"></div></div>`},
   5:{c:'dark',dot:'var(--blue)',k:'Διαδρομή',h:'Λεωφορείο, μετρό, ή και τα δύο.',p:'Ο γρηγορότερος δρόμος, και πού να κατέβεις.',
      extra:`<div class="badges"><span class="badge"><svg><use href="#check"/></svg>Χωρίς λογαριασμό</span><span class="badge"><svg><use href="#check"/></svg>Χωρίς διαφημίσεις</span></div>`,
-     top:'74vw', scr:`<div class="screen">${bar()}<img src="plan.png"></div>`},
+     top:'74vw', scr:`<div class="screen">${bar()}<img src="${cap('plan')}"></div>`},
 };
 const EN = {
   1:{k:'Live map',h:'Every Athens bus. Right now.',p:'See where it is, and if it runs late, before you leave home.'},
