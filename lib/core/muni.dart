@@ -144,7 +144,10 @@ int? _intOf(Object? v) {
 }
 
 const _defaultAttribution = '© OpenStreetMap contributors (ODbL)';
-final _webLink = RegExp(r'^https?://');
+final _webLink = RegExp(r'^https://', caseSensitive: false);
+
+/// A link the app may open in the browser: https only (the data comes from the network).
+bool isWebLink(String url) => _webLink.hasMatch(url);
 
 MuniRoute? _readRoute(Object? v) {
   if (v is! Map) return null;
@@ -169,7 +172,7 @@ MuniRoute? _readRoute(Object? v) {
     name: m['name'] as String,
     municipality: m['municipality'] as String,
     // Only a web link goes into an href.
-    timetableUrl: url is String && _webLink.hasMatch(url) ? url : null,
+    timetableUrl: url is String && isWebLink(url) ? url : null,
     shape: shape,
     stops: [for (final s in rawStops) s as String],
   );

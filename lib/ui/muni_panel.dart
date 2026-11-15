@@ -147,7 +147,7 @@ class _MuniPanelState extends State<MuniPanel> with _MuniLoad {
             if (l.note != null) _note(context, l.note!),
           const SizedBox(height: 8),
           _note(context, 'Ωράριο: ${table.municipality}, ελέγχθηκε ${_date(table.checked)}.'),
-          _link('Σελίδα του δήμου', table.source),
+          if (isWebLink(table.source)) _link('Σελίδα του δήμου', table.source),
         ],
         const SizedBox(height: 8),
         Text('Διαδρομή και στάσεις: ${muni?.data.attribution ?? '© OpenStreetMap contributors (ODbL)'}',

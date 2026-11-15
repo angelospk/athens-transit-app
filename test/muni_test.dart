@@ -83,6 +83,15 @@ void main() {
     expect(parseMunicipal('not found'), isNull);
   });
 
+  // The app opens these links outside itself: only https, never http, intent:, tel: or javascript:.
+  test('isWebLink accepts only https', () {
+    expect(isWebLink('https://dad.gr/x'), isTrue);
+    expect(isWebLink('HTTPS://dad.gr/x'), isTrue);
+    for (final bad in ['http://dad.gr/x', 'intent://x#Intent;end', 'tel:2100000000', 'javascript:alert(1)', 's', '']) {
+      expect(isWebLink(bad), isFalse, reason: bad);
+    }
+  });
+
   test('timetables: the file\'s tables, each checked whole', () {
     expect(_tables.map((t) => t.municipality), ['Δήμος Χαλανδρίου', 'Δήμος Αγίου Δημητρίου']);
     expect(_tables[0].valid, isNull);
