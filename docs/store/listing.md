@@ -46,20 +46,141 @@
 
 **Κατηγορία**: Maps & Navigation · **Tags**: Public transit, Navigation
 
-## App Store
+## App Store (iPhone και iPad)
 
-**Όνομα (30)**: Στάσεις: Live Συγκοινωνίες
-**Υπότιτλος (30)**: Αφίξεις live και ειδοποιήσεις
-**Λέξεις-κλειδιά (100)**: λεωφορείο,αφίξεις,μετρό,τραμ,Αθήνα,Θεσσαλονίκη,συγκοινωνίες,στάσεις,bus,live
+Έλεγχος 2026-11-16. Τα κείμενα είναι ανά γλώσσα, ίδια για iPhone και iPad. Κύρια γλώσσα: Ελληνικά.
+Προσθήκη English (U.S.) στο App Store Connect. Όρια της Apple: όνομα και υπότιτλος 30 χαρακτήρες,
+promotional text 170, περιγραφή 4000, keywords **100 bytes** (όχι χαρακτήρες: ένα ελληνικό γράμμα
+είναι 2 bytes). Τα keywords δεν επαναλαμβάνουν λέξεις του ονόματος ή του υπότιτλου (η Apple τις
+μετράει ήδη).
 
-> «ΟΑΣΑ» στα keywords: η Apple μπορεί να το θεωρήσει χρήση εμπορικού σήματος (guideline 2.3.7). Αν
-> απορριφθεί, σβήσε το.
+| Πεδίο | Ελληνικά | English |
+|---|---|---|
+| Όνομα (30) | Στάσεις: Live Συγκοινωνίες (26) | Staseis: Live Transit (21) |
+| Υπότιτλος (30) | Αφίξεις live και ειδοποιήσεις (29) | Live arrivals and bus alerts (28) |
+| Keywords (100 bytes) | λεωφορείο,μετρό,τραμ,Αθήνα,Θεσσαλονίκη,δρομολόγια,bus (97 bytes) | athens,thessaloniki,metro,tram,greece,timetable,public transport,schedule,stop,map,commute (90) |
+| Promotional text (170) | Λεωφορεία Αθήνας και Θεσσαλονίκης live, αφίξεις στη στάση σου και ειδοποιήσεις πριν έρθει το λεωφορείο. Χωρίς λογαριασμό, χωρίς διαφημίσεις. (140) | Live buses in Athens and Thessaloniki. Arrivals at your stop and an alert a few minutes before your bus comes. No account, no ads. (130) |
+| What's New (4000) | Δεν ζητείται στην πρώτη έκδοση. Υποχρεωτικό από την επόμενη. | Same |
 
-**Promotional text (170)**: Λεωφορεία Αθήνας και Θεσσαλονίκης live, αφίξεις στη στάση σου και
-ειδοποιήσεις πριν έρθει το λεωφορείο. Χωρίς λογαριασμό, χωρίς διαφημίσεις.
+Κατηγορία: **Navigation**, δευτερεύουσα **Travel**. Τιμή: δωρεάν. URLs και copyright: `SUBMISSION.md` §1.
 
-**Περιγραφή**: η ίδια με το Play, χωρίς την ενότητα «Widgets» (κρυφή στο iOS).
-**Κατηγορία**: Navigation · δευτερεύουσα Travel · **Age rating**: 4+
+### Περιγραφή, Ελληνικά (1304 / 4000)
+
+Διαφέρει από το Play: χωρίς widgets (μόνο Android) και με τις ειδοποιήσεις όπως δουλεύουν στο iPhone.
+Το iOS δεν τρέχει live ειδοποιήσεις με την εφαρμογή κλειστή· οι εβδομαδιαίοι κανόνες και το
+τελευταίο λεωφορείο είναι προγραμματισμένες ειδοποιήσεις (`lib/background/service.dart`,
+`_scheduleNext`, `noteAt`, `syncNudge`).
+
+```text
+Δες πού είναι το λεωφορείο σου τώρα, πόσο απέχει από τη στάση σου, και πότε πρέπει να φύγεις.
+Αθήνα και Θεσσαλονίκη. Μετρό, διαδρομές και ειδοποιήσεις: μόνο στην Αθήνα, προς το παρόν.
+
+ΧΑΡΤΗΣ LIVE
+• Όλα τα λεωφορεία της Αθήνας και της Θεσσαλονίκης στον χάρτη, με χρώμα ανάλογα με την καθυστέρηση
+• Αθήνα: σταθμοί μετρό, τραμ και προαστιακού με τα επόμενα δρομολόγια
+
+ΣΤΑΣΕΙΣ ΚΑΙ ΓΡΑΜΜΕΣ
+• Επόμενες αφίξεις live, και τα δρομολόγια που δεν ξεκίνησαν ακόμα από το πρόγραμμα
+• Δρομολόγια που δεν ξεκίνησαν, με άλλη επιλογή
+• Πρόγραμμα κάθε γραμμής και κενά ανάμεσα στα λεωφορεία
+
+ΔΙΑΔΡΟΜΗ
+• Με ένα λεωφορείο, με μία αλλαγή, ή λεωφορείο και μετρό
+• «Φύγε σε N′», «Πού κατεβαίνω;» και «Ακολούθησέ με» βήμα βήμα
+
+ΕΙΔΟΠΟΙΗΣΕΙΣ
+• Λίγα λεπτά ή λίγες στάσεις πριν έρθει το λεωφορείο
+• «Φύγε εγκαίρως» από τη θέση σου
+• Στο iPhone οι live ειδοποιήσεις τρέχουν όσο η εφαρμογή είναι ανοιχτή
+• Εβδομαδιαίοι κανόνες: υπενθύμιση όταν ξεκινά το καθημερινό σου δρομολόγιο
+• Υπενθύμιση πριν φύγει το τελευταίο λεωφορείο της ημέρας
+
+ΑΓΑΠΗΜΕΝΑ
+• Αγαπημένες στάσεις και μέρη («Σπίτι», «Δουλειά»)
+
+ΑΠΟΡΡΗΤΟ
+Χωρίς λογαριασμό, χωρίς διαφημίσεις, χωρίς tracking. Η θέση σου μένει στο κινητό.
+
+Ανεπίσημη εφαρμογή. Δεν έχει σχέση με τον ΟΑΣΑ, τον ΟΑΣΘ, τη ΣΤΑΣΥ ή την Hellenic Train. Τα δεδομένα έρχονται
+από τις δημόσιες πηγές τους.
+```
+
+### Description, English (1175 / 4000)
+
+```text
+See where your bus is right now, how far it is from your stop, and when to leave.
+Athens and Thessaloniki. Metro, trip planner and alerts: Athens only, for now.
+
+LIVE MAP
+• Every Athens and Thessaloniki bus on the map, coloured by delay
+• Athens: metro, tram and suburban rail stations with their next trains
+
+STOPS AND LINES
+• Live arrivals, plus the runs that have not started yet from the timetable
+• Runs that did not start, with another option
+• Each line's timetable and the gaps between its buses
+
+TRIP PLANNER
+• One bus, one change, or bus plus metro
+• Step by step: "leave in N min", "Where do I get off?" and "Follow me"
+
+ALERTS
+• A few minutes or stops before your bus arrives
+• "Leave on time" from where you are
+• On iPhone, live alerts run while the app is open
+• Weekly rules remind you when your daily trip starts
+• A reminder before the last bus of the day leaves
+
+FAVOURITES
+• Favourite stops and places ("Home", "Work")
+
+PRIVACY
+No account, no ads, no tracking. Your location stays on your phone.
+
+Interface in Greek for now; English is coming. Unofficial app, not affiliated with OASA, OASTH, STASY or
+Hellenic Train. Data comes from their public sources.
+```
+
+### Age rating (ερωτηματολόγιο του App Store Connect)
+
+Όλα **No** / **None**. Αποτέλεσμα: **4+**.
+
+- In-App Controls: Parental Controls **No**, Age Assurance **No**.
+- Capabilities: Unrestricted Web Access **No** (τα links ανοίγουν στον browser του κινητού, όχι μέσα
+  στην εφαρμογή), User-Generated Content **No** (η αναφορά «Λάθος θέση;» πάει μόνο σε εμάς, κανείς
+  άλλος χρήστης δεν τη βλέπει), Social Media **No**, Messaging and Chat **No**, Advertising **No**.
+- Mature Themes, Medical or Wellness, Sexuality or Nudity, Violence: όλα **None** / **No**.
+- Chance-Based Activities: Gambling **No**, Simulated Gambling **None**, Contests **None**, Loot Boxes **No**.
+- Age Categories and Override: **Not Applicable** (όχι «Made for Kids»: η πολιτική λέει «όχι για
+  παιδιά κάτω των 13», και η επιλογή δεν αλλάζει μετά την έγκριση).
+
+### Screenshots
+
+Χωρίς alpha, PNG ή JPEG, 1 έως 10 ανά μέγεθος.
+
+| Συσκευή | Μέγεθος (portrait) | Κατάσταση |
+|---|---|---|
+| iPhone 6.9" | 1320×2868 | Έτοιμα: `screenshots/ios/el/`, `screenshots/ios/en/` (4 καρέ, RGB) |
+| iPhone 6.5" | 1284×2778 | Δεν χρειάζεται: η Apple τα βγάζει από τα 6.9" |
+| iPad 13" | 2064×2752 ή 2048×2732 | **Λείπουν.** Υποχρεωτικά όσο η εφαρμογή δηλώνει iPad (δες παρακάτω) |
+
+### iPad: απόφαση που εκκρεμεί
+
+Το `ios/Runner.xcodeproj/project.pbxproj` έχει `TARGETED_DEVICE_FAMILY = "1,2"` (iPhone **και** iPad)
+και το `Info.plist` έχει `UISupportedInterfaceOrientations~ipad`. Η εφαρμογή όμως δεν έχει διάταξη
+για tablet: κανένα breakpoint πλάτους στο `lib/`, το φύλλο του χάρτη πιάνει όλο το πλάτος, και δεν έχει
+δοκιμαστεί ποτέ σε iPad. Με το "1,2" το App Store Connect ζητά screenshots iPad 13", και ο reviewer
+δοκιμάζει και σε iPad (guideline 2.4.1).
+
+1. **iPhone μόνο (προτείνεται για την πρώτη έκδοση)**: `TARGETED_DEVICE_FAMILY = 1` στα τρία build
+   configurations του Runner. Στο iPad η εφαρμογή ανοίγει ως «Designed for iPhone». Δεν χρειάζονται
+   screenshots iPad. Υποστήριξη iPad μπαίνει αργότερα· το αντίστροφο (να βγει το iPad μετά τη
+   δημοσίευση) η Apple δεν το επιτρέπει.
+2. **iPad τώρα**: δοκιμή σε iPad simulator στο Mac (portrait και landscape), πιθανώς μέγιστο πλάτος στο
+   φύλλο και στα panels, και screenshots 13" από τον simulator. Θέλει Mac και μερικές ώρες.
+
+Πριν την υποβολή, όποια κι αν είναι η επιλογή: τα iPhone screenshots είναι λήψεις από Android σε
+πλαίσιο iPhone. Πιο ασφαλές (guideline 2.3.3): νέες λήψεις από iPhone simulator στο ίδιο `slides.html`.
 
 ## English (both stores, locale en-US / en-GB)
 
@@ -67,7 +188,7 @@ The app interface is in Greek. The English page says so, so that visitors are no
 
 **Title / App Store name (30)**: Staseis: Live Transit
 **App Store subtitle (30)**: Live arrivals and bus alerts
-**Keywords (100)**: athens,bus,transit,metro,tram,greece,arrivals,timetable,public transport
+**Keywords**: δες την ενότητα App Store (το Play δεν έχει keywords)
 **Short description (80)**: Live bus and transit arrivals, plus an alert before your bus comes.
 **Promotional text (170)**: Live buses in Athens and Thessaloniki. Arrivals at your stop and an alert a
 few minutes before your bus comes. No account, no ads.
@@ -123,9 +244,8 @@ Hellenic Train. Data comes from their public sources.
 - Το iOS set έχει 4 καρέ: λείπει το 04 («Ακόμα και κλειστή»). Στο iOS η εφαρμογή δεν τρέχει live
   κάρτα στο παρασκήνιο· οι κανόνες και το τελευταίο λεωφορείο είναι προγραμματισμένες ειδοποιήσεις
   (`lib/background/service.dart:279`).
-- Η περιγραφή του App Store: σβήσε την ενότητα «ΕΙΔΟΠΟΙΗΣΕΙΣ ΠΟΥ ΤΡΕΧΟΥΝ ΜΕ ΤΗΝ ΕΦΑΡΜΟΓΗ ΚΛΕΙΣΤΗ»
-  και τα widgets. Κράτα «το τελευταίο λεωφορείο της ημέρας» και τους εβδομαδιαίους κανόνες ως
-  υπενθυμίσεις.
+- Η περιγραφή του App Store είναι έτοιμη (ενότητα «App Store»): χωρίς widgets και χωρίς live
+  ειδοποιήσεις με την εφαρμογή κλειστή.
 - Το καρέ 03 («Σε ειδοποιεί λίγα λεπτά πριν φτάσει»): πριν την υποβολή, δοκίμασέ το σε iPhone με
   κλειδωμένη οθόνη. Αν η ειδοποίηση δεν έρχεται, άλλαξε τον υπότιτλο σε κάτι που ισχύει.
 - Πιο ασφαλές από όλα: νέες λήψεις από iPhone simulator στο Mac, στο ίδιο `slides.html`.
