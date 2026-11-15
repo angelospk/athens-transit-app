@@ -3,7 +3,7 @@
 > Η σελίδα που ανοίγει η εφαρμογή (Μενού → Απόρρητο) είναι η https://staseis.gr/privacy/
 > (`athens-transit-map/public/privacy/index.html`). Κράτα τις δύο ίδιες.
 
-Ισχύει από: 14 Νοεμβρίου 2026 · Τελευταία αλλαγή: 14 Νοεμβρίου 2026 · Επικοινωνία: angelos.papamichail@gmail.com
+Ισχύει από: 14 Νοεμβρίου 2026 · Τελευταία αλλαγή: 15 Νοεμβρίου 2026 · Επικοινωνία: angelos.papamichail@gmail.com
 
 Αυτή η πολιτική αφορά την εφαρμογή «Στάσεις: Live Συγκοινωνίες» (Staseis: Live Transit, `gr.staseis.app`, Android και iOS) και τον χάρτη στο staseis.gr.
 
@@ -23,11 +23,11 @@
 - Δεν έχουμε λογαριασμούς. Δεν ζητάμε όνομα, email ή τηλέφωνο.
 - Η εφαρμογή δεν έχει διαφημίσεις, analytics ή tracking.
 - Η ακριβής θέση σου **δεν φεύγει από το κινητό**. Η εφαρμογή τη χρησιμοποιεί για τις κοντινές στάσεις, την απόσταση ως τη στάση σου και τις ειδοποιήσεις. Δεν τη στέλνει σε κανέναν διακομιστή.
-- Τα αγαπημένα, τα μέρη (π.χ. «Σπίτι», «Δουλειά») και οι ειδοποιήσεις σου μένουν μόνο στο κινητό.
+- Τα αγαπημένα, τα μέρη (π.χ. «Σπίτι», «Δουλειά») και οι ειδοποιήσεις σου μένουν μόνο στο κινητό. Στο Android η εφαρμογή δεν τα βάζει στο αντίγραφο ασφαλείας του Google.
 
 ## Τι φεύγει από το κινητό
 
-- **Αιτήματα για δεδομένα συγκοινωνιών** (γραμμές, στάσεις, αφίξεις, στατιστικά) προς τους διακομιστές μας (`transit.haroldpoi.dev`, `transit-thess.haroldpoi.dev`, `bus.haroldpoi.dev`, `staseis.gr`), προς το GitHub, όπου είναι τα στατικά αρχεία (`angelospk.github.io`, `raw.githubusercontent.com`), και προς την Hellenic Train (`railway.gov.gr`). Δεν περιέχουν στοιχεία σου ούτε την ακριβή θέση σου, αλλά δείχνουν ποια περιοχή του χάρτη κοιτάς: τα λεωφορεία έρχονται σε πλακίδια περίπου 5 × 5 χλμ., όπως και ο ίδιος ο χάρτης, και η περιοχή αυτή συχνά είναι γύρω σου. Κάθε διακομιστής που λαμβάνει ένα αίτημα βλέπει τη διεύθυνση IP σου. Οι διακομιστές μας κρατούν τεχνικά logs (διεύθυνση IP, ώρα, αίτημα) για ασφάλεια και διάγνωση σφαλμάτων.
+- **Αιτήματα για δεδομένα συγκοινωνιών** (γραμμές, στάσεις, αφίξεις, στατιστικά) προς τους διακομιστές μας (`transit.haroldpoi.dev`, `transit-thess.haroldpoi.dev`, `bus.haroldpoi.dev`, `staseis.gr`), προς το GitHub, όπου είναι τα στατικά αρχεία (`angelospk.github.io`, `raw.githubusercontent.com`), και προς την Hellenic Train (`railway.gov.gr`). Δεν περιέχουν στοιχεία σου ούτε την ακριβή θέση σου, αλλά δείχνουν ποια περιοχή του χάρτη κοιτάς: τα λεωφορεία έρχονται σε πλακίδια περίπου 5 × 5 χλμ., όπως και ο ίδιος ο χάρτης, και η περιοχή αυτή συχνά είναι γύρω σου. Γι' αυτό το δηλώνουμε στα stores ως **κατά προσέγγιση θέση**, που δεν συνδέεται με εσένα και δεν χρησιμοποιείται για tracking. Κάθε διακομιστής που λαμβάνει ένα αίτημα βλέπει τη διεύθυνση IP σου. Οι διακομιστές μας κρατούν τεχνικά logs (διεύθυνση IP, ώρα, αίτημα, άρα και το πλακίδιο του χάρτη) για ασφάλεια και διάγνωση σφαλμάτων, για 14 ημέρες.
 - **Το κείμενο της αναζήτησης διευθύνσεων** πηγαίνει στο Photon (`photon.komoot.io`, δεδομένα OpenStreetMap), για να βρεθεί η διεύθυνση. Η θέση σου δεν στέλνεται.
 - **Ο χάρτης** φορτώνει από το OpenFreeMap (`tiles.openfreemap.org`) πλακίδια για την περιοχή που βλέπεις.
 - **Οι οδηγίες περπατήματος** ως μια στάση ανοίγουν την εφαρμογή χαρτών του κινητού (Google Maps ή Apple Maps) με τη θέση της στάσης. Μετά ισχύει η πολιτική της εφαρμογής χαρτών.
@@ -92,7 +92,7 @@
 
 # Privacy policy · Στάσεις
 
-Effective: 14 November 2026 · Last updated: 14 November 2026 · Contact: angelos.papamichail@gmail.com
+Effective: 14 November 2026 · Last updated: 15 November 2026 · Contact: angelos.papamichail@gmail.com
 
 This policy covers the app "Staseis: Live Transit" (Στάσεις: Live Συγκοινωνίες, `gr.staseis.app`, Android and iOS) and the map at staseis.gr.
 
@@ -107,11 +107,11 @@ Staseis is a project of two individuals, not a company: **Angelos Papamichail** 
 - No accounts. We never ask for your name, email or phone number.
 - The app has no ads, no analytics and no tracking.
 - Your exact location **stays on your phone**. It is used for nearby stops, the distance to your stop and alerts, and is never sent to any server.
-- Favourites, places (e.g. "Home", "Work") and alerts are stored only on your phone.
+- Favourites, places (e.g. "Home", "Work") and alerts are stored only on your phone. On Android the app does not put them in your Google cloud backup.
 
 ## What leaves your phone
 
-- **Transit data requests** (lines, stops, arrivals, statistics) to our servers (`transit.haroldpoi.dev`, `transit-thess.haroldpoi.dev`, `bus.haroldpoi.dev`, `staseis.gr`), to GitHub, which hosts the static files (`angelospk.github.io`, `raw.githubusercontent.com`), and to Hellenic Train (`railway.gov.gr`). They carry no personal data and not your exact location, but they show which area of the map you look at: buses load in tiles of about 5 × 5 km, like the map itself, and that area is often around you. Every server that receives a request sees your IP address. Our servers keep technical logs (IP address, time, request) for security and debugging.
+- **Transit data requests** (lines, stops, arrivals, statistics) to our servers (`transit.haroldpoi.dev`, `transit-thess.haroldpoi.dev`, `bus.haroldpoi.dev`, `staseis.gr`), to GitHub, which hosts the static files (`angelospk.github.io`, `raw.githubusercontent.com`), and to Hellenic Train (`railway.gov.gr`). They carry no personal data and not your exact location, but they show which area of the map you look at: buses load in tiles of about 5 × 5 km, like the map itself, and that area is often around you. That is why the store listings declare it as **approximate location**, not linked to you and not used for tracking. Every server that receives a request sees your IP address. Our servers keep technical logs (IP address, time, request, so also the map tile) for security and debugging, for 14 days.
 - **Address search text** goes to Photon (`photon.komoot.io`, OpenStreetMap data), without your location.
 - **Map tiles** for the area you view load from OpenFreeMap (`tiles.openfreemap.org`).
 - **Walking directions** to a stop open your phone's map app (Google Maps or Apple Maps) with the stop's position. After that, the map app's privacy policy applies.
