@@ -43,8 +43,8 @@
 8. **Play Console**: store listing (κείμενα, εικονίδιο, feature graphic, screenshots), κατηγορία Maps &
    Navigation, δήλωση foreground service (μετά το πρώτο upload), content rating, closed test αν ισχύει,
    πρόσβαση του Άγγελου.
-9. **App Store Connect**: app record, App Privacy (Search History, Other User Content, Device ID· όλα not
-   linked, not tracking), keywords χωρίς ΟΑΣΑ, review notes, copyright «© 2026 Άγγελος Παπαμιχαήλ & Antonios
+9. **App Store Connect**: app record, App Privacy (Coarse Location, Search History, Other User Content, Device ID·
+   όλα not linked, not tracking), keywords χωρίς ΟΑΣΑ, review notes, copyright «© 2026 Άγγελος Παπαμιχαήλ & Antonios
    Freris», build από Mac.
 
 ## Προαιρετικά (καλό να γίνουν)

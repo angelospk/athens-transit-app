@@ -46,9 +46,9 @@
 
 **Κατηγορία**: Maps & Navigation · **Tags**: Public transit, Navigation
 
-## App Store (iPhone και iPad)
+## App Store (iPhone)
 
-Έλεγχος 2026-11-16. Τα κείμενα είναι ανά γλώσσα, ίδια για iPhone και iPad. Κύρια γλώσσα: Ελληνικά.
+Έλεγχος 2026-11-16. Κύρια γλώσσα: Ελληνικά.
 Προσθήκη English (U.S.) στο App Store Connect. Όρια της Apple: όνομα και υπότιτλος 30 χαρακτήρες,
 promotional text 170, περιγραφή 4000, keywords **100 bytes** (όχι χαρακτήρες: ένα ελληνικό γράμμα
 είναι 2 bytes). Τα keywords δεν επαναλαμβάνουν λέξεις του ονόματος ή του υπότιτλου (η Apple τις
@@ -162,24 +162,18 @@ Hellenic Train. Data comes from their public sources.
 |---|---|---|
 | iPhone 6.9" | 1320×2868 | Έτοιμα: `screenshots/ios/el/`, `screenshots/ios/en/` (4 καρέ, RGB) |
 | iPhone 6.5" | 1284×2778 | Δεν χρειάζεται: η Apple τα βγάζει από τα 6.9" |
-| iPad 13" | 2064×2752 ή 2048×2732 | **Λείπουν.** Υποχρεωτικά όσο η εφαρμογή δηλώνει iPad (δες παρακάτω) |
+| iPad 13" | 2064×2752 ή 2048×2732 | Δεν χρειάζονται: η εφαρμογή είναι μόνο για iPhone (δες παρακάτω) |
 
-### iPad: απόφαση που εκκρεμεί
+### iPad: μόνο iPhone στην πρώτη έκδοση (απόφαση 2026-11-16)
 
-Το `ios/Runner.xcodeproj/project.pbxproj` έχει `TARGETED_DEVICE_FAMILY = "1,2"` (iPhone **και** iPad)
-και το `Info.plist` έχει `UISupportedInterfaceOrientations~ipad`. Η εφαρμογή όμως δεν έχει διάταξη
-για tablet: κανένα breakpoint πλάτους στο `lib/`, το φύλλο του χάρτη πιάνει όλο το πλάτος, και δεν έχει
-δοκιμαστεί ποτέ σε iPad. Με το "1,2" το App Store Connect ζητά screenshots iPad 13", και ο reviewer
-δοκιμάζει και σε iPad (guideline 2.4.1).
+Η εφαρμογή δεν έχει διάταξη για tablet (κανένα breakpoint πλάτους στο `lib/`, το φύλλο του χάρτη
+πιάνει όλο το πλάτος) και δεν έχει δοκιμαστεί σε iPad. Γι' αυτό `TARGETED_DEVICE_FAMILY = 1` στο
+`ios/Runner.xcodeproj/project.pbxproj`. Στο iPad η εφαρμογή ανοίγει ως «Designed for iPhone», και το App
+Store Connect δεν ζητά screenshots iPad. Υποστήριξη iPad μπαίνει σε επόμενη έκδοση, μαζί με διάταξη
+για tablet και screenshots 13" από simulator. Το αντίστροφο (να βγει το iPad μετά τη δημοσίευση) η
+Apple δεν το επιτρέπει.
 
-1. **iPhone μόνο (προτείνεται για την πρώτη έκδοση)**: `TARGETED_DEVICE_FAMILY = 1` στα τρία build
-   configurations του Runner. Στο iPad η εφαρμογή ανοίγει ως «Designed for iPhone». Δεν χρειάζονται
-   screenshots iPad. Υποστήριξη iPad μπαίνει αργότερα· το αντίστροφο (να βγει το iPad μετά τη
-   δημοσίευση) η Apple δεν το επιτρέπει.
-2. **iPad τώρα**: δοκιμή σε iPad simulator στο Mac (portrait και landscape), πιθανώς μέγιστο πλάτος στο
-   φύλλο και στα panels, και screenshots 13" από τον simulator. Θέλει Mac και μερικές ώρες.
-
-Πριν την υποβολή, όποια κι αν είναι η επιλογή: τα iPhone screenshots είναι λήψεις από Android σε
+Πριν την υποβολή: τα iPhone screenshots είναι λήψεις από Android σε
 πλαίσιο iPhone. Πιο ασφαλές (guideline 2.3.3): νέες λήψεις από iPhone simulator στο ίδιο `slides.html`.
 
 ## English (both stores, locale en-US / en-GB)

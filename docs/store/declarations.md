@@ -2,7 +2,9 @@
 
 Πηγή των απαντήσεων: ο κώδικας στις 2026-11-11. Η ακριβής θέση χρησιμοποιείται μόνο τοπικά
 (`lib/background/service.dart`). Το geocoder στέλνει μόνο το κείμενο της αναζήτησης
-(`Api.places` στο `lib/data/api.dart`). Το «Λάθος θέση;» στέλνει αναφορά με έναν τυχαίο κωδικό
+(`Api.places` στο `lib/data/api.dart`). Τα πλακίδια λεωφορείων (`Api.tile`) δείχνουν την περιοχή του
+χάρτη: δηλώνονται ως κατά προσέγγιση θέση. Το Android δεν κρατά αντίγραφο στο cloud
+(`android:allowBackup="false"`). Το «Λάθος θέση;» στέλνει αναφορά με έναν τυχαίο κωδικό
 εφαρμογής (`Api.sendFeedback`, `lib/core/stopfix.dart`, `lib/data/stopfix_store.dart`). Αν αλλάξει
 κάτι από αυτά, ξαναδές αυτό το αρχείο, την πολιτική απορρήτου και το
 `ios/Runner/PrivacyInfo.xcprivacy`.
@@ -16,8 +18,12 @@
     είναι service provider μας). Προαιρετικό. Σκοπός: App functionality. Όχι ephemeral.
   - **Device or other IDs**: ο τυχαίος κωδικός της εφαρμογής (12 hex, `stopfix.dev`). Collected,
     όχι Shared, προαιρετικό, App functionality. Δεν είναι το Android ID ούτε advertising ID.
-  - **Location: Όχι.** Το σημείο της αναφοράς είναι η θέση της στάσης που δείχνει ο χρήστης, όχι η
-    θέση του. Η θέση του χρήστη δεν φεύγει από τη συσκευή.
+  - **Location → Approximate location**: Collected, όχι Shared, **υποχρεωτικό** (ο χάρτης το
+    κάνει μόνος του), σκοπός App functionality, όχι ephemeral. Τα πλακίδια λεωφορείων (περίπου
+    5 × 5 χλμ.) ακολουθούν τον χάρτη, που ανοίγει στη θέση του χρήστη, και τα logs μας τα κρατούν
+    με την IP 14 ημέρες. Η Google ορίζει approximate location κάθε περιοχή από 3 τ.χλμ. και πάνω.
+  - **Precise location: Όχι.** Η ακριβής θέση δεν φεύγει από τη συσκευή. Το σημείο της αναφοράς
+    «Λάθος θέση;» είναι η θέση της στάσης που δείχνει ο χρήστης, όχι η θέση του.
   - **App activity → In-app search history**: το κείμενο της αναζήτησης διευθύνσεων φεύγει από το
     κινητό προς το Photon (komoot), τρίτο μέρος χωρίς σύμβαση μαζί μας. Collected, **Shared**,
     προαιρετικό, σκοπός App functionality. Όχι ephemeral (δεν ξέρουμε πόσο κρατά logs το Photon).
@@ -62,12 +68,14 @@ https://youtube.com/shorts/0Y5P6Zeynyg . Δείχνει: στάση → «Ειδ
 ## App Store · App Privacy (nutrition labels)
 
 - Data types, όλα not linked to user, not used for tracking, App Functionality:
+  - **Coarse Location**: τα πλακίδια λεωφορείων του χάρτη (περίπου 5 × 5 χλμ.), που κρατούν τα logs
+    μας με την IP 14 ημέρες (ίδιος λόγος με το Google Play παραπάνω).
   - **Search History**: το κείμενο της αναζήτησης διευθύνσεων (Photon).
   - **Other User Content**: η αναφορά «Λάθος θέση;».
   - **Device ID**: ο τυχαίος κωδικός της εφαρμογής στην αναφορά.
   Ταιριάζει με το `ios/Runner/PrivacyInfo.xcprivacy`.
-- Τίποτα άλλο. Location: **Not collected** (η θέση του χρήστη δεν φεύγει από τη συσκευή· το σημείο της
-  αναφοράς είναι η θέση της στάσης).
+- Τίποτα άλλο. Precise Location: **Not collected** (η ακριβής θέση δεν φεύγει από τη συσκευή· το
+  σημείο της αναφοράς είναι η θέση της στάσης).
 - Export compliance: `ITSAppUsesNonExemptEncryption = false` στο `Info.plist` (μόνο HTTPS). Δεν θα
   ρωτά σε κάθε build.
 

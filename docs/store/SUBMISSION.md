@@ -106,8 +106,7 @@ https://github.com/angelospk/athens-transit-app/blob/main/docs/store/PRE-PUBLISH
 2. **Play, λογαριασμός προσωπικός μετά τις 13/11/2023**: closed test με 12 testers για 14 μέρες πριν το
    production.
 3. **iOS**: build από Mac, και δοκιμή σε iPhone με κλειδωμένη οθόνη για το καρέ 03.
-   **iPad**: απόφαση πριν το πρώτο build. Η εφαρμογή δηλώνει iPad (`TARGETED_DEVICE_FAMILY = "1,2"`)
-   χωρίς διάταξη για tablet και χωρίς screenshots 13". Επιλογές και πρόταση:
+   Μόνο iPhone στην πρώτη έκδοση (`TARGETED_DEVICE_FAMILY = 1`), χωρίς screenshots iPad. Λόγος:
    https://github.com/angelospk/athens-transit-app/blob/main/docs/store/listing.md (ενότητα «iPad»).
 4. Δοκιμή σε κινητό (https://github.com/angelospk/athens-transit-app/blob/main/docs/TEST-CHECKLIST.md #2, #17):
    αποφασίστηκε 2026-11-14 να μη γίνει πριν το release.
@@ -120,5 +119,4 @@ https://github.com/angelospk/athens-transit-app/blob/main/docs/store/PRE-PUBLISH
 - Η Google μπορεί να θεωρήσει ότι το polling αφίξεων δεν είναι `dataSync`. Αν το απορρίψει, χρειάζεται νέα
   έκδοση με `shortService` ή `specialUse`
   (https://github.com/angelospk/athens-transit-app/blob/main/docs/store/declarations.md).
-- Η Apple μπορεί να κόψει το «ΟΑΣΑ» από τα keywords (guideline 2.3.7). Αν απορριφθεί, σβήστο.
 - Ένας reviewer στις ΗΠΑ βλέπει άδειο χάρτη στη θέση του. Τα review notes λένε πώς να πάει στην Αθήνα.

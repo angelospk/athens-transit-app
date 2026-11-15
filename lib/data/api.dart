@@ -21,7 +21,6 @@ export '../core/city.dart' show apiBase, staticBase, tripsUrl;
 const metroUrl = 'https://bus.haroldpoi.dev/metro.json'; // metro, ISAP, tram: STASY GTFS + OSM tracks
 const statsBase = 'https://raw.githubusercontent.com/angelospk/staseis-rt/stats/v1';
 const statsUrl = '$statsBase/latest.json'; // newest day, once a day
-const pushBase = 'https://push.haroldpoi.dev';
 const railUrl = 'https://railway.gov.gr/api/public'; // suburban rail boards (docs/research/rail-data.md)
 // The web's feedback endpoint (athens-transit-map docs/feedback/Code.gs: a Google Apps Script that writes a
 // Sheet row). Public: the web's bundle carries it too. App reports come without the web's bot check.
