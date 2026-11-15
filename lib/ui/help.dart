@@ -1,34 +1,32 @@
 // "Τι σημαίνει κάθε σύμβολο" (the web's HelpPop) and where the data comes from: from the ? of the map's
-// layers sheet and from Περισσότερα. The delay legend is shared with the layers sheet.
+// layers sheet and from Περισσότερα. The level legend is shared with the layers sheet.
 
 import 'package:flutter/material.dart';
 
-import '../core/marker.dart';
+import '../core/live_quality.dart';
+import 'levels.dart';
 import 'theme.dart';
 
-Color _hex(String h) => Color(int.parse('FF${h.substring(1)}', radix: 16));
-
-const _classes = [
-  (60, 'έως 2′ ή νωρίτερα'),
-  (200, '2–5′'),
-  (400, '5–10′'),
-  (700, 'πάνω από 10′'),
-  (null, 'χωρίς δρομολόγιο'),
-];
-
-class DelayLegend extends StatelessWidget {
-  const DelayLegend({super.key});
+/// The level colours of the ring round a vehicle and of a slow part of the route (web v0.2.38): always against the
+/// usual service of the same hour and day type.
+class LevelLegend extends StatelessWidget {
+  const LevelLegend({super.key});
 
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Καθυστέρηση από το πρόγραμμα', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+      Text('Σε σύγκριση με το συνηθισμένο', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
       const SizedBox(height: 6),
       Wrap(spacing: 14, runSpacing: 6, children: [
-        for (final (d, label) in _classes)
+        for (final (l, label) in const [
+          (QualityLevel.normal, 'κανονικά'),
+          (QualityLevel.worse, 'λίγο χειρότερα'),
+          (QualityLevel.muchWorse, 'πολύ χειρότερα'),
+          (QualityLevel.unknown, 'άγνωστο'),
+        ])
           Row(mainAxisSize: MainAxisSize.min, children: [
-            Container(width: 12, height: 12, decoration: BoxDecoration(color: _hex(delayHex(d)), shape: BoxShape.circle)),
+            Container(width: 12, height: 12, decoration: BoxDecoration(color: levelFill(l), shape: BoxShape.circle)),
             const SizedBox(width: 6),
             Text(label, style: const TextStyle(fontSize: 13)),
           ]),
@@ -48,13 +46,16 @@ Future<void> showMapHelp(BuildContext context) => showModalBottomSheet<void>(
         builder: (c, scroll) => ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(24, 0, 24, 24), children: const [
           Text('Τι σημαίνει κάθε σύμβολο', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
           SizedBox(height: 12),
-          _Item(_Bus(fill: Color(0xFF1A7F37)), 'Λεωφορείο. Το χρώμα του δείχνει πόσο αργεί σε σχέση με το πρόγραμμα.'),
-          Padding(padding: EdgeInsets.only(left: 44, bottom: 10), child: DelayLegend()),
-          _Item(_Bus(fill: Color(0xFF0072B2), ring: Color(0xFFA87C00)), 'Λεωφορείο μιας από τις γραμμές σου: έχει το χρώμα της γραμμής, και το δαχτυλίδι γύρω του δείχνει την καθυστέρηση.'),
+          _Item(_Bus(fill: Color(0xFF0072B2)), 'Λεωφορείο. Πάτημα: ολόκληρη η γραμμή του, με το περίγραμμα σε κάθε όχημα.'),
+          _Item(_Bus(fill: Color(0xFF0072B2), level: Color(0xFFA87C00)),
+              'Όχημα της γραμμής που άνοιξες ή μιας από τις γραμμές σου: έχει το χρώμα της γραμμής. Το περίγραμμα το συγκρίνει με το συνηθισμένο αυτής της ώρας: '
+              'πράσινο κανονικά, κίτρινο λίγο χειρότερα, κόκκινο πολύ χειρότερα, γκρι άγνωστο. Συχνή γραμμή: η απόσταση από το προηγούμενο όχημα· αραιή: η καθυστέρηση.'),
+          Padding(padding: EdgeInsets.only(left: 44, bottom: 10), child: LevelLegend()),
           _Item(_Glyph('▲'), 'Η κατεύθυνση που πηγαίνει. Λείπει όταν δεν είναι γνωστή.'),
-          _Item(_Bus(fill: Color(0xFF1A7F37), faded: true), 'Αχνό: η θέση του είναι παλιά, πάνω από 1½ λεπτό. Δίπλα γράφει πόσο παλιά (π.χ. 2′).'),
-          _Item(_Bus(fill: Color(0xFF1A7F37), ring: Color(0xFF1A73E8)), 'Μπλε δαχτυλίδι: το λεωφορείο ή η γραμμή που άνοιξες.'),
+          _Item(_Bus(fill: Color(0xFF0072B2), faded: true), 'Αχνό: η θέση του είναι παλιά, πάνω από 1½ λεπτό. Δίπλα γράφει πόσο παλιά (π.χ. 2′).'),
+          _Item(_Bus(fill: Color(0xFF0072B2), ring: Color(0xFF1A73E8)), 'Μπλε δαχτυλίδι: το λεωφορείο ή η γραμμή που άνοιξες.'),
           _Item(_Glyph('›', box: true), 'Η διαδρομή, με βέλη προς τα πού πηγαίνει. Κάθε κατεύθυνση έχει τη δική της λωρίδα.'),
+          _Item(_Slow(), 'Κίτρινο περίγραμμα στη διαδρομή: κίνηση πιο αργή από συνήθως· κόκκινο: πολύ πιο αργή. Πάτημα: η ταχύτητα.'),
           _Item(_Bus(fill: Colors.white, ring: Color(0xFF5B5F66), small: true), 'Στάση. Πάτα τη για να δεις τι έρχεται.'),
           _Item(Icon(Icons.touch_app_outlined), 'Πάτα σε κενό σημείο του χάρτη για να κλείσεις ό,τι είναι ανοιχτό.'),
           SizedBox(height: 16),
@@ -101,23 +102,41 @@ class _Para extends StatelessWidget {
 }
 
 class _Bus extends StatelessWidget {
-  const _Bus({required this.fill, this.ring = Colors.white, this.faded = false, this.small = false});
+  const _Bus({required this.fill, this.ring = Colors.white, this.level, this.faded = false, this.small = false});
   final Color fill, ring;
+  final Color? level; // the live level: a ring outside the edge
   final bool faded, small;
 
   @override
-  Widget build(BuildContext context) => Opacity(
-        opacity: faded ? .35 : 1,
-        child: Container(
-          width: small ? 12 : 22,
-          height: small ? 12 : 22,
-          decoration: BoxDecoration(
-            color: fill,
-            shape: BoxShape.circle,
-            border: Border.all(color: ring, width: ring == Colors.white ? 1.5 : 3),
-            boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 2)],
-          ),
-        ),
+  Widget build(BuildContext context) {
+    final dot = Container(
+      width: small ? 12 : 22,
+      height: small ? 12 : 22,
+      decoration: BoxDecoration(
+        color: fill,
+        shape: BoxShape.circle,
+        border: Border.all(color: ring, width: ring == Colors.white ? 1.5 : 3),
+        boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 2)],
+      ),
+    );
+    return Opacity(
+      opacity: faded ? .35 : 1,
+      child: level == null ? dot : Container(padding: const EdgeInsets.all(2.5), decoration: BoxDecoration(color: level, shape: BoxShape.circle), child: dot),
+    );
+  }
+}
+
+// A slow part of a route: the route's colour with a yellow halo round it.
+class _Slow extends StatelessWidget {
+  const _Slow();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 36,
+        height: 13,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: levelFill(QualityLevel.worse).withValues(alpha: .85), borderRadius: BorderRadius.circular(7)),
+        child: Container(height: 5, decoration: BoxDecoration(color: const Color(0xFF0072B2), borderRadius: BorderRadius.circular(3))),
       );
 }
 

@@ -15,14 +15,18 @@ import '../core/athens_time.dart';
 import '../core/eta.dart';
 import '../core/geo.dart';
 import '../core/leave.dart' show walkMinutes;
+import '../core/held.dart';
 import '../core/line_stop.dart';
+import '../core/live_quality.dart';
 import '../core/models.dart';
 import '../core/nearby.dart';
 import '../core/rules.dart' show hasAlert;
 import '../data/live.dart';
 import '../data/locate.dart';
 import 'alert_sheet.dart';
+import 'levels.dart';
 import 'map_sel.dart';
+import 'quality_pill.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -93,6 +97,7 @@ class _LinePanelState extends State<LinePanel> {
   Future<void> _loadLive() async {
     final d = Deps.of(context);
     final line = widget.line;
+    d.live.loadQuality([line]); // the levels of its buses (the hub asks a line at most every 10 s)
     if (d.store.myLines.contains(line)) return; // one of my lines: the hub polls it
     try {
       final l = await d.api.live(line);
@@ -183,26 +188,28 @@ class _LinePanelState extends State<LinePanel> {
     final shown = on;
     final Widget chips;
     if (two) {
-      final cur = shown!, other = groups.entries.firstWhere((g) => g.key != cur.key);
+      final cur = shown!;
       // As the web: a direction by its terminus (the last stop of its longest variant), not the route's name.
       String end(MapEntry<String, Set<String>> g) {
         final v = g.value.map((id) => s.variants[id]!).reduce((a, b) => a.stops.length >= b.stops.length ? a : b);
         return s.stops[v.stops.lastOrNull]?.name ?? g.key;
       }
 
-      chips = Row(children: [
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('προς ${titleCase(end(cur))}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-            Text('από ${titleCase(end(other))}', style: TextStyle(fontSize: 13, color: t.muted)),
-          ]),
-        ),
-        IconButton.filledTonal(
-          tooltip: 'Η άλλη κατεύθυνση: προς ${titleCase(end(other))}',
-          icon: const Icon(Icons.swap_vert),
-          onPressed: () => pick(other.value),
-        ),
-      ]);
+      // Web v0.2.37 (2a4f541): the two directions are a two-segment control, an arrow and the terminus each.
+      chips = SegmentedButton<String>(
+        segments: [
+          for (final g in groups.entries)
+            ButtonSegment(
+              value: g.key,
+              icon: const Icon(Icons.arrow_forward, size: 16),
+              label: Text(titleCase(end(g)), maxLines: 1, overflow: TextOverflow.ellipsis),
+              tooltip: titleCase(end(g)),
+            ),
+        ],
+        selected: {cur.key},
+        showSelectedIcon: false,
+        onSelectionChanged: (v) => pick(groups[v.first]),
+      );
     } else {
       chips = Wrap(spacing: 8, runSpacing: 4, children: [
         ChoiceChip(label: const Text('Όλες'), selected: shown == null, onSelected: (_) => pick(null)),
@@ -240,6 +247,7 @@ class _LinePanelState extends State<LinePanel> {
     final gaps = busGaps([for (final v in mine) if (v.nextStopId case final id? when order.contains(id)) order.indexOf(id)]);
     final big = bigGap(gaps);
     return [
+      QualityPill(key: ValueKey(widget.line), line: widget.line, headsign: shown.key),
       chips,
       _LineStopBox(line: widget.line, st: s, variants: dir, live: lineLive, from: widget.from, me: _me),
       const SizedBox(height: 8),
@@ -353,7 +361,11 @@ class _LinePanelState extends State<LinePanel> {
 
   List<Widget> _buses(Tones t, LineStatic s, List<Vehicle> vs) {
     if (vs.isEmpty) return [Text('Κανένα λεωφορείο με GPS τώρα.', style: TextStyle(fontSize: 13, color: t.muted))];
+    final held = Deps.of(context).live.qualityOf(widget.line);
+    final note = heldNote(held, DateTime.now().millisecondsSinceEpoch);
     return [
+      // The live levels are the last good answer; while a refresh fails or warms up, a note says how old (web v0.2.38).
+      if (note != null) Padding(padding: const EdgeInsets.only(bottom: 4), child: Text(note, style: TextStyle(fontSize: 12, color: t.muted))),
       for (final v in vs)
         InkWell(
           onTap: () => mapSel.value = BusSel(widget.line, v.id, at: (v.lat, v.lon), variant: v.variant),
@@ -369,7 +381,12 @@ class _LinePanelState extends State<LinePanel> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (delayNote(context, v.delayS) case final n?) Text(n.$1, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: n.$2)),
+              // The words of the live level in its colour («12′ μετά», «κολλητά», «+7′», «νωρίτερα 2′», «—»); without a
+              // level object (an older backend) the delay as before.
+              if (vehiclePhrase(held?.value.vehicles[v.id], v.delayS) case final ph?)
+                Text(ph.text, style: TextStyle(fontSize: 13, fontWeight: ph.level.live ? FontWeight.w600 : FontWeight.w400, color: levelText(context, ph.level), fontFeatures: const [FontFeature.tabularFigures()]))
+              else if (delayNote(context, v.delayS) case final n?)
+                Text(n.$1, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: n.$2)),
               Icon(Icons.chevron_right, color: t.muted),
             ]),
           ),

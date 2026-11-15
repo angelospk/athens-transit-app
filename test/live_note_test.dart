@@ -39,4 +39,26 @@ void main() {
     expect(find.textContaining('Χωρίς σύνδεση'), findsOneWidget);
     live.watch([]);
   });
+
+  // Web v0.2.37 (eaf2538): the green dot and «Live» are gone; «τελ. ενημέρωση: HH:MM:SS» shows once a fetch worked.
+  testWidgets('online note is plain text «τελ. ενημέρωση: HH:MM:SS», no dot, nothing before the first fetch', (t) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final api = Api(client: MockClient((_) async => throw const SocketException('offline')), cache: DiskCache(dir: Directory.systemTemp.createTempSync()));
+    final live = LiveHub(api);
+    Widget app() => Deps(
+          store: AppStore(prefs),
+          live: live,
+          api: api,
+          child: MaterialApp(theme: buildTheme(Brightness.light), home: const Scaffold(body: LiveNote())),
+        );
+    await t.pumpWidget(app());
+    expect(find.byType(Text), findsNothing);
+    expect(find.byType(Dot), findsNothing);
+    live.markOk();
+    await t.pump();
+    expect(find.textContaining(RegExp(r'^τελ\. ενημέρωση: \d\d:\d\d:\d\d$')), findsOneWidget);
+    expect(find.byType(Dot), findsNothing);
+    expect(find.textContaining('Live'), findsNothing);
+  });
 }
