@@ -173,8 +173,9 @@ Store Connect δεν ζητά screenshots iPad. Υποστήριξη iPad μπα
 για tablet και screenshots 13" από simulator. Το αντίστροφο (να βγει το iPad μετά τη δημοσίευση) η
 Apple δεν το επιτρέπει.
 
-Πριν την υποβολή: τα iPhone screenshots είναι λήψεις από Android σε
-πλαίσιο iPhone. Πιο ασφαλές (guideline 2.3.3): νέες λήψεις από iPhone simulator στο ίδιο `slides.html`.
+Τα iPhone screenshots είναι λήψεις από iPhone 17 Pro Max simulator (iOS 27.2, 2026-11-15:
+`src/ios-*.png`). Το καρέ 04 (διαδρομή) τραβήχτηκε βράδυ με λίγα λεωφορεία και δείχνει «Κανένα
+λεωφορείο με GPS κοντά τώρα»: καλύτερα να ξαναβγεί σε ώρα αιχμής.
 
 ## English (both stores, locale en-US / en-GB)
 
@@ -228,11 +229,11 @@ Hellenic Train. Data comes from their public sources.
 | Play icon | 512×512 PNG | από το `ios/.../Icon-App-1024x1024@1x.png` |
 | Play feature graphic | 1024×500 | νέο |
 | Play screenshots | 1080×2160 | `docs/store/screenshots/play/el/`, `.../play/en/` |
-| iOS screenshots | 6.9" (1320×2868) | `docs/store/screenshots/ios/el/`, `.../ios/en/` (οθόνες Android, βλ. σημείωση) |
+| iOS screenshots | 6.9" (1320×2868) | `docs/store/screenshots/ios/el/`, `.../ios/en/` (λήψεις από iPhone simulator) |
 
-Τα screenshots ξαναβγαίνουν με `docs/store/screenshots/src/render.sh`. Οι λήψεις είναι από Android
-(ίδιο Flutter UI)· στο iOS set η μπάρα κατάστασης και το πλαίσιο είναι iPhone, και η μπάρα πλοήγησης
-του Android κόβεται.
+Τα screenshots ξαναβγαίνουν με `docs/store/screenshots/src/render.sh`. Οι λήψεις του Play είναι από
+Android emulator, του iOS από iPhone simulator (`src/ios-*.png`)· τη μπάρα κατάστασης τη ζωγραφίζει το
+`slides.html`.
 
 **iOS: τι δεν πρέπει να υπόσχεται η σελίδα** (guideline 2.3.1, ακριβή metadata):
 - Το iOS set έχει 4 καρέ: λείπει το 04 («Ακόμα και κλειστή»). Στο iOS η εφαρμογή δεν τρέχει live
@@ -242,4 +243,3 @@ Hellenic Train. Data comes from their public sources.
   ειδοποιήσεις με την εφαρμογή κλειστή.
 - Το καρέ 03 («Σε ειδοποιεί λίγα λεπτά πριν φτάσει»): πριν την υποβολή, δοκίμασέ το σε iPhone με
   κλειδωμένη οθόνη. Αν η ειδοποίηση δεν έρχεται, άλλαξε τον υπότιτλο σε κάτι που ισχύει.
-- Πιο ασφαλές από όλα: νέες λήψεις από iPhone simulator στο Mac, στο ίδιο `slides.html`.

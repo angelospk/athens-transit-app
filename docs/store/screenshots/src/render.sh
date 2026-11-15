@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Renders the store screenshots from slides.html and the app captures next to it.
 # Captures: release build on an Android emulator, 1080x2400, status bar cropped (top 110 px).
+# The iPhone set (?device=iphone) uses ios-*.png: iPhone 17 Pro Max simulator, 1320 wide, status bar
+# (186 px) and home indicator (102 px) cropped. On a Mac, put Chrome on PATH as google-chrome.
 # Usage: docs/store/screenshots/src/render.sh   (needs google-chrome; fonts load from Google Fonts)
 set -euo pipefail
 cd "$(dirname "$0")"
