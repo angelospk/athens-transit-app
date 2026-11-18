@@ -53,11 +53,11 @@ const bar = (cls='') => iphone
 const S = {
   1:{c:'dark',dot:'var(--yellow)',k:'Live χάρτης',h:'Κάθε λεωφορείο της Αθήνας. Τώρα.',p:'Δες πού είναι, και αν αργεί, πριν βγεις από το σπίτι.',
      scr:`<div class="screen">${bar()}<img src="${cap('home')}"></div>`},
-  2:{c:'light',dot:'var(--blue)',k:'Η στάση σου',h:'Πόσο απέχει; Μια ματιά αρκεί.',p:'Αφίξεις live, πόσες στάσεις μακριά, και ποιο ακολουθεί.',
+  2:{c:'dark',dot:'var(--blue)',k:'Η στάση σου',h:'Πόσο απέχει; Μια ματιά αρκεί.',p:'Αφίξεις live, πόσες στάσεις μακριά, και ποιο ακολουθεί.',
      scr:`<div class="screen">${bar()}<img src="${cap('stop')}"></div>`},
   3:{c:'dark',dot:'var(--green)',k:'Ειδοποιήσεις',h:'Μην περιμένεις στη στάση.',p:'Σε ειδοποιεί λίγα λεπτά πριν φτάσει το λεωφορείο.',
      scr:`<div class="screen"${iphone ? ' style="background:#f1f3f9"' : ''}>${bar()}<img src="${cap('alert')}"></div>`},
-  4:{c:'light',dot:'var(--red)',k:'Με κλειστή εφαρμογή',h:'Σε ενημερώνει live. Ακόμα και κλειστή.',p:'Η κάρτα μετρά αντίστροφα μέχρι να έρθει το λεωφορείο σου.',
+  4:{c:'dark',dot:'var(--red)',k:'Με κλειστή εφαρμογή',h:'Σε ενημερώνει live. Ακόμα και κλειστή.',p:'Η κάρτα μετρά αντίστροφα μέχρι να έρθει το λεωφορείο σου.',
      scr:`<div class="screen">${bar()}<img class="dim" src="home.png"><div class="notif"><img src="notif.png"></div></div>`},
   5:{c:'dark',dot:'var(--blue)',k:'Διαδρομή',h:'Λεωφορείο, μετρό, ή και τα δύο.',p:'Ο γρηγορότερος δρόμος, και πού να κατέβεις.',
      extra:`<div class="badges"><span class="badge"><svg><use href="#check"/></svg>Χωρίς λογαριασμό</span><span class="badge"><svg><use href="#check"/></svg>Χωρίς διαφημίσεις</span></div>`,
