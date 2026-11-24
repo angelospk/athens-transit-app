@@ -51,6 +51,7 @@ class _CityRootState extends State<CityRoot> {
 
   LiveHub _hub(Api api) {
     final store = widget.store;
+    loadLineColors(api); // line badges in their operator colours, as on the web
     final live = LiveHub(api)..watch(store.myLines);
     live.addListener(() => pushWidget(store, live));
     return live;

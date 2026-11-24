@@ -1,5 +1,6 @@
-// Colours and type from the mockups (claude.ai artifact "Athens Transit App mockups", System board):
-// calm neutrals, one ink, line colours from the Okabe-Ito palette, delay in amber, on time in green.
+// Colours and type shared with the web (athens-transit-map docs/design-unify-2026-11.md; its src/app.css has the
+// same values): warm neutrals, one ink, one deep blue accent, line colours from the Okabe-Ito palette.
+// Names here vs the web: ground = ground (--bg), card = surface, surface = surface-2 (--control), rule = rule.
 
 import 'package:flutter/material.dart';
 
@@ -18,41 +19,54 @@ class Tones extends ThemeExtension<Tones> {
     required this.mapGround,
     required this.accent,
     required this.outline,
+    required this.card,
+    required this.accentSoft,
+    required this.onAccent,
+    required this.star,
   });
 
   final Color ground, surface, ink, muted, rule, indicator, late, onTime, problemBg, problemFg, mapGround;
   final Color accent, outline; // actions and the smart card's minutes; the walk button's edge
+  final Color card, accentSoft, onAccent, star; // a card on the ground; a live ETA chip's fill; text on accent; a starred favourite
 
   static const light = Tones(
-    ground: Color(0xFFFCFCFA),
-    surface: Color(0xFFF2F3F0),
-    ink: Color(0xFF1A1C1E),
-    muted: Color(0xFF43474E),
-    rule: Color(0xFFE1E3DF),
-    indicator: Color(0xFFD7E0E8),
-    late: Color(0xFF7A4F00),
+    ground: Color(0xFFF7F7F4),
+    surface: Color(0xFFEFF0EC),
+    ink: Color(0xFF16181B),
+    muted: Color(0xFF5C626A),
+    rule: Color(0xFFE3E4DF),
+    indicator: Color(0xFFE7EEFB),
+    late: Color(0xFFB4470B),
     onTime: Color(0xFF146C2E),
     problemBg: Color(0xFFF9DEDC),
     problemFg: Color(0xFF410E0B),
     mapGround: Color(0xFFE9ECE6),
     accent: Color(0xFF1A56C4),
     outline: Color(0xFFCFD6E0),
+    card: Color(0xFFFFFFFF),
+    accentSoft: Color(0xFFE7EEFB),
+    onAccent: Color(0xFFFFFFFF),
+    star: Color(0xFFE8A100),
   );
 
   static const dark = Tones(
-    ground: Color(0xFF111315),
-    surface: Color(0xFF1D2023),
-    ink: Color(0xFFE3E3E0),
-    muted: Color(0xFFB4B8BF),
-    rule: Color(0xFF33373B),
-    indicator: Color(0xFF3A4652),
-    late: Color(0xFFFFB951),
+    ground: Color(0xFF0F1113),
+    surface: Color(0xFF24282C),
+    ink: Color(0xFFECEDE9),
+    muted: Color(0xFFA3A9B1),
+    rule: Color(0xFF2E3337),
+    indicator: Color(0xFF1C2C47),
+    late: Color(0xFFFFB25C),
     onTime: Color(0xFF7DD99A),
     problemBg: Color(0xFF5C1F1B),
     problemFg: Color(0xFFFFDAD6),
     mapGround: Color(0xFF1B1E1C),
     accent: Color(0xFF8AB4F8),
     outline: Color(0xFF4A5560),
+    card: Color(0xFF181B1E),
+    accentSoft: Color(0xFF1C2C47),
+    onAccent: Color(0xFF0B1B3A),
+    star: Color(0xFFF5B83D),
   );
 
   @override
@@ -60,6 +74,24 @@ class Tones extends ThemeExtension<Tones> {
 
   @override
   Tones lerp(Tones? other, double t) => t < .5 ? this : other ?? this;
+}
+
+// Radius, type and spacing shared with the web (docs/design-unify-2026-11.md §2; the web's --r-*, --fs-*).
+abstract final class Ds {
+  static const rXs = 6.0, rSm = 8.0, rMd = 12.0, rLg = 16.0, rXl = 24.0;
+  static const gutter = 16.0;
+  static const tabular = [FontFeature.tabularFigures()];
+  static const titleLg = TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: -0.3, height: 1.2);
+  static const title = TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.2, height: 1.25);
+  static const bodyStrong = TextStyle(fontSize: 15, fontWeight: FontWeight.w600);
+  static const meta = TextStyle(fontSize: 13, fontWeight: FontWeight.w500);
+  static const note = TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600);
+  static const eyebrow = TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, letterSpacing: 0.7);
+  static const badge = TextStyle(fontSize: 14, fontWeight: FontWeight.w800, height: 1.15, fontFeatures: tabular);
+
+  // A card on the ground: white (dark: surface), a 1 px rule, radius 16, no shadow.
+  static BoxDecoration card(Tones t) =>
+      BoxDecoration(color: t.card, borderRadius: BorderRadius.circular(rLg), border: Border.all(color: t.rule));
 }
 
 extension TonesOf on BuildContext {
@@ -89,8 +121,8 @@ ThemeData buildTheme(Brightness b) {
       ),
     ),
     textTheme: const TextTheme(
-      headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+      headlineSmall: Ds.titleLg, // a card's title (stop, station), as the web's h2
+      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: -0.2),
     ),
   );
 }

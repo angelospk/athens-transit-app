@@ -29,28 +29,132 @@ class Deps extends InheritedWidget {
   bool updateShouldNotify(Deps old) => old.api != api || old.live != live; // a city switch
 }
 
-// A line keeps its palette slot by its place among the user's lines; other lines are neutral.
-LineColor lineColor(AppStore store, String line) {
-  final i = store.myLines.indexOf(line);
-  return i < 0 ? const LineColor(Color(0xFFECEEEA), Color(0xFF1A1C1E)) : palette[i % palette.length];
+// Each line's operator colours (lines.json `color`, `text_color`) of the open city, as the web shows them. Empty
+// until the city's lines load; a city switch loads them again (main.dart).
+final operatorColors = ValueNotifier<Map<String, LineColor>>(const {});
+Api? _colorsOf;
+
+Future<void> loadLineColors(Api api) async {
+  _colorsOf = api;
+  try {
+    final lines = await api.lines();
+    if (!identical(_colorsOf, api)) return; // another city opened meanwhile
+    operatorColors.value = {
+      for (final l in lines)
+        if (hexColor(l.color) case final bg?) l.id: LineColor(bg, hexColor(l.textColor) ?? Colors.white),
+    };
+  } catch (_) {/* badges stay neutral */}
 }
 
+// "#1a56c4" → the colour; null for anything else.
+Color? hexColor(String s) {
+  final v = s.length == 7 && s.startsWith('#') ? int.tryParse(s.substring(1), radix: 16) : null;
+  return v == null ? null : Color(0xFF000000 | v);
+}
+
+const _neutral = LineColor(Color(0xFFEFF0EC), Color(0xFF16181B));
+
+// A badge's colours: the line's, or for a line with none the theme's surface and ink (light and dark).
+LineColor badgeColor(BuildContext context, String line) {
+  final c = lineColor(Deps.of(context).store, line);
+  final t = context.tones;
+  return identical(c, _neutral) ? LineColor(t.surface, t.ink) : c;
+}
+
+// A line keeps its palette slot by its place among the user's lines (its route on the map has that colour);
+// other lines take their operator colour, neutral until the lines load.
+LineColor lineColor(AppStore store, String line) {
+  final i = store.myLines.indexOf(line);
+  return i < 0 ? operatorColors.value[line] ?? _neutral : palette[i % palette.length];
+}
+
+// The shared line badge (docs/design-unify-2026-11.md in the web repo): min 44 × 30, radius 8, 14 / 800.
 class LineBadge extends StatelessWidget {
   const LineBadge(this.line, {super.key, this.big = false});
   final String line;
   final bool big;
 
   @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+        valueListenable: operatorColors,
+        builder: (context, _, _) {
+          final c = badgeColor(context, line);
+          return Container(
+            constraints: BoxConstraints(minWidth: big ? 50 : 44, minHeight: big ? 34 : 30),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(color: c.bg, borderRadius: BorderRadius.circular(Ds.rSm)),
+            // Factors of 1: only as wide as its text, also where the width offered is larger (a ListTile's leading).
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: Text(line, textAlign: TextAlign.center, style: Ds.badge.copyWith(color: c.fg, fontSize: big ? 16 : 14)),
+            ),
+          );
+        },
+      );
+}
+
+// The live mark: a dot and two arcs, on a time that comes from a vehicle's GPS (the web's Icon «live» draws the
+// same shape on the same 20-unit grid).
+class LiveMark extends StatelessWidget {
+  const LiveMark({super.key, this.size = 12, this.color});
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        label: 'ζωντανά',
+        child: CustomPaint(size: Size.square(size), painter: _LivePainter(color ?? context.tones.accent)),
+      );
+}
+
+class _LivePainter extends CustomPainter {
+  _LivePainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final k = size.width / 20;
+    final p = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.6 * k
+      ..strokeCap = StrokeCap.round;
+    const c = Offset(5, 15);
+    canvas.drawCircle(c * k, 2.2 * k, Paint()..color = color);
+    for (final r in [5.8, 11.4]) {
+      canvas.drawArc(Rect.fromCircle(center: c * k, radius: r * k), -pi / 2, pi / 2, false, p);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LivePainter old) => old.color != color;
+}
+
+// An arrival time in the shared ETA style: a live time with the live mark in ink, an estimate or timetable time
+// muted with no mark, «τώρα» smaller and in the accent. [big]: the first row of a stop (28), else 24.
+class EtaText extends StatelessWidget {
+  const EtaText(this.text, {super.key, required this.live, this.big = false});
+  final String text;
+  final bool live, big;
+
+  @override
   Widget build(BuildContext context) {
-    final c = lineColor(Deps.of(context).store, line);
-    final size = big ? 17.0 : 15.0;
-    return Container(
-      constraints: BoxConstraints(minWidth: big ? 52 : 48),
-      padding: EdgeInsets.fromLTRB(6, big ? 7 : 6, 6, big ? 7 : 6),
-      decoration: BoxDecoration(color: c.bg, borderRadius: BorderRadius.circular(8)),
-      // No alignment: it would stretch the badge to all the width it is offered (a ListTile's leading).
-      child: Text(line, textAlign: TextAlign.center, style: TextStyle(color: c.fg, fontSize: size, fontWeight: FontWeight.w700)),
-    );
+    final t = context.tones;
+    final now = text.endsWith('τώρα');
+    final size = now ? (big ? 19.0 : 17.0) : (big ? 28.0 : 24.0);
+    return Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (live) Padding(padding: EdgeInsets.only(top: size * .2, right: 3), child: LiveMark(size: big ? 13 : 11)),
+      Text(text,
+          style: TextStyle(
+            fontSize: size,
+            height: 1.05,
+            fontWeight: live ? FontWeight.w800 : FontWeight.w700,
+            letterSpacing: now ? 0 : -0.4,
+            color: now ? t.accent : live ? t.ink : t.muted,
+            fontFeatures: Ds.tabular,
+          )),
+    ]);
   }
 }
 
@@ -117,22 +221,25 @@ class ArrivalRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('→ ${towards(first)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+              Text('→ ${towards(first)}', style: Ds.bodyStrong, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 3),
               Row(children: [
                 if (far) ...[StopsDots(left, color: lineColor(Deps.of(context).store, first.line).bg), const SizedBox(width: 6)],
                 Flexible(
                   child: Text(fact,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: late ? t.late : t.muted)),
+                      style: Ds.note.copyWith(color: late ? t.late : !estimate && !far && note != null ? t.onTime : t.muted)),
                 ),
               ]),
             ]),
           ),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text('$tilde${mins(first.etaS)}',
-                style: TextStyle(fontSize: big ? 32 : 26, fontWeight: FontWeight.w700, height: 1, fontFeatures: const [FontFeature.tabularFigures()])),
-            if (then.isNotEmpty) Text('επόμενο ${then.take(2).map((a) => mins(a.etaS)).join(', ')}', style: TextStyle(fontSize: 12, color: t.muted)),
+            EtaText('$tilde${mins(first.etaS)}', live: !estimate, big: big),
+            if (then.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text('μετά ${then.take(2).map((a) => mins(a.etaS)).join(', ')}', style: TextStyle(fontSize: 12, color: t.muted)),
+              ),
           ]),
           if (trailing != null) ...[const SizedBox(width: 10), trailing!],
         ]),
