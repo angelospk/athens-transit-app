@@ -440,7 +440,7 @@ void main() {
       expect(nextStartUtc(r.copyWith(enabled: false), DateTime.utc(2026)), isNull);
     });
 
-    test('hit text matches the web wording', () {
+    test('hit text: natural Greek (the web still has the older wording)', () {
       expect(hitText(const RuleHit(ruleId: 'r', line: '040', vehicleId: 'x', stopsLeft: 1, etaS: 50, delayS: null), 'ΠΑΝΕΠΙΣΤΗΜΙΟ'),
           'Το 040 έρχεται: επόμενη στάση ΠΑΝΕΠΙΣΤΗΜΙΟ.');
       expect(hitText(const RuleHit(ruleId: 'r', line: '040', vehicleId: 'x', stopsLeft: 3, etaS: 290, delayS: 200), 'ΑΓΟΡΑ'),
