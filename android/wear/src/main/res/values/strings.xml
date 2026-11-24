@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Greek is the default (and the fallback for any other language). Informal «εσύ», short; never «εγώ». -->
+<resources>
+    <string name="app_name">Στάσεις</string>
+    <string name="favourites">Αγαπημένα</string>
+    <string name="nearby">Κοντά μου</string>
+    <string name="no_favs">Άνοιξε τις Στάσεις στο κινητό για να δεις εδώ τις αγαπημένες σου στάσεις.</string>
+    <string name="no_favs_short">Άνοιξε τις Στάσεις στο κινητό</string>
+    <string name="no_bus">Κανένα λεωφορείο με GPS δεν έρχεται τώρα.</string>
+    <string name="now">τώρα</string>
+    <string name="updated">Ενημέρωση %1$s</string>
+    <string name="offline">Χωρίς σύνδεση · τελευταία ενημέρωση %1$s</string>
+    <string name="no_data">Δεν υπάρχουν δεδομένα</string>
+    <string name="location_rationale">Δες τις στάσεις κοντά σου. Η θέση μένει στο ρολόι.</string>
+    <string name="no_permission">Δεν υπάρχει άδεια τοποθεσίας.</string>
+    <string name="allow">Επίτρεψε</string>
+    <string name="retry">Δοκίμασε ξανά</string>
+    <string name="settings">Ρυθμίσεις</string>
+    <string name="locating">Αναζήτηση θέσης…</string>
+    <string name="loading_stops">Φόρτωση στάσεων…</string>
+    <string name="no_location">Η θέση σου δεν βρέθηκε.</string>
+    <string name="no_stops_nearby">Καμία στάση κοντά σου</string>
+    <string name="next_bus">Επόμενο λεωφορείο</string>
+</resources>

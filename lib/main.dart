@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'background/service.dart';
+import 'background/watch_sync.dart';
 import 'background/widget.dart';
 import 'core/city.dart';
 import 'core/names.dart';
@@ -61,6 +62,7 @@ class _CityRootState extends State<CityRoot> {
   void initState() {
     super.initState();
     widget.store.addListener(_onStore);
+    syncWatch(widget.store, _api.trips); // the watches get the favourites at every start
   }
 
   @override
@@ -84,6 +86,7 @@ class _CityRootState extends State<CityRoot> {
       WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose()); // after the old map let go of it
     }
     pushWidget(store, _live, force: true); // a removed or reordered stop shows at once
+    syncWatch(store, _api.trips); // sends only when the favourites or the city changed
   }
 
   @override

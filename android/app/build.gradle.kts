@@ -79,4 +79,6 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    // The favourites for the Wear OS app (MainActivity.kt): the Wearable Data Layer.
+    implementation("com.google.android.gms:play-services-wearable:19.0.0")
 }
