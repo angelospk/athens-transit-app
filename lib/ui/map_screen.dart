@@ -19,6 +19,7 @@ import '../core/board.dart';
 import '../core/eta.dart';
 import '../core/geo.dart';
 import '../core/home_sheet.dart';
+import '../core/live_quality.dart';
 import '../core/map_geo.dart';
 import '../core/marker.dart';
 import '../core/models.dart';
@@ -30,12 +31,14 @@ import '../core/rail.dart';
 import '../core/stopfix.dart';
 import '../data/api.dart' show MuniData;
 import '../data/basemap.dart';
+import '../data/live.dart' show LiveHub;
 import '../data/locate.dart';
 import '../data/stopfix_store.dart';
 import '../data/store.dart';
 import 'go_home_card.dart';
 import 'help.dart';
 import 'favs_screen.dart';
+import 'levels.dart';
 import 'line_panel.dart';
 import 'map_sel.dart';
 import 'motion_fx.dart';
@@ -83,6 +86,14 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   String _routesKey = ''; // what the route layers show now: redrawn only when it changes
   int _routesGen = 0; // the newest route draw; an older one stops before writing
   String? _routesPending; // the key being drawn: the same draw is not started twice
+  // Live quality (web v0.2.38): the lines whose levels are asked for (the open line, my lines), the slow segments drawn
+  // as a halo under the open route (redrawn when the levels or the route change), and the words of each for a tap.
+  String _qKey = '';
+  int _qAt = 0;
+  String _haloKey = '';
+  Map<String, LineStatic> _drawnStatics = {};
+  Map<String, Set<String>?> _drawnOnly = {};
+  Map<String, ({String text, QualityLevel level})> _haloTips = {};
   Pt? _followedAt; // where "follow" last centred the bus
   (bool, bool, bool)? _rail; // metro, tram and suburban rail visibility applied to the map
   Map<String, dynamic>? _metroJson; // metro.json: a tapped station is found by its index
@@ -197,6 +208,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       if (_sheet.isAttached) _sheet.animateTo(_half, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
     });
     _routesKey = '';
+    _haloKey = '';
     _routesPending = null;
     _routesGen++;
     _draw();
@@ -283,6 +295,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final halo = dark ? '#1B1D21' : '#FFFFFF';
     _styled = false;
     _routesKey = '';
+    _haloKey = '';
     _routesPending = null;
     _routesGen++;
     _rail = null;
@@ -312,6 +325,18 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     await m.addCircleLayer('stops', 'stop-hit',
         const CircleLayerProperties(circleRadius: ['interpolate', ['linear'], ['zoom'], 14, 9, 16, 14], circleColor: '#000000', circleOpacity: 0),
         minzoom: 14);
+    // Slow segments of the open route (live quality, web v0.2.38): a wide halo under it, yellow, or red when much
+    // slower than usual; a tap on one says the speeds. The route keeps its colour.
+    await m.addGeoJsonSource('halos', _empty);
+    await m.addLineLayer('halos', 'route-halo',
+        LineLayerProperties(
+          lineColor: ['match', ['get', 'level'], 'much_worse', hex(levelFill(QualityLevel.muchWorse)), hex(levelFill(QualityLevel.worse))],
+          lineWidth: 13,
+          lineOpacity: .85,
+          lineOffset: _lanePx,
+          lineJoin: 'round',
+          lineCap: 'round',
+        ));
     // The open line's route: a white casing, the colour offset into its lane, and arrows.
     await m.addGeoJsonSource('routes', _empty);
     await m.addLineLayer('routes', 'route-casing',
@@ -367,9 +392,20 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           SymbolLayerProperties(textField: ['get', 'name'], textFont: ['Noto Sans Regular'], textSize: 11, textOffset: [0, 1.2], textColor: dark ? '#C9CCD1' : '#43474E', textHaloColor: halo, textHaloWidth: 1.5),
           filter: pt, minzoom: 13, enableInteraction: false);
     }
-    // Buses as on the web: filled by delay (my lines by their colour, with the delay as the ring), a
+    // Buses as on the web: filled with their line's colour (my lines) or blue, a ring outside for the live level, a
     // dark triangle ahead in travel direction, faded when the position is old, and its age beside.
     await m.addGeoJsonSource('vehicles', _empty);
+    // The live level (web v0.2.38): a ring outside the dot's edge, green / yellow / red / grey, on the vehicles of
+    // the open line and of my lines. The arrow stays above it.
+    await m.addCircleLayer('vehicles', 'veh-ring',
+        const CircleLayerProperties(
+          // The dot's radius + 4.5: past its stroke (up to 3.5 wide) the ring shows 2.75-3.75 dp, as the web's 2.5 px.
+          circleRadius: ['interpolate', ['linear'], ['zoom'], 10, 7.5, 13, 11.5, 16, 15.5],
+          circleColor: ['get', 'lv'],
+          circleOpacity: ['get', 'op'],
+        ),
+        filter: ['has', 'lv'],
+        enableInteraction: false);
     await m.addSymbolLayer('vehicles', 'veh-arrow',
         const SymbolLayerProperties(
           textField: '▲',
@@ -611,6 +647,37 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // A line shown on the map in its own colour: one of mine keeps its slot, any other line is blue.
   String _hexOf(AppStore store, String line) => store.myLines.contains(line) ? hex(lineColor(store, line).bg) : hex(palette[0].bg);
 
+  // The lines drawn in detail: the open line or bus, and my lines.
+  Set<String> _detailLines(AppStore store, MapSel? sel) => {
+        ...store.myLines,
+        if (sel case LineSel(:final line) || BusSel(:final line)) line,
+      };
+
+  // Asks for the levels of those lines when they change and every 20 s after (the hub asks a line at most every 10 s).
+  void _askLevels(LiveHub live, Set<String> lines) {
+    final key = (lines.toList()..sort()).join(',');
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (lines.isEmpty || (key == _qKey && now - _qAt < 20000)) return;
+    _qKey = key;
+    _qAt = now;
+    live.loadQuality(lines);
+  }
+
+  // The slow segments of the routes drawn now, as a halo under them. Only when the levels or the routes change.
+  Future<void> _drawHalos(MapLibreMapController m, LiveHub live) async {
+    // The lines whose levels are still "now" are in the key: held levels older than 10 min drop their halos too.
+    final key = '${live.qualityVersion}|$_routesKey|${[for (final l in _drawnOnly.keys) if (live.qualityOf(l) != null) l]}';
+    if (key == _haloKey) return;
+    _haloKey = key;
+    final segs = {
+      for (final l in _drawnOnly.keys)
+        if (live.qualityOf(l) case final h?) l: h.value.segments,
+    };
+    final r = haloFeatures(statics: _drawnStatics, only: _drawnOnly, segs: segs, name: titleCase);
+    _haloTips = r.tips;
+    await m.setGeoJsonSource('halos', {'type': 'FeatureCollection', 'features': r.features});
+  }
+
   Future<void> _draw() async {
     final m = _map;
     if (m == null || !_styled || !mounted) return;
@@ -621,6 +688,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final features = <Object>[];
     final shown = <String>{};
     final focus = sel is BusSel || sel is LineSel || sel is MuniSel; // «the others» setting dims the rest
+    // Live levels (contract rev 23) of the lines in detail: the open line and my lines.
+    final live = Deps.of(context).live;
+    final detail = _detailLines(store, sel);
+    _askLevels(live, detail);
     for (final v in _vehicles(store)) {
       final line = v.line ?? '';
       final on = switch (sel) {
@@ -635,7 +706,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       final age = now - v.positionAt;
       final stale = age > staleS;
       final op = focus && !on && store.others == Others.dim ? .22 : (stale ? (mine ? .7 : .55) : 1.0); // old fixes fade, but late buses stay readable
-      final delay = delayHex(v.delayS);
+      // Colour on a vehicle means its live level (web v0.2.38): the ring round it, on the lines in detail. The delay
+      // colours are gone (docs/QUALITY.md, step 4): every vehicle is its line's colour, or blue.
+      final lv = detail.contains(line) ? live.qualityOf(line)?.value.levelOf(v.id) : null;
       final c = lineColor(store, line);
       final p = _glidePos(v, nowS);
       shown.add('$line|${v.id}');
@@ -645,10 +718,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         'id': 'v|$line|${v.id}',
         'properties': {
           'line': line,
-          'bg': mine ? hex(c.bg) : delay,
+          'bg': mine ? hex(c.bg) : hex(palette[0].bg),
           'fg': mine ? hex(c.fg) : '#FFFFFF',
-          'ring': on ? '#1A73E8' : (mine ? delay : '#FFFFFF'),
+          'ring': on ? '#1A73E8' : '#FFFFFF',
           'rw': on ? 3.5 : (mine ? 3.0 : 1.5),
+          'lv': ?(lv == null ? null : hex(levelFill(lv))),
           'op': op,
           'hd': ?hd,
           if (store.showAges || stale) 'age': ago(age),
@@ -673,6 +747,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       _followedAt = null;
     }
     await _drawRoutes(m, store, sel);
+    await _drawHalos(m, live);
     final c = store.city.rail; // metro, tram and rail: Athens only
     final rail = (store.showMetro && c, store.showTram && c, store.showRail && c);
     if (rail != _rail) {
@@ -742,6 +817,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final drawn = [for (final e in want.entries) if (statics[e.key] case final st?) (line: e.key, color: _hexOf(store, e.key), st: st, only: e.value)];
     await m.setGeoJsonSource('routes', mc != null ? muniRoutesGeo(mc, muniHex) : routesGeo(drawn));
     if (stale()) return;
+    _drawnStatics = statics;
+    _drawnOnly = mc != null ? {} : {for (final e in drawn) e.line: e.only};
+    _haloKey = ''; // the routes changed: the halos are cut again
     final one = sel is BusSel || sel is LineSel ? drawn.firstOrNull : null;
     _routeSt = one?.st;
     _muniStops = muniStops;
@@ -764,9 +842,37 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (statics.length == want.length && (mc == null || muniStops != null)) _routesKey = key; // a failed load is tried again on the next draw
   }
 
+  // A tap on a slow segment says its stops and speeds (web v0.2.38: «Καλλιθέα → Φιξ · πιο αργό: 14 km/h, συνήθως 19»).
+  void _showSegment(String id) {
+    final tip = _haloTips[id];
+    if (tip == null) return;
+    final t = context.tones;
+    final text = tip.text, cut = text.indexOf(' · '), colon = cut < 0 ? -1 : text.indexOf(':', cut);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        backgroundColor: t.ground,
+        showCloseIcon: true,
+        closeIconColor: t.muted,
+        duration: const Duration(seconds: 10),
+        content: Text.rich(TextSpan(style: TextStyle(color: t.ink, fontSize: 14), children: [
+          if (colon < 0)
+            TextSpan(text: text)
+          else ...[
+            TextSpan(text: text.substring(0, cut), style: const TextStyle(fontWeight: FontWeight.w700)),
+            const TextSpan(text: ' · '),
+            TextSpan(text: text.substring(cut + 3, colon), style: TextStyle(color: levelText(context, tip.level), fontWeight: FontWeight.w600)),
+            TextSpan(text: text.substring(colon)),
+          ],
+        ])),
+      ));
+  }
+
   void _tap(Point<double> point, LatLng at, String id, String layer, Annotation? annotation) {
     if (_fixTap(at)) return;
-    if (id.startsWith('r|')) {
+    if (id.startsWith('hs|')) {
+      _showSegment(id);
+    } else if (id.startsWith('r|')) {
       Deps.of(context).api.suburban().then((sub) {
         final st = sub.stations[id.substring(2)];
         if (st != null) mapSel.value = StationSel(st.name, (st.lat, st.lon), lines: st.corridors, railId: st.id);
@@ -793,15 +899,34 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       final s = _routeSt!.stops[id.substring(3)]!;
       mapSel.value = StopSel(StopRef(name: s.name, lat: s.lat, lon: s.lon, lines: _ix == null ? [_routeSt!.id] : linesAt(_ix!, s.name, s.lat, s.lon)));
     } else if (layer == 'route') {
-      // A route opens its line, in the tapped direction (route features have no id: the line comes from
-      // the open selection, the direction from the bus).
-      final sel = mapSel.value;
-      if (sel is BusSel) {
-        final v = _vehicles(Deps.of(context).store).where((x) => x.id == sel.vehicleId && x.line == sel.line).firstOrNull;
-        final vv = v?.variant ?? sel.variant;
-        mapSel.value = LineSel(sel.line, variants: vv == null ? null : {vv}, stop: sel.stop);
-      }
+      // The halo lies under the route, and the map gives a tap to the topmost layer: the route takes every tap on a
+      // slow segment. As the web, the segment's speeds come first.
+      _haloAt(point).then((halo) {
+        if (!mounted) return;
+        if (halo != null) return _showSegment(halo);
+        // A route opens its line, in the tapped direction (route features have no id: the line comes from
+        // the open selection, the direction from the bus).
+        final sel = mapSel.value;
+        if (sel is BusSel) {
+          final v = _vehicles(Deps.of(context).store).where((x) => x.id == sel.vehicleId && x.line == sel.line).firstOrNull;
+          final vv = v?.variant ?? sel.variant;
+          mapSel.value = LineSel(sel.line, variants: vv == null ? null : {vv}, stop: sel.stop);
+        }
+      });
     }
+  }
+
+  // The id of a slow segment's halo near a tap (the plugin's own 10 px box round the point), else null.
+  Future<String?> _haloAt(Point<double> p) async {
+    final m = _map;
+    if (m == null || _haloTips.isEmpty) return null;
+    try {
+      final hits = await m.queryRenderedFeaturesInRect(Rect.fromLTRB(p.x - 10, p.y - 10, p.x + 10, p.y + 10), const ['route-halo'], null);
+      for (final f in hits) {
+        if (f is Map && f['id'] is String && _haloTips.containsKey(f['id'])) return f['id'] as String;
+      }
+    } catch (_) {/* no halo */}
+    return null;
   }
 
   @override
@@ -1040,7 +1165,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     FilterChip(avatar: const Icon(Icons.train_outlined, size: 18), label: const Text('Προαστιακός'), selected: store.showRail, onSelected: (v) => store.setRail(rail: v)),
                   ]),
                   const SizedBox(height: 12),
-                  const DelayLegend(),
+                  const LevelLegend(),
                   Theme(
                     data: Theme.of(c).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
