@@ -63,8 +63,8 @@
 
 | Τι | Μέγεθος | Link |
 |---|---|---|
-| Play screenshots, Ελληνικά (5: 01-05.png) | 1080×2160 | https://github.com/angelospk/athens-transit-app/tree/main/docs/store/screenshots/play/el |
-| Play screenshots, English (5) | 1080×2160 | https://github.com/angelospk/athens-transit-app/tree/main/docs/store/screenshots/play/en |
+| Play screenshots, Ελληνικά (5: 01-05.png) | 1080×1920 (9:16) | https://github.com/angelospk/athens-transit-app/tree/main/docs/store/screenshots/play/el |
+| Play screenshots, English (5) | 1080×1920 (9:16) | https://github.com/angelospk/athens-transit-app/tree/main/docs/store/screenshots/play/en |
 | iPhone 6.9" screenshots, Ελληνικά (4: 01-04.png) | 1320×2868 | https://github.com/angelospk/athens-transit-app/tree/main/docs/store/screenshots/ios/el |
 | iPhone 6.9" screenshots, English (4) | 1320×2868 | https://github.com/angelospk/athens-transit-app/tree/main/docs/store/screenshots/ios/en |
 | Play εικονίδιο | 512×512 | https://raw.githubusercontent.com/angelospk/athens-transit-app/main/docs/store/graphics/icon-512.png |

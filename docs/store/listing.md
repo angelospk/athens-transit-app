@@ -227,7 +227,7 @@ Hellenic Train. Data comes from their public sources.
 |---|---|---|
 | Play icon | 512×512 PNG | από το `ios/.../Icon-App-1024x1024@1x.png` |
 | Play feature graphic | 1024×500 | νέο |
-| Play screenshots | 1080×2160 | `docs/store/screenshots/play/el/`, `.../play/en/` |
+| Play screenshots | 1080×1920 (9:16) | `docs/store/screenshots/play/el/`, `.../play/en/` |
 | iOS screenshots | 6.9" (1320×2868) | `docs/store/screenshots/ios/el/`, `.../ios/en/` (λήψεις από iPhone simulator) |
 
 Τα screenshots ξαναβγαίνουν με `docs/store/screenshots/src/render.sh`. Οι λήψεις του Play είναι από

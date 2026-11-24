@@ -15,7 +15,7 @@ shoot() { google-chrome --headless=new --disable-gpu --hide-scrollbars --force-d
 for lang in el en; do
   mkdir -p "../ios/$lang" "../play/$lang"
   rm -f "../ios/$lang"/*.png "../play/$lang"/*.png
-  for s in 1 2 3 4 5; do shoot 1080,2160 "../play/$lang/0$s.png" "s=$s&lang=$lang" & done
+  for s in 1 2 3 4 5; do shoot 1080,1920 "../play/$lang/0$s.png" "s=$s&lang=$lang" & done
   i=1
   for s in 1 2 3 5; do shoot 1320,2868 "../ios/$lang/0$i.png" "s=$s&lang=$lang&device=iphone" & i=$((i + 1)); done
   wait
