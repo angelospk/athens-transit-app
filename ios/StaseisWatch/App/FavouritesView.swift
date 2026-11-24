@@ -75,7 +75,8 @@ struct FavouritesView: View {
                 }
                 .onAppear { vm.load(p) }
                 .onChange(of: p) { _, new in vm.load(new) }
-                .liveRefresh(every: 60) { await vm.refresh(p) }
+                // Paused while a stop screen is pushed on top (it refreshes its own stop).
+                .liveRefresh(every: 60, paused: model.isStopOpen) { await vm.refresh(p) }
             } else {
                 ScrollView {
                     Text(L.t("favs.empty"))

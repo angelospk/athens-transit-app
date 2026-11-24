@@ -1,19 +1,39 @@
 import Foundation
+import os
 
 /// The App Group defaults shared by the watch app and the complication extension:
 /// the synced favourites and the last arrivals per stop. Nothing personal beyond stop ids.
+///
+/// The app and the extension are two processes, so there is no read-modify-write of a shared blob:
+/// each stop's arrivals live under their own key (`watch.arrivals.v1.<city>/<id>`), a write touches
+/// only its own key, and pruning only removes entries that are stale (> 1 h) or beyond the newest 24.
 final class SharedStore: @unchecked Sendable {
     static let appGroup = "group.gr.staseis.app"
     static let shared = SharedStore()
 
+    private static let log = Logger(subsystem: "gr.staseis.app.watch", category: "store")
+    private static let favsKey = "watch.favs.v1"
+    static let arrivalsPrefix = "watch.arrivals.v1."
+    /// The single-blob cache of the first build; removed on the next write.
+    private static let legacyArrivalsKey = "watch.arrivals.v1"
+    static let maxCachedStops = 24
+    static let maxAge = 3600
+
     private let defaults: UserDefaults
     private let lock = NSLock()
-    private static let favsKey = "watch.favs.v1"
-    private static let arrivalsKey = "watch.arrivals.v1"
-    private static let maxCachedStops = 24
 
     init(defaults: UserDefaults? = nil) {
-        self.defaults = defaults ?? UserDefaults(suiteName: Self.appGroup) ?? .standard
+        if let defaults {
+            self.defaults = defaults
+        } else if FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.appGroup) != nil,
+                  let group = UserDefaults(suiteName: Self.appGroup) {
+            self.defaults = group
+        } else {
+            // The App Group is not registered or not in the signature: the app still works on its own,
+            // but the complication cannot see the favourites. Logged once per process.
+            Self.log.error("App Group \(Self.appGroup, privacy: .public) unavailable; using standard defaults (complication will not share data)")
+            self.defaults = .standard
+        }
     }
 
     var favs: FavsPayload? {
@@ -31,29 +51,36 @@ final class SharedStore: @unchecked Sendable {
         return true
     }
 
-    private static func key(_ city: City, _ id: String) -> String { "\(city.rawValue)/\(id)" }
-
-    private func allArrivals() -> [String: StopArrivals] {
-        guard let data = defaults.data(forKey: Self.arrivalsKey),
-              let map = try? JSONDecoder().decode([String: StopArrivals].self, from: data) else { return [:] }
-        return map
-    }
+    static func key(_ city: City, _ id: String) -> String { "\(arrivalsPrefix)\(city.rawValue)/\(id)" }
 
     func arrivals(city: City, stopId: String) -> StopArrivals? {
-        allArrivals()[Self.key(city, stopId)]
+        guard let data = defaults.data(forKey: Self.key(city, stopId)) else { return nil }
+        return try? JSONDecoder().decode(StopArrivals.self, from: data)
     }
 
     func saveArrivals(_ a: StopArrivals) {
         lock.lock(); defer { lock.unlock() }
-        var map = allArrivals()
-        map[Self.key(a.city, a.stopId)] = a
-        // Keep the newest few and drop anything older than an hour.
-        let cutoff = a.fetchedAt - 3600
-        map = map.filter { $0.value.fetchedAt >= cutoff }
-        if map.count > Self.maxCachedStops {
-            let keep = map.sorted { $0.value.fetchedAt > $1.value.fetchedAt }.prefix(Self.maxCachedStops)
-            map = Dictionary(uniqueKeysWithValues: keep.map { ($0.key, $0.value) })
+        guard let data = try? JSONEncoder().encode(a) else { return }
+        defaults.set(data, forKey: Self.key(a.city, a.stopId))
+        defaults.removeObject(forKey: Self.legacyArrivalsKey)
+        prune(now: a.fetchedAt)
+    }
+
+    /// Drops entries older than an hour and keeps the newest 24. Safe to run in both processes at once:
+    /// it only removes keys, re-reading them just before deciding.
+    private func prune(now: Int) {
+        var entries: [(key: String, fetchedAt: Int)] = []
+        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(Self.arrivalsPrefix) {
+            guard let d = defaults.data(forKey: key),
+                  let a = try? JSONDecoder().decode(StopArrivals.self, from: d) else {
+                defaults.removeObject(forKey: key)
+                continue
+            }
+            entries.append((key, a.fetchedAt))
         }
-        if let data = try? JSONEncoder().encode(map) { defaults.set(data, forKey: Self.arrivalsKey) }
+        entries.sort { $0.fetchedAt > $1.fetchedAt }
+        for (i, e) in entries.enumerated() where i >= Self.maxCachedStops || e.fetchedAt < now - Self.maxAge {
+            defaults.removeObject(forKey: e.key)
+        }
     }
 }

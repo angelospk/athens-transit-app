@@ -10,8 +10,9 @@
 	<array/>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
-	<!-- The synced favourites and the cached arrivals live in the App Group defaults (shared by the watch app
-	     and its complication extension, same developer and App Group). -->
+	<!-- 1C8F.1: the synced favourites and the cached arrivals live in the App Group defaults, shared by the
+	     watch app and its complication extension (same developer, same App Group).
+	     CA92.1: when the App Group is unavailable, the same data falls back to the target's own standard defaults. -->
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>
@@ -19,6 +20,7 @@
 			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
+				<string>1C8F.1</string>
 				<string>CA92.1</string>
 			</array>
 		</dict>

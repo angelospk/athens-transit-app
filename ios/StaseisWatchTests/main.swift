@@ -41,34 +41,46 @@ check(FavsPayloadValidator.validate(#"{"city":"athens","favs":[]}"#) == nil, "mi
 check(FavsPayloadValidator.validate(#"{"v":1,"city":"patras","favs":[]}"#) == nil, "unknown city rejected")
 check(FavsPayloadValidator.validate(#"{"v":1,"city":"https://evil.example","favs":[]}"#) == nil, "URL as city rejected")
 check(FavsPayloadValidator.validate(#"{"v":1,"city":"Athens","favs":[]}"#) == nil, "city is case-sensitive")
+// Invalid favourites are skipped (the valid ones stay); the payload is still accepted.
+func ids(_ json: String) -> [String]? { FavsPayloadValidator.validate(json)?.favs.map(\.id) }
+let okFav = #"{"id":"OK1","name":"ok"}"#
 for badId in ["../x", "a/b", "", "12345678901234567", "a b", "σ1", "a?b", "a%2F"] {
-    let json = #"{"v":1,"city":"athens","favs":[{"id":"\#(badId)","name":"x"}]}"#
-    check(FavsPayloadValidator.validate(json) == nil, "bad id rejected: \(badId)")
+    eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"\#(badId)","name":"x"},\#(okFav)]}"#), ["OK1"], "bad id skipped: \(badId)")
 }
-check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[{"id":340098}]}"#) == nil, "numeric id rejected")
-check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[{"id":"1234567890123456"}]}"#) != nil, "16-char id accepted")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":340098},\#(okFav)]}"#), ["OK1"], "numeric id skipped")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"name":"no id"},\#(okFav)]}"#), ["OK1"], "missing id skipped")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"1234567890123456"}]}"#), ["1234567890123456"], "16-char id accepted")
+eq(ids(#"{"v":1,"city":"athens","favs":[17,null,"x",[1],\#(okFav)]}"#), ["OK1"], "non-object entries skipped")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"1","name":5},{"id":"2","lines":"040"},{"id":"3","lines":[40]},\#(okFav)]}"#),
+   ["OK1"], "wrong-type name/lines → favourite skipped")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"1","name":null,"lines":null}]}"#), ["1"], "null name/lines = missing")
 
 let tooMany = (0..<21).map { #"{"id":"s\#($0)"}"# }.joined(separator: ",")
-check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[\#(tooMany)]}"#) == nil, "21 favs rejected")
+eq(ids(#"{"v":1,"city":"athens","favs":[\#(tooMany)]}"#)?.count, 20, "21 favs → first 20 kept")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"../x"},\#(tooMany)]}"#)?.first, "s0", "cap counts valid favourites only")
 let twenty = (0..<20).map { #"{"id":"s\#($0)"}"# }.joined(separator: ",")
-eq(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[\#(twenty)]}"#)?.favs.count, 20, "20 favs accepted")
+eq(ids(#"{"v":1,"city":"athens","favs":[\#(twenty)]}"#)?.count, 20, "20 favs accepted")
+let hundredOne = (0..<101).map { #"{"id":"s\#($0)"}"# }.joined(separator: ",")
+check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[\#(hundredOne)]}"#) == nil, "101 raw entries → bad shape, rejected")
+check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":{"id":"1"}}"#) == nil, "favs not an array → rejected")
+check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens"}"#) == nil, "missing favs → rejected")
 
 let longName = String(repeating: "Α", count: 81)
-check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[{"id":"1","name":"\#(longName)"}]}"#) == nil, "81-char name rejected")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"1","name":"\#(longName)"},\#(okFav)]}"#), ["OK1"], "81-char name skipped")
 let okName = String(repeating: "Α", count: 80)
-check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[{"id":"1","name":"\#(okName)"}]}"#) != nil, "80-char name accepted")
-check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[{"id":"1","name":"a\u0007b"}]}"#) == nil, "control char in name rejected")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"1","name":"\#(okName)"}]}"#), ["1"], "80-char name accepted")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"1","name":"a\u0007b"},\#(okFav)]}"#), ["OK1"], "control char in name skipped")
 let thirteen = (0..<13).map { #""L\#($0)""# }.joined(separator: ",")
-check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[{"id":"1","lines":[\#(thirteen)]}]}"#) == nil, "13 lines rejected")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"1","lines":[\#(thirteen)]},\#(okFav)]}"#), ["OK1"], "13 lines skipped")
 for badLine in ["123456789", "", "a b", "<b>", "Ä", "040/1"] {
-    check(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[{"id":"1","lines":["\#(badLine)"]}]}"#) == nil,
-          "bad line rejected: \(badLine)")
+    eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"1","lines":["040","\#(badLine)"]},\#(okFav)]}"#), ["OK1"],
+       "bad line → favourite skipped (not widened to all lines): \(badLine)")
 }
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"../x"}]}"#), [], "all invalid → accepted, empty")
 check(FavsPayloadValidator.validate("not json") == nil, "malformed rejected")
 check(FavsPayloadValidator.validate("[]") == nil, "array rejected")
 check(FavsPayloadValidator.validate(String(repeating: " ", count: 40_000) + good) == nil, "oversized rejected")
-eq(FavsPayloadValidator.validate(#"{"v":1,"city":"athens","favs":[{"id":"1"},{"id":"1"},{"id":"2"}]}"#)?.favs.map(\.id) ?? [],
-   ["1", "2"], "duplicate ids dropped")
+eq(ids(#"{"v":1,"city":"athens","favs":[{"id":"1"},{"id":"1"},{"id":"2"}]}"#) ?? [], ["1", "2"], "duplicate ids dropped")
 
 // MARK: Arrivals decoding
 
@@ -256,6 +268,22 @@ eq(store.favs, p, "favs round trip")
 store.saveArrivals(cached)
 eq(store.arrivals(city: .athens, stopId: "340098"), cached, "arrivals round trip")
 eq(store.arrivals(city: .thessaloniki, stopId: "340098"), nil, "arrivals keyed by city")
+// Two stores on the same defaults stand in for the app and the extension: neither write loses the other's.
+let other = SharedStore(defaults: ud)
+let athensB = StopArrivals(city: .athens, stopId: "B", name: nil, arrivals: [], fetchedAt: now + 1)
+other.saveArrivals(athensB)
+store.saveArrivals(StopArrivals(city: .athens, stopId: "C", name: nil, arrivals: [], fetchedAt: now + 2))
+check(store.arrivals(city: .athens, stopId: "340098") != nil && store.arrivals(city: .athens, stopId: "B") != nil
+      && other.arrivals(city: .athens, stopId: "C") != nil, "writes from two stores both kept")
+check(ud.data(forKey: SharedStore.key(.athens, "B")) != nil, "one key per stop")
+ud.set(Data("legacy".utf8), forKey: "watch.arrivals.v1")
+for i in 0..<30 { store.saveArrivals(StopArrivals(city: .thessaloniki, stopId: "T\(i)", name: nil, arrivals: [], fetchedAt: now + 10 + i)) }
+let kept = ud.dictionaryRepresentation().keys.filter { $0.hasPrefix(SharedStore.arrivalsPrefix) }
+eq(kept.count, 24, "keeps the newest 24")
+check(store.arrivals(city: .thessaloniki, stopId: "T29") != nil && store.arrivals(city: .athens, stopId: "340098") == nil, "oldest dropped")
+check(ud.object(forKey: "watch.arrivals.v1") == nil, "legacy blob removed")
+store.saveArrivals(StopArrivals(city: .athens, stopId: "late", name: nil, arrivals: [], fetchedAt: now + 4000))
+check(store.arrivals(city: .thessaloniki, stopId: "T0") == nil && store.arrivals(city: .athens, stopId: "late") != nil, "older than 1 h dropped")
 ud.removePersistentDomain(forName: suite)
 
 print("\(checks - failures)/\(checks) checks passed")

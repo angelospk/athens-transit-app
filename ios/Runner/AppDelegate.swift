@@ -39,9 +39,11 @@ import flutter_foreground_task
 }
 
 /// Sends the favourites to the watch as the application context: the watch gets the latest one when it
-/// next runs, even if it was not reachable now. Without a paired watch it does nothing.
+/// next runs, even if it was not reachable now. It keeps the last payload and sends it again when the
+/// watch app gets installed or a watch is paired. Without a paired watch it does nothing.
+/// All its state is touched on the main queue (WCSession calls back on a background queue).
 final class WatchSender: NSObject, WCSessionDelegate {
-  private var pending: String?
+  private var last: String?
 
   func activate() {
     guard WCSession.isSupported() else { return }
@@ -50,17 +52,24 @@ final class WatchSender: NSObject, WCSessionDelegate {
   }
 
   func send(_ json: String) {
-    guard WCSession.isSupported() else { return }
+    guard Thread.isMainThread else { return DispatchQueue.main.async { self.send(json) } }
+    last = json
+    push()
+  }
+
+  private func push() {
+    guard WCSession.isSupported(), let json = last else { return }
     let s = WCSession.default
-    guard s.activationState == .activated else { pending = json; return } // sent once activation completes
-    guard s.isPaired, s.isWatchAppInstalled else { return }
+    guard s.activationState == .activated, s.isPaired, s.isWatchAppInstalled else { return } // sent later
     try? s.updateApplicationContext(["json": json])
   }
 
   func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
-    guard state == .activated, let json = pending else { return }
-    pending = nil
-    DispatchQueue.main.async { self.send(json) }
+    DispatchQueue.main.async { self.push() }
+  }
+
+  func sessionWatchStateDidChange(_ session: WCSession) { // the watch app was installed, or a watch paired
+    DispatchQueue.main.async { self.push() }
   }
 
   func sessionDidBecomeInactive(_ session: WCSession) {}

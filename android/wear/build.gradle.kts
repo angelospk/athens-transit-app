@@ -22,7 +22,8 @@ android {
         minSdk = 30
         targetSdk = 36
         versionCode = 2_000_000 + wearBuild
-        versionName = "1.0.0"
+        // Tracks the phone app's version (pubspec.yaml `version:` without the build number); bump together.
+        versionName = "0.3.0"
     }
 
     compileOptions {

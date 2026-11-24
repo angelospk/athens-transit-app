@@ -8,6 +8,7 @@ import gr.staseis.app.wear.core.IndexStop
 import gr.staseis.app.wear.core.StopIndexFormat
 import gr.staseis.app.wear.core.StopIndexFormat.RawStop
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -24,33 +25,45 @@ object StopIndex {
     private const val PREFS = "stop_index"
 
     private val mutex = Mutex()
-    private val memory = HashMap<City, List<IndexStop>>()
+    private val memory = java.util.concurrent.ConcurrentHashMap<City, List<IndexStop>>()
 
     private fun file(ctx: Context, city: City) =
         File(ctx.applicationContext.filesDir, "stops-v${StopIndexFormat.VERSION}-${city.key}.tsv")
 
-    /** The stops of [city], downloading or refreshing the index when needed. Empty on failure. */
-    suspend fun stops(ctx: Context, city: City): List<IndexStop> = mutex.withLock {
-        withContext(Dispatchers.IO) {
-            File(ctx.applicationContext.filesDir, "stops-${city.key}.tsv").delete() // format 1
-            val f = file(ctx, city)
-            val prefs = ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            val checked = prefs.getLong("${city.key}.checked", 0)
-            if (!f.exists() || System.currentTimeMillis() - checked > WEEK_MS) {
-                try {
-                    download(ctx, city, f)
-                } catch (_: Exception) {
-                    // Keep the old file, if any; try again next time.
-                }
-            }
-            memory[city]?.let { return@withContext it }
-            val list = try {
-                if (f.exists()) f.bufferedReader().useLines { l -> l.mapNotNull(StopIndexFormat::decode).toList() } else emptyList()
-            } catch (_: Exception) {
-                emptyList()
-            }
-            if (list.isNotEmpty()) memory[city] = list
-            list
+    /**
+     * The stops of [city]. With a cached index it returns at once and, when the index is over a week old,
+     * refreshes it in the background (an unreachable server must not delay Nearby). Without one it has to
+     * download first. Empty on failure.
+     */
+    suspend fun stops(ctx: Context, city: City): List<IndexStop> = withContext(Dispatchers.IO) {
+        val app = ctx.applicationContext
+        File(app.filesDir, "stops-${city.key}.tsv").delete() // format 1
+        val f = file(app, city)
+        if (!f.exists()) {
+            mutex.withLock { if (!f.exists()) tryDownload(app, city, f) }
+        } else if (isDue(app, city)) {
+            AppScope.launch { mutex.withLock { if (isDue(app, city)) tryDownload(app, city, f) } }
+        }
+        memory[city]?.let { return@withContext it }
+        val list = try {
+            if (f.exists()) f.bufferedReader().useLines { l -> l.mapNotNull(StopIndexFormat::decode).toList() } else emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+        if (list.isNotEmpty()) memory[city] = list
+        list
+    }
+
+    private fun isDue(ctx: Context, city: City): Boolean {
+        val checked = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getLong("${city.key}.checked", 0)
+        return System.currentTimeMillis() - checked > WEEK_MS
+    }
+
+    private fun tryDownload(ctx: Context, city: City, f: File) {
+        try {
+            download(ctx, city, f)
+        } catch (_: Exception) {
+            // Keep the old file, if any; try again next time.
         }
     }
 

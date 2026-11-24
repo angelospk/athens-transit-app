@@ -62,6 +62,8 @@ class TileShotTest(private val device: String, private val font: Float) {
             .build()
         val cases = listOf(
             "next_bus" to Triple(Demo.LONG_STOP, "040 · 12′", "Επόμενο λεωφορείο"),
+            // The tile picker preview (res/drawable-nodpi/tile_preview.png is copied from the large round one).
+            "preview" to Triple("ΣΥΝΤΑΓΜΑ", "040 · 3′", "Επόμενο λεωφορείο"),
             "no_data" to Triple("ΠΑΠΑΣΠΥΡΟΥ", "—", "Επόμενο λεωφορείο"),
             "no_favourites" to Triple("Στάσεις", "—", "Άνοιξε τις Στάσεις στο κινητό"),
         )

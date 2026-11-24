@@ -33,6 +33,12 @@ final class AppModel: ObservableObject {
     @Published private(set) var favs: FavsPayload?
     @Published var path: [Screen] = []
 
+    /// A stop screen is on top: list refreshes underneath pause.
+    var isStopOpen: Bool {
+        if case .stop = path.last { return true }
+        return false
+    }
+
     private let store = SharedStore.shared
     private lazy var link = PhoneLink { [weak self] payload in
         Task { @MainActor in self?.apply(payload) }

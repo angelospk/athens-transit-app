@@ -41,7 +41,7 @@ class NextBusTileService : TileService() {
 
     override fun onTileAddEvent(requestParams: EventBuilders.TileAddEvent) {
         Glance.setInUse(this, "tile", requestParams.tileId, true)
-        Glance.kick(this)
+        Glance.kick(this, null, ArrivalsRepo.nowS(), force = true)
     }
 
     override fun onTileRemoveEvent(requestParams: EventBuilders.TileRemoveEvent) {

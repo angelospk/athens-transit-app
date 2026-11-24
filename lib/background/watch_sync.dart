@@ -16,6 +16,11 @@ const watchChannel = MethodChannel('gr.staseis.app/watch');
 const watchPayloadVersion = 1;
 const watchMaxFavs = 20;
 
+// The watches' own checks (docs/WATCH.md): what fails them is left out here, not sent.
+final _idRe = RegExp(r'^[A-Za-z0-9_-]{1,16}$');
+final _lineRe = RegExp(r'^[A-Za-z0-9Α-Ωα-ωΆ-Ώά-ώ_-]{1,8}$');
+final _control = RegExp(r'[\x00-\x1F\x7F]');
+
 /// The stop id of a favourite: the stop of the index with its name within 200 m (the index is what the
 /// backend's `/v1/stops/{id}` knows). null when none matches.
 String? stopIdOf(FavStop f, TripIndex idx) {
@@ -36,7 +41,14 @@ String watchPayload(City city, List<FavStop> favs, TripIndex idx) {
   for (final f in favs) {
     final id = stopIdOf(f, idx);
     if (id == null) continue;
-    out.add({'id': id, 'name': f.name, 'lines': f.lines.take(12).toList()});
+    if (!_idRe.hasMatch(id)) continue;
+    final name = f.name.replaceAll(_control, '').trim();
+    if (name.isEmpty) continue;
+    out.add({
+      'id': id,
+      'name': name.length > 80 ? name.substring(0, 80) : name,
+      'lines': f.lines.where(_lineRe.hasMatch).take(12).toList(),
+    });
     if (out.length == watchMaxFavs) break;
   }
   return jsonEncode({'v': watchPayloadVersion, 'city': city.id, 'favs': out});

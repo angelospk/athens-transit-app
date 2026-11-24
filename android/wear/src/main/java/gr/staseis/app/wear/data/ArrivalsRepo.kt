@@ -4,8 +4,8 @@ import android.content.Context
 import gr.staseis.app.wear.core.Arrivals
 import gr.staseis.app.wear.core.City
 import gr.staseis.app.wear.core.Payload
+import gr.staseis.app.wear.core.SingleFlight
 import gr.staseis.app.wear.core.StopData
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,12 +28,13 @@ data class StopSnapshot(
  */
 object ArrivalsRepo {
     private val BACKOFF_S = longArrayOf(30, 60, 120)
-    private const val CACHE_MAX_AGE_S = 24 * 3600L
+    /** Cached arrivals are kept at most 1 hour (as on watchOS). */
+    private const val CACHE_MAX_AGE_S = 3600L
 
     private class Backoff(var failures: Int = 0, var notBeforeS: Long = 0)
 
     private val lock = Any()
-    private val inflight = HashMap<String, CompletableDeferred<StopSnapshot>>()
+    private val flight = SingleFlight<String, StopSnapshot>(AppScope)
     private val backoff = HashMap<String, Backoff>()
     private val flows = HashMap<String, MutableStateFlow<StopSnapshot?>>()
 
@@ -58,6 +59,10 @@ object ArrivalsRepo {
             if (!f.exists()) return null
             val o = JSONObject(f.readText())
             val at = o.getLong("at")
+            if (nowS() - at > CACHE_MAX_AGE_S) {
+                f.delete()
+                return null
+            }
             val data = Arrivals.decode(o.optString("body"), id, at)
             val snap = StopSnapshot(data, at, lastFailed = false, decodeFailed = data == null)
             mutableFlow(city, id).compareAndSet(null, snap)
@@ -74,24 +79,14 @@ object ArrivalsRepo {
     suspend fun refresh(ctx: Context, city: City, id: String): StopSnapshot? {
         if (!Payload.ID_RE.matches(id)) return null
         val k = key(city, id)
-        val now = nowS()
-        val (deferred, owner) = synchronized(lock) {
-            inflight[k]?.let { return@synchronized it to false }
+        val waiting = synchronized(lock) {
             val b = backoff[k]
-            if (b != null && now < b.notBeforeS) return@synchronized null to false
-            val d = CompletableDeferred<StopSnapshot>()
-            inflight[k] = d
-            d to true
+            b != null && nowS() < b.notBeforeS && !flight.inFlight(k)
         }
-        if (deferred == null) return cached(ctx, city, id)
-        if (!owner) return deferred.await()
-        val snap = try {
-            fetch(ctx, city, id)
-        } finally {
-            synchronized(lock) { inflight.remove(k) }
-        }
-        deferred.complete(snap)
-        return snap
+        if (waiting) return cached(ctx, city, id)
+        // The fetch runs in the app scope: a cancelled caller never leaves the others waiting.
+        val app = ctx.applicationContext
+        return flight.run(k) { fetch(app, city, id) }
     }
 
     private suspend fun fetch(ctx: Context, city: City, id: String): StopSnapshot = withContext(Dispatchers.IO) {

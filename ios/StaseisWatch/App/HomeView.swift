@@ -28,16 +28,18 @@ struct HomeView: View {
     }
 }
 
-/// True while the screen is on and not dimmed: refresh only then.
+/// True while the screen is on, not dimmed and not `paused`: refresh only then.
 struct LiveRefresh: ViewModifier {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.isLuminanceReduced) private var isLuminanceReduced
     let every: UInt64
+    let paused: Bool
     let action: @MainActor () async -> Void
 
     func body(content: Content) -> some View {
-        content.task(id: scenePhase == .active && !isLuminanceReduced) {
-            guard scenePhase == .active && !isLuminanceReduced else { return }
+        let live = scenePhase == .active && !isLuminanceReduced && !paused
+        content.task(id: live) {
+            guard live else { return }
             while !Task.isCancelled {
                 await action()
                 try? await Task.sleep(nanoseconds: every * 1_000_000_000)
@@ -47,8 +49,9 @@ struct LiveRefresh: ViewModifier {
 }
 
 extension View {
-    func liveRefresh(every seconds: UInt64, _ action: @escaping @MainActor () async -> Void) -> some View {
-        modifier(LiveRefresh(every: seconds, action: action))
+    func liveRefresh(every seconds: UInt64, paused: Bool = false,
+                     _ action: @escaping @MainActor () async -> Void) -> some View {
+        modifier(LiveRefresh(every: seconds, paused: paused, action: action))
     }
 }
 

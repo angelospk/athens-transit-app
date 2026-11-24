@@ -18,6 +18,7 @@ import gr.staseis.app.wear.core.City
 import gr.staseis.app.wear.core.Fav
 import gr.staseis.app.wear.core.NextBusEntry
 import gr.staseis.app.wear.core.NextBusTimeline
+import gr.staseis.app.wear.core.RefreshPolicy
 import gr.staseis.app.wear.data.ArrivalsRepo
 import gr.staseis.app.wear.data.FavStore
 import gr.staseis.app.wear.ui.MainActivity
@@ -32,7 +33,7 @@ object Glance {
     private const val PREFS = "glance"
     private const val PERIODIC = "glance-refresh"
     private const val ONCE = "glance-refresh-now"
-    private const val STALE_FOR_KICK_S = 5 * 60
+    private const val KICK_AT = "kick.at"
 
     data class Target(val city: City, val fav: Fav)
 
@@ -50,7 +51,7 @@ object Glance {
             snap?.data?.arrivals.orEmpty(), t.fav.lines, snap?.fetchedAtS?.takeIf { snap.data != null },
             nowS, ctx.getString(R.string.now),
         )
-        if (snap?.fetchedAtS == null || nowS - snap.fetchedAtS > STALE_FOR_KICK_S) kick(ctx)
+        kick(ctx, snap?.fetchedAtS, nowS)
         return t to list
     }
 
@@ -93,9 +94,15 @@ object Glance {
         }
     }
 
-    /** One refresh soon, when the cache is stale and something is on screen. */
-    fun kick(ctx: Context) {
+    /**
+     * One refresh soon, when the cache is stale and a tile or complication is in use; at most once per
+     * [RefreshPolicy.MIN_KICK_INTERVAL_S] (persisted), so a stop that keeps failing cannot loop.
+     */
+    fun kick(ctx: Context, fetchedAtS: Long?, nowS: Long, force: Boolean = false) {
         if (!anyInUse(ctx) || target(ctx) == null) return
+        val last = prefs(ctx).getLong(KICK_AT, -1).takeIf { it >= 0 }
+        if (!RefreshPolicy.shouldKick(fetchedAtS, last, nowS, force)) return
+        prefs(ctx).edit().putLong(KICK_AT, nowS).apply()
         val req = OneTimeWorkRequestBuilder<RefreshWorker>().setConstraints(networkConstraint()).build()
         WorkManager.getInstance(ctx.applicationContext).enqueueUniqueWork(ONCE, ExistingWorkPolicy.KEEP, req)
     }
@@ -117,17 +124,19 @@ object Glance {
 
     fun favouritesChanged(ctx: Context) {
         requestUpdates(ctx)
-        kick(ctx)
+        kick(ctx, null, ArrivalsRepo.nowS(), force = true)
     }
-
-    fun nowWord(ctx: Context) = ctx.getString(R.string.now)
 }
 
 class RefreshWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
         val t = Glance.target(applicationContext) ?: return Result.success()
-        ArrivalsRepo.refresh(applicationContext, t.city, t.fav.id)
-        Glance.requestUpdates(applicationContext)
+        val before = ArrivalsRepo.cached(applicationContext, t.city, t.fav.id)?.fetchedAtS
+        val after = ArrivalsRepo.refresh(applicationContext, t.city, t.fav.id)
+        // Redraw only when new data arrived: a failure must not re-trigger the tile → kick → worker cycle.
+        if (RefreshPolicy.shouldRedraw(before, after?.fetchedAtS, after == null || after.lastFailed || after.decodeFailed)) {
+            Glance.requestUpdates(applicationContext)
+        }
         return Result.success()
     }
 }

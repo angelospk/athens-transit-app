@@ -11,8 +11,8 @@ Two native watch apps live next to the phone app: `android/wear` (Kotlin, Compos
 - **The phone sends only the favourite stops** (`lib/background/watch_sync.dart`): Android through the
   Wearable Data Layer (`MainActivity.kt`, DataItem `/staseis/favs`), iOS through WatchConnectivity
   (`AppDelegate.swift`, `updateApplicationContext`). The phone app works as before without a watch.
-- **Nearest stops** are computed on the watch from the stop index (`staseis.gr/trips.json`, only the
-  `s` array is kept, refreshed weekly with ETag). The position never leaves the watch; only the stop id
+- **Nearest stops** are computed on the watch from the stop index (`staseis.gr/trips.json`: the stops
+  `s` and, from `l`, the lines of each stop; refreshed weekly with ETag, in the background). The position never leaves the watch; only the stop id
   being looked at goes to the server, as with the phone.
 - **Alerts** ("the bus is coming") reach the watch through the system: Android bridges phone
   notifications that are not local-only to Wear OS; iOS mirrors iPhone notifications to the Watch when
@@ -32,7 +32,9 @@ the same arrivals per stop.
 
 `id` is the GTFS stop id from the stop index (`stopIdOf`: same name within 200 m). At most 20 stops,
 12 lines each. No home/work places, no coordinates. The watches treat it as untrusted (version, city
-enum, id/name/line patterns and lengths) and keep the previous list on any error.
+enum, id/name/line patterns and lengths): a bad entry is skipped, a bad version/city/shape keeps the
+previous list. The phone already leaves out what would fail (`watchPayload`). iOS keeps the last payload
+and sends it again when the watch app gets installed.
 
 ## Refresh and battery
 

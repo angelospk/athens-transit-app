@@ -23,7 +23,7 @@ class NextBusComplicationService : SuspendingTimelineComplicationDataSourceServi
 
     override fun onComplicationActivated(complicationInstanceId: Int, type: ComplicationType) {
         Glance.setInUse(this, "complication", complicationInstanceId, true)
-        Glance.kick(this)
+        Glance.kick(this, null, ArrivalsRepo.nowS(), force = true)
     }
 
     override fun onComplicationDeactivated(complicationInstanceId: Int) {

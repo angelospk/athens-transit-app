@@ -36,7 +36,7 @@ object Payload {
                     is String -> n
                     else -> null
                 } ?: return null
-                if (name.length > MAX_NAME) return null
+                if (name.length > MAX_NAME || name.any { Character.getType(it) == Character.CONTROL.toInt() }) return null
                 val lines = when (val l = f.opt("lines")) {
                     null, JSONObject.NULL -> emptyList()
                     is JSONArray -> {

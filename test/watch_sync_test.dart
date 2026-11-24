@@ -44,4 +44,20 @@ void main() {
     final j = jsonDecode(watchPayload(City.athens, many, idx)) as Map<String, dynamic>;
     expect((j['favs'] as List).length, watchMaxFavs);
   });
+
+  test('what the watches would reject is cleaned or left out, never sent', () {
+    const odd = TripIndex(v: 't', s: [('ΣΤΑΣΗ', 37.9, 23.7), ('ΚΑΚΟ ID', 37.8, 23.6)], l: {}, ids: ['1001', 'bad id/../x']);
+    final long = 'Α' * 100;
+    final j = jsonDecode(watchPayload(City.athens, [
+      FavStop(name: 'ΣΤΑΣΗ', lat: 37.9, lon: 23.7, lines: ['040', 'Χ95', 'bad line!', '123456789']),
+      const FavStop(name: 'ΚΑΚΟ ID', lat: 37.8, lon: 23.6),
+    ], odd)) as Map<String, dynamic>;
+    expect(j['favs'], [
+      {'id': '1001', 'name': 'ΣΤΑΣΗ', 'lines': ['040', 'Χ95']},
+    ]);
+    final named = jsonDecode(watchPayload(City.athens, [FavStop(name: long, lat: 37.9, lon: 23.7)],
+        TripIndex(v: 't', s: [(long, 37.9, 23.7)], l: const {}, ids: const ['1001']))) as Map<String, dynamic>;
+    expect(((named['favs'] as List).single as Map)['name'], hasLength(80));
+  });
 }
+

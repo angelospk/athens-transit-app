@@ -52,6 +52,12 @@ class PayloadTest {
         assertNotNull(Payload.parse(good.replace("ΠΑΠΑΣΠΥΡΟΥ", "x".repeat(80))))
     }
 
+    @Test fun controlCharactersInNamesRejected() {
+        listOf("\\u0000", "\\n", "\\t", "\\u001b[31m", "\\u007f").forEach { c ->
+            assertNull(c, Payload.parse(good.replace("ΠΑΠΑΣΠΥΡΟΥ", "ΠΑΠΑ${c}ΣΠΥΡΟΥ")))
+        }
+    }
+
     @Test fun tooManyFavs() {
         fun favs(n: Int) = (1..n).joinToString(",") { """{"id":"$it","name":"s","lines":[]}""" }
         assertEquals(20, Payload.parse("""{"v":1,"city":"athens","favs":[${favs(20)}]}""")!!.favs.size)
