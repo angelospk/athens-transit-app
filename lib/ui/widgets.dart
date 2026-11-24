@@ -10,7 +10,7 @@ import '../data/api.dart';
 import '../data/live.dart';
 import '../data/store.dart';
 import 'map_sel.dart';
-import 'motion_fx.dart' show Tick, motionOff;
+import 'motion_fx.dart' show motionOff;
 import 'stop_screen.dart' show StopRef;
 import 'theme.dart';
 
@@ -185,7 +185,7 @@ class EtaText extends StatelessWidget {
 }
 
 // The compact form (home pills, favourites rows), height 24, stadium: live → plate fill and amber text; otherwise
-// the plain token style ([style], default ink 15 / 800).
+// the plain token style ([style], default muted 15 / 800).
 class EtaChip extends StatelessWidget {
   const EtaChip(this.text, {super.key, required this.live, this.style});
   final String text;
@@ -195,16 +195,17 @@ class EtaChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
-    if (!live) return Tick(value: text, child: Text(text, style: style ?? TextStyle(fontSize: 15, fontWeight: FontWeight.w800, fontFeatures: Ds.tabular, color: t.ink)));
+    // Not live (timetable, offline estimate): muted and still; motion is for live times only.
+    if (!live) return Text(text, style: style ?? TextStyle(fontSize: 15, fontWeight: FontWeight.w800, fontFeatures: Ds.tabular, color: t.muted));
     return Semantics(
       label: 'ζωντανά: $text',
       excludeSemantics: true,
       child: Container(
         constraints: const BoxConstraints(minHeight: 24),
-        alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 9),
         decoration: BoxDecoration(color: t.plate, borderRadius: BorderRadius.circular(Ds.rPill), border: Border.all(color: t.plateEdge)),
-        child: Flip(value: text, child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, height: 1, fontFeatures: Ds.tabular, color: t.amber))),
+        // heightFactor 1: 24 tall (more only for large text), never the full height of the row around it
+        child: Center(widthFactor: 1, heightFactor: 1, child: Flip(value: text, child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, height: 1, fontFeatures: Ds.tabular, color: t.amber)))),
       ),
     );
   }

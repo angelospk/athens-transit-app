@@ -1441,7 +1441,7 @@ class _Pill extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tones;
     return Container(
-      height: 32,
+      constraints: const BoxConstraints(minHeight: 32), // grows with large text
       padding: EdgeInsets.fromLTRB(4, 0, when == null ? 4 : 10, 0),
       decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(16)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [

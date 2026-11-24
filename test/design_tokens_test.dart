@@ -9,6 +9,7 @@ import 'package:athens_transit/data/api.dart';
 import 'package:athens_transit/data/cache.dart';
 import 'package:athens_transit/data/live.dart';
 import 'package:athens_transit/data/store.dart';
+import 'package:athens_transit/ui/motion_fx.dart' show Tick;
 import 'package:athens_transit/ui/theme.dart';
 import 'package:athens_transit/ui/widgets.dart';
 import 'package:flutter/material.dart';
@@ -116,6 +117,18 @@ void main() {
       expect(find.descendant(of: plate, matching: find.byType(AnimatedSwitcher)), findsOneWidget);
     });
 
+    testWidgets('in a 32 px row the live chip stays 24 tall', (t) async {
+      await t.pumpWidget(host(const Center(child: SizedBox(height: 32, child: Row(mainAxisSize: MainAxisSize.min, children: [EtaChip('3′', live: true)])))));
+      final chip = find.ancestor(of: find.text('3′'), matching: find.byType(Container)).first;
+      expect(t.getSize(chip).height, 24);
+    });
+
+    testWidgets('a chip that is not live is muted and still', (t) async {
+      await t.pumpWidget(host(const EtaChip('9′', live: false)));
+      expect(t.widget<Text>(find.text('9′')).style!.color, Tones.light.muted);
+      expect(find.byType(Tick), findsNothing);
+    });
+
     testWidgets('the live chip grows with large text instead of clipping it', (t) async {
       await t.pumpWidget(host(const MediaQuery(data: MediaQueryData(textScaler: TextScaler.linear(2)), child: Center(child: EtaChip('3′', live: true)))));
       final chip = find.ancestor(of: find.text('3′'), matching: find.byType(Container)).first;
@@ -129,7 +142,7 @@ void main() {
       final box = find.ancestor(of: find.text('3′'), matching: find.byType(Container)).first;
       expect((t.widget<Container>(box).decoration! as BoxDecoration).color, const Color(0xFF16181B));
       expect(t.widget<Text>(find.text('3′')).style!.color, const Color(0xFFFFB000));
-      expect(t.widget<Text>(find.text('9′')).style!.color, Tones.light.ink);
+      expect(t.widget<Text>(find.text('9′')).style!.color, Tones.light.muted);
     });
 
     testWidgets('the digits flip once on a change (150 ms); nothing animates when animations are off', (t) async {
