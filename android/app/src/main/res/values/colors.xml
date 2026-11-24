@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_bg">#1A7F37</color>
     <!-- Widgets follow the system theme: these, and values-night for the dark one. -->
     <color name="widget_bg">#FCFCFA</color>
     <color name="widget_ink">#16181A</color>

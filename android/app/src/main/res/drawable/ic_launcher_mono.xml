@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon (monochrome) layer: the route with the stop and the bus as solid dots (one colour has no room for the ring). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <group android:scaleX="0.062" android:scaleY="0.062" android:translateX="22.256" android:translateY="22.256">
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="84" android:strokeLineCap="round"
+            android:pathData="M150,830 C380,830 360,512 512,512 S650,194 874,194" />
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M382,512 a130,130 0 1,0 260,0 a130,130 0 1,0 -260,0 z" />
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M216,790 a84,84 0 1,0 168,0 a84,84 0 1,0 -168,0 z" />
+    </group>
+</vector>
