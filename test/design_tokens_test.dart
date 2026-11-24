@@ -103,6 +103,25 @@ void main() {
       expect(t.widget<Text>(find.text('~7′')).style!.color, Tones.light.muted);
     });
 
+    testWidgets('the first row of a stop: a bigger plate (28; «τώρα» 19)', (t) async {
+      await t.pumpWidget(host(const Column(children: [EtaText('5′', live: true, big: true), EtaText('τώρα', live: true, big: true)])));
+      final rich = t.widget<RichText>(find.descendant(of: find.byType(BoardPlate), matching: find.byType(RichText)).first);
+      expect(((rich.text as TextSpan).children!.first as TextSpan).style!.fontSize, 28);
+      expect(t.widget<Text>(find.text('τώρα')).style!.fontSize, 19);
+    });
+
+    testWidgets('only the digits flip: the plate itself stays still', (t) async {
+      await t.pumpWidget(host(const EtaText('5′', live: true)));
+      final plate = find.descendant(of: find.byType(BoardPlate), matching: find.byType(Container)).first;
+      expect(find.descendant(of: plate, matching: find.byType(AnimatedSwitcher)), findsOneWidget);
+    });
+
+    testWidgets('the live chip grows with large text instead of clipping it', (t) async {
+      await t.pumpWidget(host(const MediaQuery(data: MediaQueryData(textScaler: TextScaler.linear(2)), child: Center(child: EtaChip('3′', live: true)))));
+      final chip = find.ancestor(of: find.text('3′'), matching: find.byType(Container)).first;
+      expect(t.getSize(chip).height, greaterThan(24));
+    });
+
     testWidgets('the live chip: height 24, plate fill, amber text; the other chip keeps the token style', (t) async {
       await t.pumpWidget(host(const Column(children: [EtaChip('3′', live: true), EtaChip('9′', live: false)])));
       await t.pumpAndSettle();

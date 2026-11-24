@@ -121,7 +121,8 @@ class Flip extends StatelessWidget {
 }
 
 // The board plate: a live arrival time (from a vehicle's GPS) as amber digits on a dark plate, as on a stop's
-// departure board. «5′»: the prime at 70 % of the digits. «τώρα»: the word on the same plate, 17.
+// departure board. «5′»: the prime at 70 % of the digits. «τώρα»: the word on the same plate, 17 (19 on a 28 plate).
+// Only the digits flip; the plate stays still.
 class BoardPlate extends StatelessWidget {
   const BoardPlate(this.text, {super.key, this.size = 24});
   final String text;
@@ -133,7 +134,7 @@ class BoardPlate extends StatelessWidget {
     final now = text.endsWith('τώρα');
     final style = TextStyle(
       color: t.amber,
-      fontSize: now ? 17 : size,
+      fontSize: now ? (size > 24 ? 19 : 17) : size,
       fontWeight: FontWeight.w800,
       height: 1.05,
       letterSpacing: now ? 0 : -0.4,
@@ -143,11 +144,11 @@ class BoardPlate extends StatelessWidget {
     return Semantics(
       label: 'ζωντανά: $text',
       excludeSemantics: true,
-      child: Flip(
-        value: text,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(color: t.plate, borderRadius: BorderRadius.circular(Ds.rXs), border: Border.all(color: t.plateEdge)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(color: t.plate, borderRadius: BorderRadius.circular(Ds.rXs), border: Border.all(color: t.plateEdge)),
+        child: Flip(
+          value: text,
           child: prime
               ? Text.rich(TextSpan(style: style, children: [
                   TextSpan(text: text.substring(0, text.length - 1)),
@@ -161,18 +162,19 @@ class BoardPlate extends StatelessWidget {
 }
 
 // An arrival time in the shared ETA style: live → the board plate; an estimate or timetable time → muted
-// number, no plate. Row size 24, «τώρα» 17.
+// number, no plate. Row size 24, «τώρα» 17; [big] (a stop's first row) 28, «τώρα» 19.
 class EtaText extends StatelessWidget {
-  const EtaText(this.text, {super.key, required this.live});
+  const EtaText(this.text, {super.key, required this.live, this.big = false});
   final String text;
-  final bool live;
+  final bool live, big;
 
   @override
   Widget build(BuildContext context) {
-    if (live) return BoardPlate(text);
+    if (live) return BoardPlate(text, size: big ? 28 : 24);
+    final now = text.endsWith('τώρα');
     return Text(text,
         style: TextStyle(
-          fontSize: text.endsWith('τώρα') ? 17 : 24,
+          fontSize: now ? (big ? 19 : 17) : (big ? 28 : 24),
           height: 1.05,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.4,
@@ -198,7 +200,7 @@ class EtaChip extends StatelessWidget {
       label: 'ζωντανά: $text',
       excludeSemantics: true,
       child: Container(
-        height: 24,
+        constraints: const BoxConstraints(minHeight: 24),
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 9),
         decoration: BoxDecoration(color: t.plate, borderRadius: BorderRadius.circular(Ds.rPill), border: Border.all(color: t.plateEdge)),
@@ -288,7 +290,7 @@ class ArrivalRow extends StatelessWidget {
             ]),
           ),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            EtaText('$tilde${mins(first.etaS)}', live: live),
+            EtaText('$tilde${mins(first.etaS)}', live: live, big: big),
             if (then.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
