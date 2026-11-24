@@ -43,16 +43,17 @@
 8. **Play Console**: store listing (κείμενα, εικονίδιο, feature graphic, screenshots), κατηγορία Maps &
    Navigation, δήλωση foreground service (μετά το πρώτο upload), content rating, closed test αν ισχύει,
    πρόσβαση του Άγγελου.
-   Κατάσταση 2026-11-19: 9 από 12 βήματα ρύθμισης έγιναν (privacy, ads, app access, target audience, data
-   safety, government, financial, health, trader status). Internal testing: πρόχειρο `0.3.0 (9)` με το
-   `.aab` από το `main` (`c3e9aa6`) και release notes EL/EN, όχι διαθέσιμο ακόμα. Μένουν:
-   - Ο Antonios δίνει στον Άγγελο τα δικαιώματα «Διαχείριση παρουσίας στο κατάστημα» και διαχείριση testers.
-     Μετά: store listing EL + μετάφραση en-US (κείμενα από το `listing.md`), κατηγορία και επαφή, λίστα testers.
-   - Content rating: ο Άγγελος πατά «Αποδέχομαι τους Όρους χρήσης» του IARC (κατηγορία «Όλοι οι άλλοι τύποι
-     εφαρμογών», όλα «Όχι»).
-   - Η δήλωση foreground service δεν εμφανίζεται ακόμα στο App content. Θα ζητηθεί όταν σταλεί κυκλοφορία για
-     έλεγχο (κείμενα και βίντεο στο `declarations.md`).
-   - Ο λογαριασμός είναι προσωπικός: closed test με 12 testers για 14 συνεχόμενες μέρες πριν το production.
+   Κατάσταση 2026-11-24: και τα 12 βήματα του «Ρύθμιση της εφαρμογής» έγιναν. Content rating: PEGI 3
+   (IARC ολοκληρωμένο). Store listing EL + en-US: κείμενα από το `listing.md`, εικονίδιο, feature graphic, 5+5
+   screenshots 1080×1920. Κατηγορία Maps & Navigation, tag Public transit. Internal testing: πρόχειρο
+   `0.3.0 (9)`, δεν στάλθηκε. Μένουν:
+   - Testers: λίστα email για το Internal testing, και 12 testers για το closed test (14 συνεχόμενες μέρες,
+     προσωπικός λογαριασμός) πριν το production.
+   - Τα στοιχεία επικοινωνίας του listing έχουν δημόσιο τηλέφωνο που υπήρχε ήδη. Η απόφαση (§1 του
+     `SUBMISSION.md`) λέει χωρίς τηλέφωνο. Ο Άγγελος και ο Antonios αποφασίζουν αν θα σβηστεί.
+   - Η δήλωση foreground service θα ζητηθεί όταν σταλεί κυκλοφορία για έλεγχο (κείμενα και βίντεο στο
+     `declarations.md`).
+   - Αποστολή για έλεγχο: κλικ του Άγγελου στην «Επισκόπηση δημοσίευσης».
 9. **App Store Connect**: app record, App Privacy (Coarse Location, Search History, Other User Content, Device ID·
    όλα not linked, not tracking), keywords χωρίς ΟΑΣΑ, review notes, copyright «© 2026 Άγγελος Παπαμιχαήλ & Antonios
    Freris», build από Mac.
