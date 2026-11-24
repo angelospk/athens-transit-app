@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import '../l10n/l10n.dart';
 import 'geo.dart';
 import 'models.dart';
 
@@ -294,7 +295,7 @@ String? stopIdAt(TripIndex ix, String name, double lat, double lon) {
   return k == null || k >= ix.ids.length || ix.ids[k].isEmpty ? null : ix.ids[k];
 }
 
-String towardText(Toward t) => t.names.isEmpty ? '' : 'προς ${t.names.join(' · ')}';
+String towardText(Toward t) => t.names.isEmpty ? '' : l10n.coreToward(t.names.join(' · '));
 
 /// The lines of stop [k] alone (not its twin across the road).
 List<String> linesOfStop(TripIndex ix, int k) => k < 0 || k >= ix.s.length ? const [] : sortLines(_linesPerStop(ix)[k]);

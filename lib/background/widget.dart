@@ -11,6 +11,7 @@ import '../core/city.dart';
 import '../core/go_home.dart';
 import '../data/live.dart';
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 
@@ -47,9 +48,10 @@ Future<void> pushWidget(AppStore store, LiveHub live, {bool force = false}) asyn
           'at': [for (final a in [first, ...then].take(3)) now + a.etaS],
         }
     ];
-    final place = switch (f.place) { Place.home => 'Σπίτι', Place.work => 'Δουλειά', null => 'Η στάση μου' };
+    // Saved for the widget in the device's language at this update.
+    final place = switch (f.place) { Place.home => l10n.commonHome, Place.work => l10n.commonWork, null => l10n.homeWidgetMyStop };
     await HomeWidget.saveWidgetData('w_title', titleCase(f.name));
-    await HomeWidget.saveWidgetData('w_sub', rows.isEmpty ? '$place · κανένα λεωφορείο με GPS' : place);
+    await HomeWidget.saveWidgetData('w_sub', rows.isEmpty ? l10n.homeWidgetNoBus(place) : place);
     await HomeWidget.saveWidgetData('w_rows', jsonEncode(rows));
     await HomeWidget.saveWidgetData('w_at', now);
     await HomeWidget.updateWidget(androidName: _provider);

@@ -19,6 +19,7 @@ import '../core/trip.dart' as tp;
 import '../data/live.dart' show nextArrivalsAt;
 import '../data/locate.dart';
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import 'alert_sheet.dart';
 import 'map_sel.dart';
 import 'ride.dart';
@@ -133,7 +134,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
     if (!mounted) return;
     setState(() {
       _locating = false;
-      if (p != null) _from = (label: 'Η θέση μου', pts: [p]);
+      if (p != null) _from = (label: context.l10n.plannerMyLocation, pts: [p]);
     });
   }
 
@@ -164,14 +165,14 @@ class _PlannerScreenState extends State<PlannerScreen> {
                 Expanded(
                   child: Column(
                     children: [
-                      _endTile(t, Icons.trip_origin, 'Από', from?.label ?? (_locating ? 'Αναζήτηση θέσης…' : 'Πού είσαι;'), () => _pick(true)),
+                      _endTile(t, Icons.trip_origin, context.l10n.plannerFrom, from?.label ?? (_locating ? context.l10n.commonLocating : context.l10n.plannerWhereAreYou), () => _pick(true)),
                       Divider(height: 1, indent: 52, color: t.rule),
-                      _endTile(t, Icons.place, 'Προς', to?.label ?? 'Πού πας; στάση, περιοχή, κατάστημα, διεύθυνση', () => _pick(false)),
+                      _endTile(t, Icons.place, context.l10n.plannerTo, to?.label ?? context.l10n.plannerWhereTo, () => _pick(false)),
                     ],
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Αντιστροφή',
+                  tooltip: context.l10n.plannerSwap,
                   icon: const Icon(Icons.swap_vert),
                   onPressed: () => setState(() {
                     final f = _from;
@@ -187,10 +188,10 @@ class _PlannerScreenState extends State<PlannerScreen> {
             spacing: 8,
             runSpacing: 6,
             children: [
-              ChoiceChip(label: const Text('Τώρα'), selected: _at == null, onSelected: (_) => setState(() => _at = null)),
+              ChoiceChip(label: Text(context.l10n.plannerNow), selected: _at == null, onSelected: (_) => setState(() => _at = null)),
               ChoiceChip(
                 avatar: const Icon(Icons.schedule, size: 18),
-                label: Text(_at == null ? 'Αργότερα' : 'Φεύγω ${_at!.format(context)}'),
+                label: Text(_at == null ? context.l10n.plannerLater : context.l10n.plannerLeaveAt(_at!.format(context))),
                 selected: _at != null,
                 onSelected: (_) async {
                   final got = await showTimePicker(context: context, initialTime: _at ?? TimeOfDay.now());
@@ -199,7 +200,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
               ),
               FilterChip(
                 avatar: const Icon(Icons.subway_outlined, size: 18),
-                label: const Text('Με μετρό'),
+                label: Text(context.l10n.plannerWithMetro),
                 selected: _metro,
                 showCheckmark: false,
                 onSelected: (v) => setState(() => _metro = v),
@@ -217,8 +218,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Text('Δεν φόρτωσαν οι γραμμές. Χρειάζεται σύνδεση την πρώτη φορά.', style: TextStyle(color: t.muted)),
-                  TextButton(onPressed: _init, child: const Text('Δοκίμασε ξανά')),
+                  Text(context.l10n.plannerLinesFailed, style: TextStyle(color: t.muted)),
+                  TextButton(onPressed: _init, child: Text(context.l10n.commonRetry)),
                 ],
               ),
             ),
@@ -228,8 +229,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 from == null
-                    ? 'Διάλεξε από πού φεύγεις ή δώσε άδεια τοποθεσίας: έτσι υπολογίζεται πόσο περπατάς ως τη στάση.'
-                    : 'Διάλεξε πού πας. Θα δεις λεωφορεία χωρίς αλλαγή ή με μία, και το μετρό όταν σε βολεύει.',
+                    ? context.l10n.plannerPickFrom
+                    : context.l10n.plannerPickTo,
                 style: TextStyle(color: t.muted),
               ),
             ),
@@ -289,7 +290,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
         Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
-            'Δεν βρέθηκε λεωφορείο σε 500 μ. από την αφετηρία και τον προορισμό σου, ούτε με μία αλλαγή. Δοκίμασε μια κοντινή στάση ή το μετρό.',
+            context.l10n.plannerNoBus,
             style: TextStyle(color: t.muted),
           ),
         ),
@@ -298,7 +299,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
     return [
       if (metro != null) _metroCard(t, metro),
       if (combo != null) _comboCard(t, ix, combo),
-      if (direct.isNotEmpty) _head(t, 'Χωρίς αλλαγή'),
+      if (direct.isNotEmpty) _head(t, context.l10n.plannerDirect),
       for (final r in direct)
         _DirectCard(
           key: ValueKey('${r.line}|${from.label}|${to.label}'),
@@ -308,14 +309,14 @@ class _PlannerScreenState extends State<PlannerScreen> {
           live: now,
           onOpen: () => _open(directSteps(ix, r, from: from.pts, to: to.pts)),
         ),
-      if (changes.isNotEmpty) _head(t, 'Με μία αλλαγή'),
+      if (changes.isNotEmpty) _head(t, context.l10n.plannerOneChange),
       for (final c in changes) _changeCard(t, ix, c),
       Padding(
         padding: const EdgeInsets.only(top: 12),
         child: Text(
           now
-              ? 'Χρόνοι: περπάτημα 4,5 χλμ/ώ, λεωφορείο 15 χλμ/ώ με τις στάσεις· η αναμονή είναι live από το GPS των λεωφορείων.'
-              : 'Για αργότερα δεν ξέρουμε ποιο λεωφορείο θα έρθει: οι χρόνοι είναι χωρίς αναμονή.',
+              ? context.l10n.plannerTimesLive
+              : context.l10n.plannerTimesLater,
           style: TextStyle(fontSize: 12, color: t.muted),
         ),
       ),
@@ -337,8 +338,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
     child: ListTile(
       leading: Icon(m.line.startsWith('T') ? Icons.tram_outlined : Icons.subway_outlined),
-      title: Text('${m.line.startsWith('T') ? 'Τραμ' : 'Μετρό'} ${m.line}: ${titleCase(m.from)} → ${titleCase(m.to)}'),
-      subtitle: Text('Περπάτημα ${walkMinutes(m.walk)}′ συνολικά · τρένο κάθε λίγα λεπτά (πρόγραμμα, όχι live)'),
+      title: Text('${m.line.startsWith('T') ? context.l10n.commonTram : context.l10n.commonMetro} ${m.line}: ${titleCase(m.from)} → ${titleCase(m.to)}'),
+      subtitle: Text(context.l10n.plannerMetroWalk(walkMinutes(m.walk))),
       onTap: () => _open(metroSteps(_stations, m, from: _from!.pts, to: _to!.pts)),
     ),
   );
@@ -353,7 +354,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
   Widget _comboCard(Tones t, TripIndex ix, _Combo c) {
     final v = c.bus.variants.first;
     final board = ix.s[v.from];
-    final metro = '${c.metroLine.startsWith('T') ? 'Τραμ' : 'Μετρό'} ${c.metroLine}: ${titleCase(c.station)} → ${titleCase(c.metroTo)}';
+    final metro = '${c.metroLine.startsWith('T') ? context.l10n.commonTram : context.l10n.commonMetro} ${c.metroLine}: ${titleCase(c.station)} → ${titleCase(c.metroTo)}';
     final bus = '${c.bus.line}: ${titleCase(board.$1)} → ${titleCase(ix.s[v.to].$1)}';
     return Card(
       elevation: 0,
@@ -376,7 +377,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
             const SizedBox(height: 6),
             Text(c.busFirst ? bus : metro, style: const TextStyle(fontSize: 15)),
             Text(c.busFirst ? metro : bus, style: const TextStyle(fontSize: 15)),
-            Text('Μετρό με το πρόγραμμα (όχι live), αναμονή ~5′.', style: TextStyle(fontSize: 12, color: t.muted)),
+            Text(context.l10n.plannerMetroWait, style: TextStyle(fontSize: 12, color: t.muted)),
           ]),
         ),
       ),
@@ -413,7 +414,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Ανεβαίνεις: ${titleCase(board.$1)} · αλλαγή: ${titleCase(change.$1)}${c.xfer > 30 ? ' (${c.xfer.round()} μ. με τα πόδια)' : ''}',
+                '${context.l10n.plannerBoardChange(titleCase(board.$1), titleCase(change.$1))}${c.xfer > 30 ? context.l10n.plannerTransferWalk(c.xfer.round()) : ''}',
                 style: TextStyle(fontSize: 13, color: t.muted),
               ),
             ],
@@ -526,19 +527,19 @@ class _DirectCardState extends State<_DirectCard> {
                   LineBadge(r.line, big: true),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text('${v.stops} στάσεις · περπάτημα $walk′', style: TextStyle(fontSize: 13, color: t.muted)),
+                    child: Text(context.l10n.plannerStopsWalk(v.stops, walk), style: TextStyle(fontSize: 13, color: t.muted)),
                   ),
                   Text('~${total.round()}′', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                 ],
               ),
               const SizedBox(height: 6),
-              Text('Ανεβαίνεις: ${titleCase(name)}', style: const TextStyle(fontSize: 15)),
-              Text('Κατεβαίνεις: ${titleCase(off.$1)}', style: TextStyle(fontSize: 13, color: t.muted)),
+              Text(context.l10n.plannerBoard(titleCase(name)), style: const TextStyle(fontSize: 15)),
+              Text(context.l10n.plannerGetOff(titleCase(off.$1)), style: TextStyle(fontSize: 13, color: t.muted)),
               if (widget.live) ...[
                 const SizedBox(height: 6),
                 if (next == null)
                   Text(
-                    _asked ? (_arrivals.isEmpty ? 'Κανένα λεωφορείο με GPS κοντά τώρα' : 'Δεν προλαβαίνεις αυτά που έρχονται τώρα') : '',
+                    _asked ? (_arrivals.isEmpty ? context.l10n.routeNoBusNear : context.l10n.routeCantCatch) : '',
                     style: TextStyle(fontSize: 13, color: t.muted),
                   )
                 else
@@ -548,11 +549,11 @@ class _DirectCardState extends State<_DirectCard> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Το επόμενο που προλαβαίνεις σε ${mins(next.eta)} (${clockIn(next.eta)})${leave == null
+                          '${context.l10n.routeNextCatch(mins(next.eta), clockIn(next.eta))}${leave == null
                               ? ''
                               : leave <= 0
-                              ? ' · φύγε τώρα'
-                              : ' · φύγε σε $leave′'}',
+                              ? ' · ${context.l10n.routeLeaveNow}'
+                              : ' · ${context.l10n.routeLeaveIn(leave)}'}',
                           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: leave != null && leave <= 0 ? t.late : null),
                         ),
                       ),
@@ -566,7 +567,7 @@ class _DirectCardState extends State<_DirectCard> {
                     if (next != null)
                       TextButton.icon(
                         icon: const Icon(Icons.notifications_active_outlined, size: 18),
-                        label: const Text('Φύγε εγκαίρως'),
+                        label: Text(context.l10n.routeLeaveInTime),
                         onPressed: () => showAlertSheet(
                           context,
                           stop: StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)),
@@ -576,7 +577,7 @@ class _DirectCardState extends State<_DirectCard> {
                       ),
                     TextButton.icon(
                       icon: const Icon(Icons.flag_outlined, size: 18),
-                      label: const Text('Πού κατεβαίνω;'),
+                      label: Text(context.l10n.routeWhereGetOff),
                       onPressed: () => rideFromHere(context, line: r.line, variant: v.id, alight: off.$1),
                     ),
                   ],
@@ -615,13 +616,13 @@ Future<SavedPlace?> askPlace(BuildContext context, String name) async {
   final lon = got.pts.map((p) => p.$2).reduce((a, b) => a + b) / got.pts.length;
   // A point near home is named after the nearest stop, so «Σπίτι · κοντά σε Υμηττό» still reads later.
   final near = approx && ix != null ? nearbyStops(ix, (lat, lon), radiusM: 600, max: 1).firstOrNull : null;
-  final label = !approx ? got.label : near == null ? 'κοντά στη θέση σου' : 'κοντά σε ${titleCase(near.name)}';
+  final label = !approx ? got.label : near == null ? l10n.plannerNearMyLocation : l10n.plannerNearStop(titleCase(near.name));
   final h = SavedPlace(name: name, label: label, lat: lat, lon: lon, approx: approx);
   d.store.putPlace(h);
   return h;
 }
 
-const _nearMe = 'Κοντά στη θέση μου (περίπου)';
+String get _nearMe => l10n.plannerNearMeApprox;
 
 class _PlacePicker extends StatefulWidget {
   const _PlacePicker({required this.ix, required this.stations, required this.from, this.home = false, this.name = homeName});
@@ -693,10 +694,10 @@ class _PlacePickerState extends State<_PlacePicker> {
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
                   hintText: widget.home
-                      ? '${widget.name}: διεύθυνση ή περιοχή'
+                      ? context.l10n.plannerPlaceHint(widget.name)
                       : widget.from
-                          ? 'Από: στάση, περιοχή, διεύθυνση'
-                          : 'Προς: στάση, περιοχή, κατάστημα, διεύθυνση',
+                          ? context.l10n.plannerFromHint
+                          : context.l10n.plannerToHint,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(28)),
                 ),
               ),
@@ -707,20 +708,20 @@ class _PlacePickerState extends State<_PlacePicker> {
                   if (widget.home)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-                      child: Text('Αρκεί μια περιοχή κοντά. Δεν κρατάμε τίποτα: το μέρος μένει μόνο στο κινητό σου.', style: TextStyle(fontSize: 13, color: t.muted)),
+                      child: Text(context.l10n.plannerPlacePrivacy, style: TextStyle(fontSize: 13, color: t.muted)),
                     ),
                   ListTile(
                     leading: const Icon(Icons.my_location),
-                    title: Text(widget.home ? _nearMe : 'Η θέση μου'),
+                    title: Text(widget.home ? _nearMe : context.l10n.plannerMyLocation),
                     onTap: () async {
                       final p = await myPosition();
                       if (!context.mounted) return;
                       if (p == null) {
                         ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(content: Text('Δεν βρέθηκε η θέση σου. Ενεργοποίησε την τοποθεσία ή διάλεξε ένα μέρος.')));
+                            .showSnackBar(SnackBar(content: Text(context.l10n.plannerNoLocation)));
                         return;
                       }
-                      Navigator.pop(context, widget.home ? (label: _nearMe, pts: [approxPoint(p)]) : (label: 'Η θέση μου', pts: [p]));
+                      Navigator.pop(context, widget.home ? (label: _nearMe, pts: [approxPoint(p)]) : (label: context.l10n.plannerMyLocation, pts: [p]));
                     },
                   ),
                   for (final p in _hits)
@@ -746,7 +747,7 @@ class _PlacePickerState extends State<_PlacePicker> {
                   if (_c.text.trim().length >= 2 && _hits.isEmpty && _osm.isEmpty)
                     Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Text('Αναζήτηση…', style: TextStyle(color: t.muted)),
+                      child: Text(context.l10n.commonSearching, style: TextStyle(color: t.muted)),
                     ),
                 ],
               ),

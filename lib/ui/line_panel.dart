@@ -21,6 +21,7 @@ import '../core/nearby.dart';
 import '../core/rules.dart' show hasAlert;
 import '../data/live.dart';
 import '../data/locate.dart';
+import '../l10n/l10n.dart';
 import 'alert_sheet.dart';
 import 'map_sel.dart';
 import 'stop_screen.dart';
@@ -121,14 +122,14 @@ class _LinePanelState extends State<LinePanel> {
               child: Text(titleCase(name), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
             IconButton.filledTonal(
-              tooltip: mine ? 'Βγάλε από τις γραμμές μου' : 'Στις γραμμές μου',
+              tooltip: mine ? context.l10n.lineRemoveMine : context.l10n.lineAddMine,
               isSelected: mine,
               icon: const Icon(Icons.star_outline),
               selectedIcon: const Icon(Icons.star),
               onPressed: () {
                 if (mine) live = d.live.lives[widget.line]; // no longer polled by the hub: the panel polls it
                 if (!d.store.toggleMyLine(widget.line)) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ως 5 γραμμές. Βγάλε μία από τις γραμμές σου πρώτα.')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.lineMaxMine)));
                 }
               },
             ),
@@ -136,9 +137,9 @@ class _LinePanelState extends State<LinePanel> {
           ]),
           const SizedBox(height: 8),
           SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(value: false, label: Text('Τώρα'), icon: Icon(Icons.directions_bus_outlined)),
-              ButtonSegment(value: true, label: Text('Δρομολόγια'), icon: Icon(Icons.schedule)),
+            segments: [
+              ButtonSegment(value: false, label: Text(context.l10n.lineNow), icon: const Icon(Icons.directions_bus_outlined)),
+              ButtonSegment(value: true, label: Text(context.l10n.lineTimetable), icon: const Icon(Icons.schedule)),
             ],
             selected: {_timetable},
             showSelectedIcon: false,
@@ -193,19 +194,19 @@ class _LinePanelState extends State<LinePanel> {
       chips = Row(children: [
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('προς ${titleCase(end(cur))}', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-            Text('από ${titleCase(end(other))}', style: TextStyle(fontSize: 13, color: t.muted)),
+            Text(context.l10n.lineTo(titleCase(end(cur))), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+            Text(context.l10n.lineFrom(titleCase(end(other))), style: TextStyle(fontSize: 13, color: t.muted)),
           ]),
         ),
         IconButton.filledTonal(
-          tooltip: 'Η άλλη κατεύθυνση: προς ${titleCase(end(other))}',
+          tooltip: context.l10n.lineOtherDirection(titleCase(end(other))),
           icon: const Icon(Icons.swap_vert),
           onPressed: () => pick(other.value),
         ),
       ]);
     } else {
       chips = Wrap(spacing: 8, runSpacing: 4, children: [
-        ChoiceChip(label: const Text('Όλες'), selected: shown == null, onSelected: (_) => pick(null)),
+        ChoiceChip(label: Text(context.l10n.lineAll), selected: shown == null, onSelected: (_) => pick(null)),
         for (final g in groups.entries)
           ChoiceChip(label: Text('→ ${titleCase(g.key)}'), selected: shown?.key == g.key, onSelected: (_) => pick(g.value)),
       ]);
@@ -220,7 +221,7 @@ class _LinePanelState extends State<LinePanel> {
               padding: const EdgeInsets.only(top: 14, bottom: 4),
               child: Row(children: [
                 Expanded(child: Text('→ ${titleCase(g.key)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
-                Text('στάσεις', style: TextStyle(fontSize: 13, color: t.muted)),
+                Text(context.l10n.lineStopsLink, style: TextStyle(fontSize: 13, color: t.muted)),
                 Icon(Icons.chevron_right, size: 18, color: t.muted),
               ]),
             ),
@@ -248,13 +249,13 @@ class _LinePanelState extends State<LinePanel> {
         Padding(
           padding: const EdgeInsets.only(top: 6),
           child: Text(
-            'Κενά από το μπροστινό: ${gaps.join(' · ')} στάσεις${big == null ? '' : ' · μεγάλο κενό μετά το ${big + 1}ο λεωφορείο'}',
+            '${context.l10n.lineGaps(gaps.join(' · '))}${big == null ? '' : ' · ${context.l10n.lineBigGap(big + 1)}'}',
             style: TextStyle(fontSize: 13, color: big == null ? t.muted : t.late),
           ),
         ),
       Padding(
         padding: const EdgeInsets.only(top: 14, bottom: 4),
-        child: Text('Στάσεις', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+        child: Text(context.l10n.lineStopsTitle, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
       ),
       for (final id in s.variants[main]!.stops)
         if (s.stops[id] case final st?)
@@ -287,7 +288,7 @@ class _LinePanelState extends State<LinePanel> {
           if (snap.hasError || j == null) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(snap.hasError ? 'Δεν φόρτωσαν τα δρομολόγια.' : 'Τα δρομολόγια δεν είναι ακόμη διαθέσιμα.', style: TextStyle(color: t.muted)),
+              child: Text(snap.hasError ? context.l10n.lineScheduleError : context.l10n.lineScheduleMissing, style: TextStyle(color: t.muted)),
             );
           }
           final wall = athensWall(DateTime.now().toUtc());
@@ -298,12 +299,12 @@ class _LinePanelState extends State<LinePanel> {
           }
 
           final dirs = [for (final x in j['directions'] as List? ?? const []) x as Map<String, dynamic>];
-          if (dirs.isEmpty) return Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text('Κανένα δρομολόγιο σήμερα.', style: TextStyle(color: t.muted)));
+          if (dirs.isEmpty) return Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text(context.l10n.lineNoRunsToday, style: TextStyle(color: t.muted)));
           return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             if (j['expired'] == true)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Text('Το πρόγραμμα του ΟΑΣΑ έχει λήξει: δείχνουμε τις ώρες του παλιού για την ίδια μέρα της εβδομάδας.', style: TextStyle(fontSize: 13, color: t.late)),
+                child: Text(context.l10n.lineExpired, style: TextStyle(fontSize: 13, color: t.late)),
               ),
             for (final dir in dirs) ...() {
               final deps = [for (final x in dir['departures'] as List? ?? const []) x as Map<String, dynamic>];
@@ -316,8 +317,8 @@ class _LinePanelState extends State<LinePanel> {
                 ),
                 Text(
                   [
-                    '${deps.length} δρομολόγια σήμερα',
-                    if (known > 0) 'έγιναν $seen από $known ως τώρα',
+                    context.l10n.lineRunsToday(deps.length),
+                    if (known > 0) context.l10n.lineRanSoFar(seen, known),
                   ].join(' · '),
                   style: TextStyle(fontSize: 13, color: known > 0 && seen < known ? t.late : t.muted),
                 ),
@@ -344,15 +345,15 @@ class _LinePanelState extends State<LinePanel> {
             const SizedBox(height: 10),
             Text(
                 j['source'] == 'oasa-daily'
-                    ? 'Πρόγραμμα ημέρας ΟΑΣΑ, ώρα αναχώρησης από την αφετηρία.' // no seen flags: OASA runs are not matched
-                    : 'Πρόγραμμα ΟΑΣΑ, ώρα αναχώρησης από την αφετηρία. Διαγραμμένη: δεν φάνηκε λεωφορείο.',
+                    ? context.l10n.lineSourceDaily // no seen flags: OASA runs are not matched
+                    : context.l10n.lineSource,
                 style: TextStyle(fontSize: 12, color: t.muted)),
           ]);
         },
       );
 
   List<Widget> _buses(Tones t, LineStatic s, List<Vehicle> vs) {
-    if (vs.isEmpty) return [Text('Κανένα λεωφορείο με GPS τώρα.', style: TextStyle(fontSize: 13, color: t.muted))];
+    if (vs.isEmpty) return [Text(context.l10n.lineNoGps, style: TextStyle(fontSize: 13, color: t.muted))];
     return [
       for (final v in vs)
         InkWell(
@@ -364,7 +365,7 @@ class _LinePanelState extends State<LinePanel> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  v.nextStopId == null ? 'στη διαδρομή' : 'επόμενη: ${titleCase(s.stops[v.nextStopId]?.name ?? '')}',
+                  v.nextStopId == null ? context.l10n.lineEnRoute : context.l10n.lineNextStop(titleCase(s.stops[v.nextStopId]?.name ?? '')),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -468,7 +469,7 @@ class _LineStopBox extends StatelessWidget {
             children: [
               Expanded(
                 child: first == null
-                    ? Text(l == null ? 'Φόρτωση…' : 'Κανένα καθ’ οδόν τώρα', style: TextStyle(fontSize: 13, color: t.muted))
+                    ? Text(l == null ? context.l10n.lineLoading : context.l10n.lineNoneOnWay, style: TextStyle(fontSize: 13, color: t.muted))
                     : Row(
                         crossAxisAlignment: CrossAxisAlignment.baseline,
                         textBaseline: TextBaseline.alphabetic,
@@ -500,12 +501,12 @@ class _LineStopBox extends StatelessWidget {
               ),
               if (d.store.city.alerts && first != null)
                 IconButton(
-                  tooltip: 'Ειδοποίηση για το $line στη στάση ${titleCase(stop.name)}',
+                  tooltip: context.l10n.lineAlertTooltip(line, titleCase(stop.name)),
                   icon: Icon(hasAlert(d.store.rules, line, ref.name, d.live.nowS) ? Icons.notifications_active : Icons.notifications_outlined),
                   onPressed: () => showAlertSheet(context, stop: ref, arrival: first),
                 ),
               IconButton(
-                tooltip: 'Οδηγίες με τα πόδια ως τη στάση',
+                tooltip: context.l10n.lineWalkDirections,
                 icon: const Icon(Icons.directions),
                 onPressed: () => launchUrl(walkUrl(stop.lat, stop.lon, ios: ios), mode: LaunchMode.externalApplication),
               ),

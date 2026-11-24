@@ -45,14 +45,15 @@ class StopWidgetProvider : HomeWidgetProvider() {
         v.setOnClickPendingIntent(R.id.widget_root, HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java))
         widgetData.getString("w_title", null)?.let { v.setTextViewText(R.id.title, it) }
         val at = (widgetData.all["w_at"] as? Number)?.toLong() ?: 0L // home_widget saves a small Dart int as Integer
-        val age = if (at == 0L) "" else " · δεδομένα πριν ${(now - at) / 60}′"
+        val age = if (at == 0L) "" else " · " + context.getString(R.string.stop_widget_age, ((now - at) / 60).toInt())
         widgetData.getString("w_sub", null)?.let { v.setTextViewText(R.id.sub, it + age) }
         // A short widget keeps the lines: the stop's name and the age go.
         val visible = if (head) View.VISIBLE else View.GONE
         v.setViewVisibility(R.id.title, visible)
         v.setViewVisibility(R.id.sub, visible)
         v.setInt(R.id.widget_root, "setGravity", if (head) Gravity.TOP else Gravity.CENTER_VERTICAL)
-        val fmt = { s: Long -> if (s < 45) "τώρα" else "${(s + 30) / 60}′" }
+        val nowText = context.getString(R.string.stop_widget_now)
+        val fmt = { s: Long -> if (s < 45) nowText else context.getString(R.string.duration_min, ((s + 30) / 60).toInt()) }
         var shown = 0
         for (i in 0 until rows.length()) {
             if (shown == maxRows) break

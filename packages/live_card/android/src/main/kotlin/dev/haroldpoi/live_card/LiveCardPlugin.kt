@@ -80,7 +80,7 @@ class LiveCardPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityA
                     call.argument<String>("sub"),
                     call.argument<Int>("progress") ?: -1,
                     call.argument<String>("chip"),
-                    call.argument<String>("endLabel") ?: "End",
+                    call.argument<String>("endLabel") ?: context.getString(R.string.live_card_stop),
                     call.argument<String>("ruleId") ?: "",
                     call.argument<String>("open"),
                 )
@@ -103,12 +103,12 @@ class LiveCardPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityA
     companion object {
         @Volatile var pendingOpen: String? = null
 
-        private fun ensureChannel(nm: NotificationManager) {
+        private fun ensureChannel(ctx: Context, nm: NotificationManager) {
             if (Build.VERSION.SDK_INT < 26 || nm.getNotificationChannel(CHANNEL) != null) return
             // Default importance: shown on the lock screen and allowed to be a Live Update. No sound:
             // the card changes every 30 s.
-            val c = NotificationChannel(CHANNEL, "Live στην οθόνη κλειδώματος", NotificationManager.IMPORTANCE_DEFAULT)
-            c.description = "Η πορεία του λεωφορείου σου ως τη στάση"
+            val c = NotificationChannel(CHANNEL, ctx.getString(R.string.live_card_channel_name), NotificationManager.IMPORTANCE_DEFAULT)
+            c.description = ctx.getString(R.string.live_card_channel_description)
             c.setSound(null, null)
             c.enableVibration(false)
             c.setShowBadge(false)
@@ -120,7 +120,7 @@ class LiveCardPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityA
             // Ended, and the service has not read it yet: keep the receiver's short card until it does.
             if (ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getStringSet(ENDED, null)?.contains(ruleId) == true) return
             val nm = ctx.getSystemService(NotificationManager::class.java)
-            ensureChannel(nm)
+            ensureChannel(ctx, nm)
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             val open = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
                 ?.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -173,8 +173,8 @@ class LiveCardEndReceiver : BroadcastReceiver() {
         val icon = ctx.resources.getIdentifier("ic_stat_bus", "drawable", ctx.packageName)
         val n = NotificationCompat.Builder(ctx, "live") // the service's own low channel
             .setSmallIcon(if (icon != 0) icon else ctx.applicationInfo.icon)
-            .setContentTitle("Η ειδοποίηση σταμάτησε")
-            .setContentText("Δεν θα σε ειδοποιήσουμε ξανά για αυτό σήμερα.")
+            .setContentTitle(ctx.getString(R.string.live_card_stopped_title))
+            .setContentText(ctx.getString(R.string.live_card_stopped_text))
             .setShowWhen(false)
             .setTimeoutAfter(15_000)
             .build()

@@ -3,6 +3,7 @@
 
 import 'dart:math';
 
+import '../l10n/l10n.dart';
 import 'athens_time.dart';
 import 'geo.dart';
 import 'models.dart';
@@ -99,7 +100,9 @@ int walkMin(double m) => max(1, (m * 1.25 / 80).round());
 /// "40 μ." to the nearest 10 m below 1 km, "1,3 χλμ." above.
 String distLabel(double m) {
   final r = (m / 10).round() * 10;
-  return r < 1000 ? '$r μ.' : '${(m / 1000).toStringAsFixed(1).replaceAll('.', ',')} χλμ.';
+  if (r < 1000) return l10n.coreDistanceM(r);
+  final km = (m / 1000).toStringAsFixed(1);
+  return l10n.coreDistanceKm(l10n.localeName == 'el' ? km.replaceAll('.', ',') : km);
 }
 
 class StationDep {

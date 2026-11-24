@@ -4,6 +4,7 @@
 
 import 'dart:math';
 
+import '../l10n/l10n.dart';
 import 'geo.dart';
 import 'models.dart';
 import 'nearby.dart' show fold, latinMatches;
@@ -612,7 +613,7 @@ bool _isMetro(MetroStation s) => s.lines.any((l) => l.startsWith('M'));
 
 /// One place for the nearest metro or ISAP station of all (the caller picks by the point it compares).
 Place anyMetro(List<MetroStation> stations) => Place(
-      label: 'Κοντινότερος σταθμός μετρό',
+      label: l10n.coreNearestMetro,
       pts: [
         for (final s in stations)
           if (_isMetro(s)) (s.lat, s.lon),

@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import '../background/service.dart';
 import '../core/route_steps.dart';
 import '../core/rules.dart';
+import '../l10n/l10n.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -29,24 +30,25 @@ class _FollowButtonState extends State<FollowButton> {
   Future<void> _follow() async {
     final d = Deps.of(context);
     final b = widget.bus;
+    final tx = context.l10n;
     setState(() => _busy = true);
     try {
       var p = await Geolocator.checkPermission();
       if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
       if (!mounted) return;
       if (p == LocationPermission.denied || p == LocationPermission.deniedForever || !await Geolocator.isLocationServiceEnabled()) {
-        _say('Χρειάζεται άδεια τοποθεσίας για να καταλάβει η εφαρμογή πότε ανεβαίνεις.');
+        _say(tx.followNoLocation);
         return;
       }
       if (!mounted) return;
       if (!await AlertService.ensurePermissions(context)) {
-        _say('Για να σε ειδοποιήσουμε, χρειάζεται άδεια ειδοποιήσεων.');
+        _say(tx.commonNoNotificationPermission);
         return;
       }
       final st = d.live.statics[b.line!] ??= await d.api.lineStatic(b.line!);
       final stops = st.variants[b.variant!]?.stops;
       if (stops == null || b.j == null || b.j! >= stops.length) {
-        _say('Η στάση δεν βρέθηκε στη γραμμή.');
+        _say(tx.followStopNotOnLine);
         return;
       }
       final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
@@ -72,12 +74,12 @@ class _FollowButtonState extends State<FollowButton> {
       // meanwhile, it refuses.
       if (!await FlutterForegroundTask.isRunningService) {
         d.store.removeRule(id);
-        _say('Δεν ξεκίνησε η ειδοποίηση. Πάτα ξανά με την εφαρμογή ανοιχτή.');
+        _say(tx.followNotStarted);
         return;
       }
       if (mounted) setState(() => _on = id);
     } catch (_) {
-      _say('Δεν φόρτωσε η γραμμή. Δοκίμασε ξανά με σύνδεση.');
+      _say(tx.followLineNotLoaded);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -109,11 +111,11 @@ class _FollowButtonState extends State<FollowButton> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Έτοιμο. Ανέβα στο ${b.line} και θα σε ειδοποιήσουμε μία στάση πριν από ${titleCase(b.to)}, ακόμη κι αν η εφαρμογή είναι κλειστή.',
+              context.l10n.followReady(b.line ?? '', titleCase(b.to)),
               style: const TextStyle(fontSize: 14, height: 1.35),
             ),
           ),
-          TextButton(onPressed: _stop, child: const Text('Σταμάτα')),
+          TextButton(onPressed: _stop, child: Text(context.l10n.followStop)),
         ]),
       );
     }
@@ -122,7 +124,7 @@ class _FollowButtonState extends State<FollowButton> {
       height: 48,
       child: FilledButton.icon(
         icon: _busy ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.my_location),
-        label: const Text('Πες μου πότε να κατέβω'),
+        label: Text(context.l10n.followButton),
         onPressed: _busy ? null : _follow,
       ),
     );

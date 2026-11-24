@@ -11,6 +11,7 @@ import '../core/near_home.dart' show departureClock;
 import '../core/models.dart';
 import '../core/nearby.dart';
 import '../core/rail.dart';
+import '../l10n/l10n.dart';
 import 'map_sel.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
@@ -89,7 +90,7 @@ class _StationPanelState extends State<StationPanel> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    rail ? 'Σταθμός Προαστιακού' : 'Σταθμός μετρό / τραμ',
+                    rail ? context.l10n.stationRail : context.l10n.stationMetroTram,
                     style: TextStyle(fontSize: 13, color: t.muted, fontWeight: FontWeight.w500),
                   ),
                   Text(titleCase(sel.name), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
@@ -113,12 +114,12 @@ class _StationPanelState extends State<StationPanel> {
             padding: EdgeInsets.all(20),
             child: Center(child: CircularProgressIndicator()),
           ),
-        if (_loaded && _failed) _note(t, 'Δεν φόρτωσαν οι αναχωρήσεις. Νέα προσπάθεια σε λίγο.'),
+        if (_loaded && _failed) _note(t, context.l10n.stationDeparturesFailed),
         if (_loaded && !_failed) ...(rail ? _trainRows(t) : _metroRows(t)),
         if (stops.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(
-            'Στάσεις λεωφορείων κοντά',
+            context.l10n.stationBusStopsNear,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: t.muted),
           ),
           for (final s in stops)
@@ -127,7 +128,7 @@ class _StationPanelState extends State<StationPanel> {
               dense: true,
               leading: const Icon(Icons.directions_bus_outlined),
               title: Text(titleCase(s.name)),
-              subtitle: Text('${s.distM.round()} μ. · ${s.lines.take(8).join(', ')}', maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text(context.l10n.mapStopDistLines(s.distM.round(), s.lines.take(8).join(', ')), maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => mapSel.value = StopSel(StopRef(name: s.name, lat: s.lat, lon: s.lon, lines: linesAt(ix!, s.name, s.lat, s.lon))),
             ),
@@ -147,7 +148,7 @@ class _StationPanelState extends State<StationPanel> {
     final list = (_trains ?? const <RailDeparture>[])
         .where((d) => d.status != 'completed' && d.expected.isAfter(now.subtract(const Duration(minutes: 1))))
         .toList();
-    if (list.isEmpty) return [_note(t, 'Κανένα τρένο στις επόμενες ώρες.')];
+    if (list.isEmpty) return [_note(t, context.l10n.stationNoTrain)];
     final sub = _sub;
     return [
       for (final d in list)
@@ -193,8 +194,8 @@ class _StationPanelState extends State<StationPanel> {
                       ),
                       Text(
                         [
-                          if (d.train.isNotEmpty) 'Τρένο ${d.train}',
-                          if (d.cancelled) 'ακυρώθηκε' else if ((d.delayMin ?? 0) > 0) '+${d.delayMin}′ καθυστέρηση' else 'στην ώρα του',
+                          if (d.train.isNotEmpty) context.l10n.stationTrain(d.train),
+                          if (d.cancelled) context.l10n.mapCancelled else if ((d.delayMin ?? 0) > 0) context.l10n.stationDelay(d.delayMin!) else context.l10n.commonOnTime,
                         ].join(' · '),
                         style: TextStyle(fontSize: 13, color: d.cancelled || (d.delayMin ?? 0) >= 3 ? t.late : t.muted),
                       ),
@@ -204,7 +205,7 @@ class _StationPanelState extends State<StationPanel> {
                 if (d.platform != null && d.platform!.isNotEmpty)
                   Column(
                     children: [
-                      Text('γραμμή', style: TextStyle(fontSize: 11, color: t.muted)),
+                      Text(context.l10n.stationLine, style: TextStyle(fontSize: 11, color: t.muted)),
                       Text(d.platform!, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                     ],
                   ),
@@ -215,7 +216,7 @@ class _StationPanelState extends State<StationPanel> {
       Padding(
         padding: const EdgeInsets.only(top: 6),
         child: Text(
-          'Live από railway.gov.gr. Ο πίνακας δίνει μόνο την επόμενη στάση· το «προς» είναι το τέρμα της γραμμής.',
+          context.l10n.stationRailNote,
           style: TextStyle(fontSize: 12, color: t.muted),
         ),
       ),
@@ -224,15 +225,15 @@ class _StationPanelState extends State<StationPanel> {
 
   String _towards(Suburban? sub, RailDeparture d) {
     final ends = sub?.towards(widget.sel.railId!, d.next) ?? const <String>{};
-    return ends.isNotEmpty ? 'προς ${ends.map(titleCase).join(' / ')}' : 'επόμενη στάση ${titleCase(d.next)}';
+    return ends.isNotEmpty ? context.l10n.stationToward(ends.map(titleCase).join(' / ')) : context.l10n.stationNextStop(titleCase(d.next));
   }
 
   // Metro/tram: the backend's timetable rows (line, headsign, minutes), or why there are none.
   List<Widget> _metroRows(Tones t) {
     final j = _metro;
-    if (j == null) return [_note(t, 'Τα δρομολόγια μετρό και τραμ δεν είναι ακόμη διαθέσιμα.')];
+    if (j == null) return [_note(t, context.l10n.stationNoMetroTimes)];
     final deps = [for (final d in j['departures'] as List? ?? const []) d as Map<String, dynamic>];
-    if (deps.isEmpty) return [_note(t, 'Καμία αναχώρηση στην επόμενη ώρα.')];
+    if (deps.isEmpty) return [_note(t, context.l10n.stationNoDeparture)];
     return [
       for (final d in deps)
         DecoratedBox(
@@ -254,7 +255,7 @@ class _StationPanelState extends State<StationPanel> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'προς ${titleCase('${d['headsign'] ?? ''}')}',
+                    context.l10n.stationToward(titleCase('${d['headsign'] ?? ''}')),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 15),
@@ -279,7 +280,7 @@ class _StationPanelState extends State<StationPanel> {
       Padding(
         padding: const EdgeInsets.only(top: 6),
         child: Text(
-          j['indicative'] == true ? 'Ενδεικτικά, από το πρόγραμμα της ΣΤΑΣΥ (όχι live).' : 'Από το πρόγραμμα της ΣΤΑΣΥ (όχι live).',
+          j['indicative'] == true ? context.l10n.stationIndicative : context.l10n.stationSchedule,
           style: TextStyle(fontSize: 12, color: t.muted),
         ),
       ),

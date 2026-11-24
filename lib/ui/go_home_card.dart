@@ -16,6 +16,7 @@ import '../core/home_sheet.dart';
 import '../core/leave.dart';
 import '../core/models.dart';
 import '../data/live.dart' show nextArrivalsAt;
+import '../l10n/l10n.dart';
 import 'alert_sheet.dart' show dayClock;
 import 'map_sel.dart';
 import 'motion_fx.dart';
@@ -65,9 +66,9 @@ class _SmartCardState extends State<SmartCard> {
       Smart.goHome => TripCard(key: const ValueKey('home'), me: me!, ix: ix, to: home!, home: true),
       Smart.askHome => SmartShell(
           onTap: () => askHome(context),
-          kicker: 'ΓΥΡΝΑΣ ΣΠΙΤΙ',
-          title: 'Πού είναι το σπίτι σου;',
-          lines: const ['Αρκεί μια περιοχή. Μένει μόνο στο κινητό σου.'],
+          kicker: context.l10n.goHomeKickerHome,
+          title: context.l10n.favsWhereHome,
+          lines: [context.l10n.goHomeAskHomeSub],
         ),
       Smart.nextFav => const _NextFav(),
       Smart.none => null,
@@ -85,16 +86,17 @@ class _NextFav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final d = Deps.of(context);
-    return ListenableBuilder(listenable: d.live, builder: (context, _) => _card(d));
+    return ListenableBuilder(listenable: d.live, builder: (context, _) => _card(context, d));
   }
 
-  Widget _card(Deps d) {
+  Widget _card(BuildContext context, Deps d) {
+    final tx = context.l10n;
     final fav = d.store.favsByTime(DateTime.now().toUtc()).where((f) => f.lines.isNotEmpty).first;
     final a = d.live.arrivalsNear(fav.name, fav.lat, fav.lon, only: fav.lines).firstOrNull;
     return SmartShell(
       onTap: () => mapSel.value = StopSel(StopRef(name: fav.name, lat: fav.lat, lon: fav.lon, lines: fav.lines)),
-      kicker: 'ΑΠΟ ${titleCase(fav.name).toUpperCase()}',
-      title: a == null ? 'Κανένα από ${fav.lines.join(', ')} δεν έρχεται τώρα' : 'Το ${a.line} → ${towards(a)}',
+      kicker: tx.goHomeKickerFrom(titleCase(fav.name).toUpperCase()),
+      title: a == null ? tx.goHomeNoneComing(fav.lines.join(', ')) : tx.goHomeNext(a.line, towards(a)),
       minutes: a == null ? null : '${d.live.isOffline ? '~' : ''}${mins(a.etaS)}',
     );
   }
@@ -240,33 +242,34 @@ class _TripCardState extends State<TripCard> {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
+    final tx = context.l10n;
     _refresh(widget.to);
     final nowS = serviceNowS(DateTime.now().toUtc());
     final last = _last.where((x) => x.atS > nowS).take(3).toList();
     final soon = last.isNotEmpty && last.first.atS - nowS <= _lastSoonS;
     final n = _next;
     final title = n != null
-        ? 'Με το ${n.b.line} από ${titleCase(n.b.stop)}'
+        ? tx.goHomeWith(n.b.line, titleCase(n.b.stop))
         : _boards.isEmpty
-            ? (widget.ix == null ? 'Αναζήτηση…' : 'Χωρίς απευθείας λεωφορείο')
-            : 'Με το ${_boards.first.line} από ${titleCase(_boards.first.stop)}';
+            ? (widget.ix == null ? tx.commonSearching : tx.goHomeNoDirect)
+            : tx.goHomeWith(_boards.first.line, titleCase(_boards.first.stop));
     return SmartShell(
-      onTap: () => showPlanner(from: (label: 'Η θέση μου', pts: [widget.me]), to: (label: widget.home ? 'Σπίτι' : 'Δουλειά', pts: [widget.to])),
-      kicker: widget.home ? 'ΓΥΡΝΑΣ ΣΠΙΤΙ' : 'ΠΑΜΕ ΔΟΥΛΕΙΑ',
+      onTap: () => showPlanner(from: (label: tx.goHomeMyLocation, pts: [widget.me]), to: (label: widget.home ? tx.commonHome : tx.commonWork, pts: [widget.to])),
+      kicker: widget.home ? tx.goHomeKickerHome : tx.goHomeKickerWork,
       title: title,
       lines: [
-        if (n != null) 'περνά σε ${mins(n.a.etaS)}',
-        if (_boards.isEmpty && widget.ix != null) 'Πάτα για διαδρομή με αλλαγή ή μετρό.',
-        if (n == null && _boards.isNotEmpty) 'Κανένα λεωφορείο με GPS δεν έρχεται τώρα.',
+        if (n != null) tx.goHomePassesIn(mins(n.a.etaS)),
+        if (_boards.isEmpty && widget.ix != null) tx.goHomeTapForRoute,
+        if (n == null && _boards.isNotEmpty) tx.stopNoBus,
       ],
-      minutesLabel: n == null ? null : 'φύγε σε',
-      minutes: n == null ? null : (n.leaveS < 60 ? 'τώρα' : '${(n.leaveS / 60).floor()}′'),
+      minutesLabel: n == null ? null : tx.goHomeLeaveIn,
+      minutes: n == null ? null : (n.leaveS < 60 ? tx.commonNow : tx.minutesShort((n.leaveS / 60).floor())),
       foot: last.isEmpty
           ? null
           : Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(
-                '${last.length == 1 ? 'τελευταίο' : 'τελευταία'}: ${last.map((x) => '${x.line} στις ${dayClock(x.atS)}').join(' · ')}',
+                tx.goHomeLast(last.length, last.map((x) => tx.goHomeRunAt(x.line, dayClock(x.atS))).join(' · ')),
                 style: TextStyle(fontSize: 12.5, fontWeight: soon ? FontWeight.w700 : FontWeight.w400, color: soon ? t.late : t.muted),
               ),
             ),

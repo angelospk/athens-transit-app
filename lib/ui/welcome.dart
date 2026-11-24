@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../background/service.dart';
 import '../data/locate.dart';
 import '../data/store.dart';
-import 'menu.dart' show unofficialNote;
+import '../l10n/l10n.dart';
 import 'theme.dart';
 
 const welcomeKey = 'welcome_v1';
@@ -22,16 +22,12 @@ Future<void> markWelcomed(SharedPreferences p) => p.setBool(welcomeKey, true);
 
 // A screenshot of the feature on each card (assets/welcome, from docs/store/screenshots/src), and the
 // part of it to show: the map, or the sheet at the bottom.
-const _cards = [
-  ('home', Alignment.center, 'Καλώς ήρθες στις Στάσεις',
-      'Κάθε λεωφορείο της πόλης στον χάρτη, ζωντανά. Το χρώμα του δείχνει αν αργεί σε σχέση με το πρόγραμμα.'),
-  ('stop', Alignment.bottomCenter, 'Στάσεις και αγαπημένα',
-      'Πάτα μια στάση για να δεις τι έρχεται και σε πόσα λεπτά. Με το αστέρι την κρατάς στα αγαπημένα.'),
-  ('alert', Alignment.bottomCenter, 'Πες μου πότε να φύγω',
-      'Πάτα το καμπανάκι δίπλα σε ένα λεωφορείο και θα σε ειδοποιήσουμε λίγο πριν φτάσει. Ή φτιάξε κανόνα για κάθε πρωί.'),
-  ('plan', Alignment.topCenter, 'Από εδώ ως εκεί',
-      'Η «Διαδρομή» στο μενού βρίσκει πώς πας κάπου, με τις αλλαγές και τους χρόνους από τα λεωφορεία που κινούνται τώρα.'),
-];
+List<(String, Alignment, String, String)> _cards(AppLocalizations l) => [
+      ('home', Alignment.center, l.welcomeHomeTitle, l.welcomeHomeBody),
+      ('stop', Alignment.bottomCenter, l.welcomeStopTitle, l.welcomeStopBody),
+      ('alert', Alignment.bottomCenter, l.welcomeAlertTitle, l.welcomeAlertBody),
+      ('plan', Alignment.topCenter, l.welcomePlanTitle, l.welcomePlanBody),
+    ];
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({
@@ -66,6 +62,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
+    final l = context.l10n;
     return Scaffold(
       backgroundColor: t.ground,
       body: SafeArea(
@@ -74,7 +71,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             height: 48,
             child: Align(
               alignment: Alignment.centerRight,
-              child: _at < _last ? TextButton(onPressed: () => _go(_last), child: const Text('Παράλειψη')) : null,
+              child: _at < _last ? TextButton(onPressed: () => _go(_last), child: Text(l.welcomeSkip)) : null,
             ),
           ),
           Expanded(
@@ -82,8 +79,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               controller: _pages,
               onPageChanged: (i) => setState(() => _at = i),
               children: [
-                for (final (shot, part, title, body) in _cards) _Card(shot: shot, part: part, title: title, body: body),
-                _permissions(t),
+                for (final (shot, part, title, body) in _cards(l)) _Card(shot: shot, part: part, title: title, body: body),
+                _permissions(t, l),
               ],
             ),
           ),
@@ -101,7 +98,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               const Spacer(),
               FilledButton(
                 onPressed: _at < _last ? () => _go(_at + 1) : widget.onDone,
-                child: Text(_at < _last ? 'Επόμενο' : 'Ξεκίνα'),
+                child: Text(_at < _last ? l.commonNext : l.welcomeStart),
               ),
             ]),
           ),
@@ -110,11 +107,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  Widget _permissions(Tones t) => ListView(padding: const EdgeInsets.symmetric(horizontal: 24), children: [
+  Widget _permissions(Tones t, AppLocalizations l) => ListView(padding: const EdgeInsets.symmetric(horizontal: 24), children: [
         const SizedBox(height: 24),
-        const Text('Δύο άδειες', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700)),
+        Text(l.welcomePermissionsTitle, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
-        Text('Και οι δύο είναι προαιρετικές. Τις αλλάζεις όποτε θέλεις από τις ρυθμίσεις του κινητού.',
+        Text(l.welcomePermissionsBody,
             style: TextStyle(fontSize: 15, height: 1.4, color: t.muted)),
         const SizedBox(height: 20),
         Container(
@@ -125,9 +122,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Χωρίς λογαριασμό, διαφημίσεις ή tracking', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                Text(l.welcomePrivacyTitle, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
-                Text('Η θέση σου, το σπίτι, η δουλειά και τα αγαπημένα μένουν μόνο στο κινητό σου.',
+                Text(l.welcomePrivacyBody,
                     style: TextStyle(fontSize: 13.5, height: 1.35, color: t.muted)),
               ]),
             ),
@@ -137,8 +134,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         _Permission(
           key: const ValueKey('ask-location'),
           icon: Icons.my_location,
-          title: 'Τοποθεσία',
-          body: 'Για τις στάσεις κοντά σου και τον χρόνο περπατήματος. Η θέση μένει στο κινητό.',
+          title: l.welcomeLocationTitle,
+          body: l.welcomeLocationBody,
           allowed: _loc,
           onAsk: () async {
             final ok = await widget.askLocation();
@@ -149,8 +146,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         _Permission(
           key: const ValueKey('ask-notifications'),
           icon: Icons.notifications_outlined,
-          title: 'Ειδοποιήσεις',
-          body: 'Για να σου λέμε πότε να φύγεις και πότε φτάνει το λεωφορείο σου.',
+          title: l.welcomeNotificationsTitle,
+          body: l.welcomeNotificationsBody,
           allowed: _notes,
           onAsk: () async {
             final ok = await widget.askNotifications();
@@ -158,7 +155,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           },
         ),
         const SizedBox(height: 20),
-        Text(unofficialNote, style: TextStyle(fontSize: 12.5, height: 1.4, color: t.muted)),
+        Text(l.menuUnofficialNote, style: TextStyle(fontSize: 12.5, height: 1.4, color: t.muted)),
         const SizedBox(height: 16),
       ]);
 }
@@ -223,11 +220,11 @@ class _Permission extends StatelessWidget {
               true => Row(children: [
                   Icon(Icons.check_circle, size: 18, color: t.onTime),
                   const SizedBox(width: 6),
-                  Text('Δόθηκε', style: TextStyle(fontWeight: FontWeight.w600, color: t.onTime)),
+                  Text(context.l10n.welcomeGranted, style: TextStyle(fontWeight: FontWeight.w600, color: t.onTime)),
                 ]),
               // Refused: another tap asks again, or opens the phone's settings when it no longer asks.
-              false => OutlinedButton(onPressed: onAsk, child: const Text('Δεν δόθηκε · δοκίμασε ξανά')),
-              null => FilledButton.tonal(onPressed: onAsk, child: const Text('Επίτρεψε')),
+              false => OutlinedButton(onPressed: onAsk, child: Text(context.l10n.welcomeDenied)),
+              null => FilledButton.tonal(onPressed: onAsk, child: Text(context.l10n.welcomeAllow)),
             },
           ]),
         ),

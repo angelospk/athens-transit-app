@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Greek: the default. English in values-en. -->
+<resources>
+    <string name="live_card_channel_name">Live στην οθόνη κλειδώματος</string>
+    <string name="live_card_channel_description">Η πορεία του λεωφορείου σου ως τη στάση</string>
+    <!-- The card's end button when the app passes no label -->
+    <string name="live_card_stop">Σταμάτα</string>
+    <string name="live_card_stopped_title">Η ειδοποίηση σταμάτησε</string>
+    <string name="live_card_stopped_text">Δεν θα σε ειδοποιήσουμε ξανά για αυτό σήμερα.</string>
+</resources>

@@ -9,6 +9,7 @@ import '../core/eta.dart';
 import '../core/models.dart';
 import '../core/nearby.dart';
 import '../data/live.dart';
+import '../l10n/l10n.dart';
 import 'alert_sheet.dart';
 import 'line_speed.dart';
 import 'ride.dart';
@@ -100,11 +101,11 @@ class _VehiclePanelState extends State<VehiclePanel> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Text(
                     error != null
-                        ? 'Δεν φορτώνει το λεωφορείο: χωρίς σύνδεση. Νέα προσπάθεια σε λίγο.'
-                        : 'Το λεωφορείο #${widget.vehicleId} δεν στέλνει θέση τώρα: μάλλον τελείωσε το δρομολόγιό του.',
+                        ? context.l10n.vehicleOffline
+                        : context.l10n.vehicleGone(widget.vehicleId),
                     style: TextStyle(fontSize: 15, color: t.muted)),
               ),
-              FilledButton.tonal(onPressed: () => mapSel.value = LineSel(widget.line, stop: widget.stop), child: Text('Δες τα λεωφορεία του ${widget.line}')),
+              FilledButton.tonal(onPressed: () => mapSel.value = LineSel(widget.line, stop: widget.stop), child: Text(context.l10n.vehicleSeeLine(widget.line))),
             ],
           ]);
         }
@@ -122,6 +123,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
     final age = now - v.positionAt;
     final delay = v.delayS;
     int kmh(double ms) => (ms * 3.6).round();
+    final tx = context.l10n;
     final slow = v.speed != null && usual != null && v.speed! < usual * .6;
     final muted = TextStyle(fontSize: 13.5, color: t.muted);
     // The next stops: the ones the bus has passed since its fix (they read "τώρα") are left out.
@@ -152,7 +154,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
           const SizedBox(width: 10),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(mineK >= 0 ? 'στη στάση σου · $headName' : 'στην επόμενη στάση · $headName',
+              Text(mineK >= 0 ? tx.vehicleAtYourStop(headName) : tx.vehicleAtNextStop(headName),
                   maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               if (delay != null)
                 Text(delayWords(delay), style: TextStyle(fontSize: 14, fontWeight: late ? FontWeight.w700 : FontWeight.w400, color: late ? t.late : t.onTime)),
@@ -165,7 +167,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
           child: FilledButton.icon(
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(46)),
             icon: const Icon(Icons.notifications_outlined),
-            label: const Text('Ειδοποίησέ με'),
+            label: Text(tx.vehicleNotify),
             onPressed: nextK < 0 ? null : () => _pickAlert(s, v, stops, from, myIds),
           ),
         ),
@@ -174,7 +176,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
           child: OutlinedButton.icon(
             style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
             icon: const Icon(Icons.flag_outlined),
-            label: const Text('Πού κατεβαίνω;'),
+            label: Text(tx.vehicleWhereGetOff),
             onPressed: nextK < 0 ? null : () => showRide(context, line: widget.line, st: s, vehicle: v),
           ),
         ),
@@ -186,39 +188,39 @@ class _VehiclePanelState extends State<VehiclePanel> {
           tilePadding: EdgeInsets.zero,
           childrenPadding: const EdgeInsets.only(bottom: 8),
           expandedAlignment: Alignment.centerLeft,
-          title: Text('Λεπτομέρειες', style: TextStyle(fontSize: 14, color: t.muted)),
+          title: Text(tx.vehicleDetails, style: TextStyle(fontSize: 14, color: t.muted)),
           children: [
             Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 6, runSpacing: 2, children: [
-              Text(v.speed == null ? '— χλμ/ώ' : '${kmh(v.speed!)} χλμ/ώ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: slow ? t.late : t.ink)),
+              Text(v.speed == null ? tx.vehicleNoSpeed : tx.vehicleSpeed(kmh(v.speed!)), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: slow ? t.late : t.ink)),
               InkWell(
                 borderRadius: BorderRadius.circular(8),
                 onTap: () => showLineSpeed(context, line: widget.line, vehicle: v),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Text(usual == null ? 'ταχύτητες γραμμής' : 'συνήθως ${kmh(usual)}',
+                    Text(usual == null ? tx.vehicleLineSpeeds : tx.vehicleUsually(kmh(usual)),
                         style: TextStyle(fontSize: 13.5, color: t.ink, decoration: TextDecoration.underline, decorationColor: t.muted)),
                     Icon(Icons.chevron_right, size: 16, color: t.muted),
                   ]),
                 ),
               ),
               Text('·', style: muted),
-              Text('θέση πριν ${ago(age)}', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: age <= 90 ? t.onTime : t.late)),
+              Text(tx.vehicleFixAge(ago(age)), style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: age <= 90 ? t.onTime : t.late)),
               Text('·', style: muted),
-              Text('όχημα ${v.id}', style: muted),
+              Text(tx.vehicleId(v.id), style: muted),
             ]),
-            if (v.tripLabel != null) Text('δρομολόγιο ${v.tripLabel}', style: muted),
+            if (v.tripLabel != null) Text(tx.vehicleTrip(v.tripLabel!), style: muted),
           ],
         ),
       ),
-      Text('Επόμενες στάσεις', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+      Text(tx.vehicleNextStops, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
       const SizedBox(height: 4),
       if (nextK >= 0)
         for (var k = from; k < stops.length && (allStops || k < from + 8); k++)
           _stopRow(t, s, stops, k, etas[k - nextK], myIds.contains(stops[k])),
       if (nextK >= 0 && !allStops && stops.length > from + 8)
-        TextButton(onPressed: () => setState(() => allStops = true), child: Text('Όλες οι επόμενες (${stops.length - from})')),
-      if (nextK < 0) Text('Δεν ξέρουμε ακόμη ποιο δρομολόγιο κάνει το λεωφορείο.', style: TextStyle(color: t.muted)),
+        TextButton(onPressed: () => setState(() => allStops = true), child: Text(tx.vehicleAllNext(stops.length - from))),
+      if (nextK < 0) Text(tx.vehicleUnknownTrip, style: TextStyle(color: t.muted)),
     ]);
   }
 
@@ -235,7 +237,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
         child: Row(children: [
           Icon(Icons.circle_outlined, size: mine ? 16 : 12, color: mine ? t.ink : palette[0].bg),
           const SizedBox(width: 12),
-          Expanded(child: Text(mine ? '$name · η στάση σου' : name, style: TextStyle(fontSize: 15, fontWeight: mine ? FontWeight.w700 : FontWeight.w400))),
+          Expanded(child: Text(mine ? context.l10n.vehicleYourStop(name) : name, style: TextStyle(fontSize: 15, fontWeight: mine ? FontWeight.w700 : FontWeight.w400))),
           if (eta != null) ...[
             Text(mins(eta), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()])),
             SizedBox(
@@ -265,8 +267,8 @@ class _VehiclePanelState extends State<VehiclePanel> {
         initialChildSize: .6,
         maxChildSize: .9,
         builder: (c, scroll) => ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), children: [
-          const Text('Σε ποια στάση;', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-          Text('Θα σε ειδοποιήσουμε πριν φτάσει εκεί το λεωφορείο.', style: TextStyle(fontSize: 13, color: t.muted)),
+          Text(c.l10n.vehicleWhichStop, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+          Text(c.l10n.vehicleWhichStopSub, style: TextStyle(fontSize: 13, color: t.muted)),
           const SizedBox(height: 8),
           for (final k in order)
             ListTile(

@@ -39,7 +39,7 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders["appLabel"] = "Στάσεις"
+        manifestPlaceholders["appLabel"] = "@string/app_name"
     }
 
     signingConfigs {

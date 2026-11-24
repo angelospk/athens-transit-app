@@ -2,6 +2,7 @@
 // the last bus of the day that passes the home stop. The direction is the one with most of the line
 // before the stop: coming home from the far end (the centre), not leaving from it.
 
+import '../l10n/l10n.dart';
 import 'athens_time.dart';
 import 'eta.dart';
 import 'models.dart';
@@ -54,7 +55,9 @@ DateTime athensDayUtc(DateTime utc, int s) {
 /// one of the previous day's runs still on the road (past 24:00), which the app does not see.
 String? lastRunDayLabel(DateTime nowUtc, DateTime atUtc) {
   if (atUtc.difference(nowUtc) <= const Duration(hours: 24)) return null;
-  const days = ['τη Δευτέρα', 'την Τρίτη', 'την Τετάρτη', 'την Πέμπτη', 'την Παρασκευή', 'το Σάββατο', 'την Κυριακή'];
+  final l = l10n;
+  final days = [l.coreLastRunOnMonday, l.coreLastRunOnTuesday, l.coreLastRunOnWednesday, l.coreLastRunOnThursday,
+      l.coreLastRunOnFriday, l.coreLastRunOnSaturday, l.coreLastRunOnSunday];
   return days[athensWall(atUtc).weekday - 1];
 }
 

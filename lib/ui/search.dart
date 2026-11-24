@@ -12,6 +12,7 @@ import '../core/map_geo.dart' show isTram;
 import '../core/models.dart';
 import '../core/muni.dart';
 import '../core/nearby.dart';
+import '../l10n/l10n.dart';
 import 'map_sel.dart';
 import 'muni_panel.dart' show MuniBadge;
 import 'stop_screen.dart';
@@ -170,8 +171,8 @@ class _SearchFieldState extends State<SearchField> {
           style: const TextStyle(fontSize: 16),
           decoration: InputDecoration(
             prefixIcon: widget.leading ?? const Icon(Icons.search),
-            suffixIcon: _c.text.isEmpty ? null : IconButton(tooltip: 'Καθαρισμός', icon: const Icon(Icons.close), onPressed: _clear),
-            hintText: 'Στάση, γραμμή ή μέρος',
+            suffixIcon: _c.text.isEmpty ? null : IconButton(tooltip: context.l10n.searchClear, icon: const Icon(Icons.close), onPressed: _clear),
+            hintText: context.l10n.searchHint,
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(vertical: 13),
           ),
@@ -206,8 +207,8 @@ class _SearchFieldState extends State<SearchField> {
           borderRadius: BorderRadius.circular(20),
           child: ListTile(
             leading: const Icon(Icons.visibility_off_outlined),
-            title: Text('$_hidden ${_hidden == 1 ? 'αποτέλεσμα' : 'αποτελέσματα'} σε κρυμμένα μέσα'),
-            trailing: TextButton(onPressed: _showAll, child: const Text('Εμφάνιση')),
+            title: Text(context.l10n.searchHiddenResults(_hidden)),
+            trailing: TextButton(onPressed: _showAll, child: Text(context.l10n.searchShow)),
           ),
         ),
       if (_lineHits.isNotEmpty || _muniHits.isNotEmpty || _stopHits.isNotEmpty || _placeHits.isNotEmpty || _stationHits.isNotEmpty)
@@ -234,7 +235,7 @@ class _SearchFieldState extends State<SearchField> {
                 ListTile(
                   leading: MuniBadge(c.ref),
                   title: Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: Text('Δημοτική · ${c.municipality}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(context.l10n.searchMunicipal(c.municipality), maxLines: 1, overflow: TextOverflow.ellipsis),
                   onTap: () {
                     _clear();
                     mapSel.value = MuniSel(c);
@@ -282,14 +283,20 @@ class _SearchFieldState extends State<SearchField> {
 }
 
 enum _Mode {
-  bus('Λεωφορεία', Icons.directions_bus_outlined),
-  metro('Μετρό', Icons.subway_outlined),
-  tram('Τραμ', Icons.tram_outlined),
-  rail('Προαστιακός', Icons.train_outlined);
+  bus(Icons.directions_bus_outlined),
+  metro(Icons.subway_outlined),
+  tram(Icons.tram_outlined),
+  rail(Icons.train_outlined);
 
-  const _Mode(this.label, this.icon);
-  final String label;
+  const _Mode(this.icon);
   final IconData icon;
+
+  String get label => switch (this) {
+        bus => l10n.commonBuses,
+        metro => l10n.commonMetro,
+        tram => l10n.commonTram,
+        rail => l10n.commonSuburban,
+      };
 }
 
 class _Station {

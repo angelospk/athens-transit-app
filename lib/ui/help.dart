@@ -4,17 +4,18 @@
 import 'package:flutter/material.dart';
 
 import '../core/marker.dart';
+import '../l10n/l10n.dart';
 import 'theme.dart';
 
 Color _hex(String h) => Color(int.parse('FF${h.substring(1)}', radix: 16));
 
-const _classes = [
-  (60, 'έως 2′ ή νωρίτερα'),
-  (200, '2–5′'),
-  (400, '5–10′'),
-  (700, 'πάνω από 10′'),
-  (null, 'χωρίς δρομολόγιο'),
-];
+List<(int?, String)> _classes(AppLocalizations l) => [
+      (60, l.helpDelayUpTo2),
+      (200, '2–5′'),
+      (400, '5–10′'),
+      (700, l.helpDelayOver10),
+      (null, l.helpDelayNoTrip),
+    ];
 
 class DelayLegend extends StatelessWidget {
   const DelayLegend({super.key});
@@ -23,10 +24,10 @@ class DelayLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tones;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Καθυστέρηση από το πρόγραμμα', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+      Text(context.l10n.helpDelayTitle, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
       const SizedBox(height: 6),
       Wrap(spacing: 14, runSpacing: 6, children: [
-        for (final (d, label) in _classes)
+        for (final (d, label) in _classes(context.l10n))
           Row(mainAxisSize: MainAxisSize.min, children: [
             Container(width: 12, height: 12, decoration: BoxDecoration(color: _hex(delayHex(d)), shape: BoxShape.circle)),
             const SizedBox(width: 6),
@@ -45,28 +46,29 @@ Future<void> showMapHelp(BuildContext context) => showModalBottomSheet<void>(
         expand: false,
         initialChildSize: .75,
         maxChildSize: .95,
-        builder: (c, scroll) => ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(24, 0, 24, 24), children: const [
-          Text('Τι σημαίνει κάθε σύμβολο', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-          SizedBox(height: 12),
-          _Item(_Bus(fill: Color(0xFF1A7F37)), 'Λεωφορείο. Το χρώμα του δείχνει πόσο αργεί σε σχέση με το πρόγραμμα.'),
-          Padding(padding: EdgeInsets.only(left: 44, bottom: 10), child: DelayLegend()),
-          _Item(_Bus(fill: Color(0xFF0072B2), ring: Color(0xFFA87C00)), 'Λεωφορείο μιας από τις γραμμές σου: έχει το χρώμα της γραμμής, και το δαχτυλίδι γύρω του δείχνει την καθυστέρηση.'),
-          _Item(_Glyph('▲'), 'Η κατεύθυνση που πηγαίνει. Λείπει όταν δεν είναι γνωστή.'),
-          _Item(_Bus(fill: Color(0xFF1A7F37), faded: true), 'Αχνό: η θέση του είναι παλιά, πάνω από 1½ λεπτό. Δίπλα γράφει πόσο παλιά (π.χ. 2′).'),
-          _Item(_Bus(fill: Color(0xFF1A7F37), ring: Color(0xFF1A73E8)), 'Μπλε δαχτυλίδι: το λεωφορείο ή η γραμμή που άνοιξες.'),
-          _Item(_Glyph('›', box: true), 'Η διαδρομή, με βέλη προς τα πού πηγαίνει. Κάθε κατεύθυνση έχει τη δική της λωρίδα.'),
-          _Item(_Bus(fill: Colors.white, ring: Color(0xFF5B5F66), small: true), 'Στάση. Πάτα τη για να δεις τι έρχεται.'),
-          _Item(Icon(Icons.touch_app_outlined), 'Πάτα σε κενό σημείο του χάρτη για να κλείσεις ό,τι είναι ανοιχτό.'),
-          SizedBox(height: 16),
-          Text('Από πού έρχονται τα δεδομένα', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-          SizedBox(height: 8),
-          _Para('Θέση', 'Κάθε λεωφορείο στέλνει το GPS του στον ΟΑΣΑ. Ο server μας το διαβάζει κάθε 30″ περίπου. '
-              'Ανάμεσα σε δύο θέσεις η εφαρμογή κινεί το λεωφορείο πάνω στη διαδρομή του, με την ταχύτητά του.'),
-          _Para('Χρόνος άφιξης', 'Τον υπολογίζει η εφαρμογή: από το πού είναι το λεωφορείο και την τυπική ταχύτητα κάθε κομματιού του δρόμου '
-              '(από τις θέσεις των τελευταίων 14 ημερών). Δεν είναι η πρόβλεψη του ΟΑΣΑ.'),
-          _Para('Καθυστέρηση', 'Σύγκριση με το πρόγραμμα του ΟΑΣΑ για το δρομολόγιο που κάνει το λεωφορείο.'),
-          _Para('«~» πριν από έναν χρόνο', 'Χωρίς σύνδεση: εκτίμηση από τα τελευταία δεδομένα. Διορθώνεται μόλις βρεθεί σήμα.'),
-        ]),
+        builder: (c, scroll) {
+          final l = c.l10n;
+          return ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(24, 0, 24, 24), children: [
+            Text(l.mapLegend, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            _Item(const _Bus(fill: Color(0xFF1A7F37)), l.helpBus),
+            const Padding(padding: EdgeInsets.only(left: 44, bottom: 10), child: DelayLegend()),
+            _Item(const _Bus(fill: Color(0xFF0072B2), ring: Color(0xFFA87C00)), l.helpMyBus),
+            _Item(const _Glyph('▲'), l.helpDirection),
+            _Item(const _Bus(fill: Color(0xFF1A7F37), faded: true), l.helpFaded),
+            _Item(const _Bus(fill: Color(0xFF1A7F37), ring: Color(0xFF1A73E8)), l.helpBlueRing),
+            _Item(const _Glyph('›', box: true), l.helpRoute),
+            _Item(const _Bus(fill: Colors.white, ring: Color(0xFF5B5F66), small: true), l.helpStop),
+            _Item(const Icon(Icons.touch_app_outlined), l.helpTapEmpty),
+            const SizedBox(height: 16),
+            Text(l.helpDataTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            _Para(l.helpPosition, l.helpPositionText),
+            _Para(l.helpEta, l.helpEtaText),
+            _Para(l.helpDelay, l.helpDelayText),
+            _Para(l.helpTilde, l.helpTildeText),
+          ]);
+        },
       ),
     );
 

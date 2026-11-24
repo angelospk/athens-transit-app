@@ -3,6 +3,8 @@
 // The Athens-only features (metro/tram/rail, «Δημοτικά», the planner, stop alerts, the statistics) are
 // hidden in the other cities, so their URLs stay in api.dart.
 
+import '../l10n/l10n.dart';
+
 // `--dart-define=API_BASE=http://127.0.0.1:18095` points a debug build at a local backend (QA).
 const apiBase = String.fromEnvironment('API_BASE', defaultValue: 'https://transit.haroldpoi.dev');
 const staticBase = 'https://angelospk.github.io/staseis-rt/static/v1';
@@ -69,6 +71,12 @@ enum City {
   final ({double s, double w, double n, double e}) box; // where its backend has vehicle tiles (web cities.ts)
   final bool rail, muni, plan, alerts, stats; // what only Athens has
 
+  /// The city's name, its transit agency and "in the city", in the device's language (the const fields
+  /// [name], [agency], [inName] stay the Greek ones).
+  String get localName => cityName(this);
+  String get localAgency => cityAgency(this);
+  String get localInName => cityInName(this);
+
   /// The city of a saved id; a city this version does not know is Athens.
   static City byId(String? id) => values.where((c) => c.id == id).firstOrNull ?? athens;
 }
@@ -76,3 +84,21 @@ enum City {
 /// A location inside one of the cities' boxes: elsewhere (an emulator's default, abroad) it says nothing useful.
 bool inAnyCity(double lat, double lon) =>
     City.values.any((c) => lat >= c.box.s && lat <= c.box.n && lon >= c.box.w && lon <= c.box.e);
+
+/// The name of [c] in the app's language ([t]: a widget's `context.l10n`; else the device's).
+String cityName(City c, [AppLocalizations? t]) {
+  final l = t ?? l10n;
+  return switch (c) { City.athens => l.cityAthensName, City.thessaloniki => l.cityThessalonikiName };
+}
+
+/// The transit agency of [c] in the app's language: «ΟΑΣΑ» / "OASA".
+String cityAgency(City c, [AppLocalizations? t]) {
+  final l = t ?? l10n;
+  return switch (c) { City.athens => l.cityAthensAgency, City.thessaloniki => l.cityThessalonikiAgency };
+}
+
+/// "In the city" in the app's language: «στην Αθήνα» / "in Athens".
+String cityInName(City c, [AppLocalizations? t]) {
+  final l = t ?? l10n;
+  return switch (c) { City.athens => l.cityAthensIn, City.thessaloniki => l.cityThessalonikiIn };
+}

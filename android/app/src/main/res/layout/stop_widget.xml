@@ -4,9 +4,9 @@
     android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical"
     android:background="@drawable/widget_bg" android:paddingHorizontal="14dp" android:paddingVertical="10dp">
     <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:textColor="@color/widget_ink" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="Στάσεις" />
+        android:textColor="@color/widget_ink" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="@string/app_name" />
     <TextView android:id="@+id/sub" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:textColor="@color/widget_muted" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:text="Άνοιξε την εφαρμογή για να διαλέξεις στάση" />
+        android:textColor="@color/widget_muted" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:text="@string/stop_widget_pick" />
     <LinearLayout android:id="@+id/row0" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="6dp" android:visibility="gone">
         <TextView android:id="@+id/line0" android:layout_width="wrap_content" android:layout_height="wrap_content"

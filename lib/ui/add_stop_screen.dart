@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../core/nearby.dart';
 import '../data/locate.dart';
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -73,6 +74,7 @@ class _AddStopScreenState extends State<AddStopScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
+    final tx = context.l10n;
     final store = Deps.of(context).store;
     final room = maxLines - store.myLines.length;
     return Scaffold(
@@ -81,14 +83,14 @@ class _AddStopScreenState extends State<AddStopScreen> {
         surfaceTintColor: Colors.transparent,
       ),
       body: SafeArea(top: false, child: ListView(padding: const EdgeInsets.fromLTRB(20, 0, 20, 24), children: [
-        Text('Ποια στάση θέλεις να κρατήσεις;', style: Theme.of(context).textTheme.headlineSmall),
+        Text(tx.addStopTitle, style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 6),
-        Text('Θα τη βρίσκεις στα αγαπημένα, με τις γραμμές που διαλέγεις.', style: TextStyle(color: t.muted)),
+        Text(tx.addStopSub, style: TextStyle(color: t.muted)),
         const SizedBox(height: 12),
         TextField(
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.search),
-            hintText: noLocation ? 'Γράψε το όνομα της στάσης' : 'Ή γράψε το όνομα της στάσης',
+            hintText: noLocation ? tx.addStopSearchHint : tx.addStopSearchHintOr,
             filled: true,
             fillColor: t.surface,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(28), borderSide: BorderSide.none),
@@ -99,7 +101,7 @@ class _AddStopScreenState extends State<AddStopScreen> {
         const SizedBox(height: 8),
         if (stops == null) const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator())),
         if (stops != null && stops!.isEmpty)
-          Padding(padding: const EdgeInsets.all(16), child: Text('Δεν βρέθηκε στάση. Γράψε το όνομά της.', style: TextStyle(color: t.muted))),
+          Padding(padding: const EdgeInsets.all(16), child: Text(tx.addStopNone, style: TextStyle(color: t.muted))),
         for (final (i, s) in (stops ?? const <NearbyStop>[]).indexed)
           Card(
             elevation: 0,
@@ -107,7 +109,7 @@ class _AddStopScreenState extends State<AddStopScreen> {
             margin: const EdgeInsets.symmetric(vertical: 4),
             child: ListTile(
               leading: CircleAvatar(backgroundColor: t.ground, child: Text('${i + 1}')),
-              title: Text('${titleCase(s.name)}${query.isEmpty ? ' · ${s.distM.round()} μ.' : ''}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Text('${titleCase(s.name)}${query.isEmpty ? ' · ${tx.addStopMeters(s.distM.round())}' : ''}', style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Text(s.lines.join(', '), maxLines: 1, overflow: TextOverflow.ellipsis),
               onTap: () {
                 FocusScope.of(context).unfocus(); // the keyboard would cover the lines
@@ -127,7 +129,7 @@ class _AddStopScreenState extends State<AddStopScreen> {
           ),
         if (picked != null) ...[
           const SizedBox(height: 16),
-          Text('Ποιες γραμμές σε νοιάζουν εδώ;', key: _linesKey, style: Theme.of(context).textTheme.titleLarge),
+          Text(tx.addStopWhichLines, key: _linesKey, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Wrap(spacing: 8, runSpacing: 8, children: [
             for (final l in picked!.lines)
@@ -140,7 +142,7 @@ class _AddStopScreenState extends State<AddStopScreen> {
               ),
           ]),
           const SizedBox(height: 6),
-          Text('Ως $maxLines γραμμές συνολικά.', style: TextStyle(fontSize: 12, color: t.muted)),
+          Text(tx.addStopMaxLines(maxLines), style: TextStyle(fontSize: 12, color: t.muted)),
         ],
         const SizedBox(height: 20),
         // A disabled button says what is still missing.
@@ -148,7 +150,7 @@ class _AddStopScreenState extends State<AddStopScreen> {
           height: 52,
           child: FilledButton(
             onPressed: picked == null || sel.isEmpty ? null : _done,
-            child: Text(picked == null ? 'Διάλεξε στάση' : sel.isEmpty ? 'Διάλεξε τουλάχιστον μία γραμμή' : 'Αποθήκευση'),
+            child: Text(picked == null ? tx.addStopPickStop : sel.isEmpty ? tx.addStopPickLine : tx.commonSave),
           ),
         ),
       ])),

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import 'widgets.dart';
 
 Future<Set<String>?> pickLines(BuildContext context, List<String> lines, Set<String> initial) {
@@ -32,9 +33,9 @@ class _PickerState extends State<_Picker> {
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 0, 20, 24 + MediaQuery.paddingOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Ποιες γραμμές σε νοιάζουν εδώ;', style: Theme.of(context).textTheme.titleLarge),
+        Text(context.l10n.addStopWhichLines, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),
-        Text('Ως $maxLines γραμμές σε όλη την εφαρμογή.', style: const TextStyle(fontSize: 13)),
+        Text(context.l10n.linesPickerMax(maxLines), style: const TextStyle(fontSize: 13)),
         const SizedBox(height: 12),
         Wrap(spacing: 8, runSpacing: 8, children: [
           for (final l in widget.lines)
@@ -54,7 +55,7 @@ class _PickerState extends State<_Picker> {
         SizedBox(
           width: double.infinity,
           height: 48,
-          child: FilledButton(onPressed: () => Navigator.pop(context, sel), child: const Text('Αποθήκευση')),
+          child: FilledButton(onPressed: () => Navigator.pop(context, sel), child: Text(context.l10n.commonSave)),
         ),
       ]),
     );
