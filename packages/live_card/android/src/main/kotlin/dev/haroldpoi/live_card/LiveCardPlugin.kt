@@ -104,7 +104,7 @@ class LiveCardPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityA
         @Volatile var pendingOpen: String? = null
 
         private fun ensureChannel(ctx: Context, nm: NotificationManager) {
-            if (Build.VERSION.SDK_INT < 26 || nm.getNotificationChannel(CHANNEL) != null) return
+            if (Build.VERSION.SDK_INT < 26) return // created again each time, so its name follows the language
             // Default importance: shown on the lock screen and allowed to be a Live Update. No sound:
             // the card changes every 30 s.
             val c = NotificationChannel(CHANNEL, ctx.getString(R.string.live_card_channel_name), NotificationManager.IMPORTANCE_DEFAULT)

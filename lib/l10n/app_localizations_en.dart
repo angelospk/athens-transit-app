@@ -310,7 +310,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get plannerLinesFailed =>
-      'The lines didn\'t load. You need a connection the first time.';
+      'The lines didn’t load. You need a connection the first time.';
 
   @override
   String get plannerPickFrom =>
@@ -318,7 +318,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get plannerPickTo =>
-      'Pick where you\'re going. You\'ll see buses with no change or one, and the metro when it suits you.';
+      'Pick where you’re going. You’ll see buses with no change or one, and the metro when it suits you.';
 
   @override
   String get plannerNoBus =>
@@ -336,7 +336,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get plannerTimesLater =>
-      'For later we don\'t know which bus will come: the times leave out the wait.';
+      'For later we don’t know which bus will come: the times leave out the wait.';
 
   @override
   String plannerMetroWalk(int walk) {
@@ -399,7 +399,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get plannerNoLocation =>
-      'Couldn\'t find your location. Turn on location or pick a place.';
+      'Couldn’t find your location. Turn on location or pick a place.';
 
   @override
   String routeArrive(String time) {
@@ -443,7 +443,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String routeBoardToward(String line, String toward) {
-    return 'Board the $line toward $toward';
+    return 'Board the $line towards $toward';
   }
 
   @override
@@ -476,7 +476,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routeNoBusNear => 'No bus with GPS nearby right now';
 
   @override
-  String get routeCantCatch => 'You can\'t catch the ones coming now';
+  String get routeCantCatch => 'You can’t catch the ones coming now';
 
   @override
   String get routeSearchingNext => 'Looking for the next bus…';
@@ -538,7 +538,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stationDeparturesFailed =>
-      'The departures didn\'t load. Trying again shortly.';
+      'The departures didn’t load. Trying again shortly.';
 
   @override
   String get stationBusStopsNear => 'Bus stops nearby';
@@ -561,11 +561,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stationRailNote =>
-      'Live from railway.gov.gr. The board only gives the next stop; “toward” is the end of the line.';
+      'Live from railway.gov.gr. The board only gives the next stop; “towards” is the end of the line.';
 
   @override
   String stationToward(String name) {
-    return 'toward $name';
+    return 'towards $name';
   }
 
   @override
@@ -605,10 +605,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get muniNoTimetable =>
-      'We don\'t have a checked timetable for this line.';
+      'We don’t have a checked timetable for this line.';
 
   @override
-  String get muniTimetableLink => 'Municipality\'s timetable';
+  String get muniTimetableLink => 'Municipality’s timetable';
 
   @override
   String get muniNextDepartures => 'Next departures';
@@ -627,7 +627,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get muniPageLink => 'Municipality\'s page';
+  String get muniPageLink => 'Municipality’s page';
 
   @override
   String muniRouteSource(String source) {
@@ -639,7 +639,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get muniLinesFailed =>
-      'The municipal lines didn\'t load. Try again shortly.';
+      'The municipal lines didn’t load. Try again shortly.';
 
   @override
   String get muniNoCheckedTimetable => 'No checked timetable';
@@ -687,7 +687,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The route, with arrows showing the way it goes. Each direction has its own lane.';
 
   @override
-  String get helpStop => 'A stop. Tap it to see what\'s coming.';
+  String get helpStop => 'A stop. Tap it to see what’s coming.';
 
   @override
   String get helpTapEmpty =>
@@ -708,14 +708,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpEtaText =>
-      'The app works it out from where the bus is and the typical speed on each stretch of road (from the positions of the last 14 days). It isn\'t OASA\'s prediction.';
+      'The app works it out from where the bus is and the typical speed on each stretch of road (from the positions of the last 14 days). It isn’t OASA’s prediction.';
 
   @override
   String get helpDelay => 'Delay';
 
   @override
   String get helpDelayText =>
-      'Compared with OASA\'s timetable for the trip the bus is running.';
+      'Compared with OASA’s timetable for the trip the bus is running.';
 
   @override
   String get helpTilde => '“~” before a time';
@@ -728,7 +728,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lineSpeedTitle => 'Line speed';
 
   @override
-  String get lineSpeedDaysFailed => 'The daily statistics didn\'t load.';
+  String get lineSpeedDaysFailed => 'The daily statistics didn’t load.';
 
   @override
   String get lineSpeedNext2km => 'The next 2 km';
@@ -755,7 +755,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String lineSpeedRank(int place, int total) {
-    return 'Yesterday: #$place slowest of $total lines.';
+    return 'Yesterday: no. $place slowest of $total lines.';
   }
 
   @override
@@ -816,12 +816,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String alertLastSet(int before, String line, String time) {
-    return 'We\'ll notify you $before min before: the last $line passes at ~$time.';
+    return 'We’ll notify you $before min before: the last $line passes at ~$time.';
   }
 
   @override
   String alertLastSetDay(int before, String line, String day, String time) {
-    return 'We\'ll notify you $before min before: the last $line passes $day at ~$time.';
+    return 'We’ll notify you $before min before: the last $line passes $day at ~$time.';
   }
 
   @override
@@ -847,11 +847,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alertScheduleOffline =>
-      'The timetable didn\'t load. Try again when you\'re online.';
+      'The timetable didn’t load. Try again when you’re online.';
 
   @override
   String get alertNoLocation =>
-      'Couldn\'t find your location (permission or GPS). Set the walking time by hand.';
+      'Couldn’t find your location (permission or GPS). Set the walking time by hand.';
 
   @override
   String get alertWeeklySet => 'Rule: Mon–Fri at this time.';
@@ -862,12 +862,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String alertLeaveSet(String line) {
-    return 'We\'ll tell you when to leave for the $line.';
+    return 'We’ll tell you when to leave for the $line.';
   }
 
   @override
   String alertSet(String line) {
-    return 'We\'ll notify you about the $line.';
+    return 'We’ll notify you about the $line.';
   }
 
   @override
@@ -899,7 +899,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get alertTooLate => 'you probably won\'t make this one';
+  String get alertTooLate => 'you probably won’t make this one';
 
   @override
   String alertBarNow(int n) {
@@ -957,13 +957,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alertNearStart =>
-      'Your stop is near the start of the line: we\'ll notify you as soon as the bus sets off.';
+      'Your stop is near the start of the line: we’ll notify you as soon as the bus sets off.';
 
   @override
   String get alertMeansNow => 'Right now that means';
 
   @override
-  String get alertWhenAt => 'when it\'s at ';
+  String get alertWhenAt => 'when it’s at ';
 
   @override
   String alertWhenAtTail(int n) {
@@ -1015,10 +1015,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alertLiveLockScreen => 'Live on the lock screen';
 
   @override
-  String get alertLiveLockScreenSub => 'Shows the bus\'s progress to your stop';
+  String get alertLiveLockScreenSub => 'Shows the bus’s progress to your stop';
 
   @override
-  String get alertLateToo => 'Also tell me if it\'s late';
+  String get alertLateToo => 'Also tell me if it’s late';
 
   @override
   String alertLateTooSub(int n) {
@@ -1080,7 +1080,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String ruleEditNotServed(String line) {
-    return 'The $line doesn\'t stop here (or this is its last stop).';
+    return 'The $line doesn’t stop here (or this is its last stop).';
   }
 
   @override
@@ -1152,7 +1152,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get rulesAndIfLate => 'and if it\'s late';
+  String get rulesAndIfLate => 'and if it’s late';
 
   @override
   String get rulesNewRule => 'New rule';
@@ -1194,7 +1194,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String rulesNext(String when, String time) {
-    return 'Next: $when $time';
+    return 'Next: $when, $time';
   }
 
   @override
@@ -1213,7 +1213,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rulesExactHint =>
-      'Rules may start a few minutes late: Android hasn\'t given us permission for exact alarms.';
+      'Rules may start a few minutes late: Android hasn’t given us permission for exact alarms.';
 
   @override
   String get rulesGrant => 'Allow';
@@ -1223,23 +1223,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Location permission is needed so the app can tell when you get on.';
 
   @override
-  String get followStopNotOnLine => 'The stop isn\'t on this line.';
+  String get followStopNotOnLine => 'The stop isn’t on this line.';
 
   @override
   String get followNotStarted =>
-      'The alert didn\'t start. Tap again with the app open.';
+      'The alert didn’t start. Tap again with the app open.';
 
   @override
   String get followLineNotLoaded =>
-      'The line didn\'t load. Try again when you\'re online.';
+      'The line didn’t load. Try again when you’re online.';
 
   @override
   String followReady(String line, String stop) {
-    return 'All set. Get on the $line and we\'ll notify you one stop before $stop, even with the app closed.';
+    return 'All set. Get on the $line and we’ll notify you one stop before $stop, even with the app closed.';
   }
 
   @override
-  String get followStop => 'Stop';
+  String get followStop => 'Stop alert';
 
   @override
   String get followButton => 'Tell me when to get off';
@@ -1264,7 +1264,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your phone will vibrate one stop before: “Get off at the next stop”. You can also see it in Alerts.';
 
   @override
-  String get rideOnBoard => 'You\'re on board · we\'ll notify you';
+  String get rideOnBoard => 'You’re on board · we’ll notify you';
 
   @override
   String get rideNoPermission => 'No notification permission';
@@ -1278,10 +1278,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get favsAddStop => 'Stop';
+  String get favsAddStop => 'Add stop';
 
   @override
-  String get favsWhereHome => 'Where\'s your home?';
+  String get favsWhereHome => 'Where’s your home?';
 
   @override
   String get favsPlacesSub =>
@@ -1297,7 +1297,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get favsAfternoon => 'Afternoon: work stop first';
 
   @override
-  String get favsEmpty => 'No saved stops yet. Tap “+ Stop”.';
+  String get favsEmpty => 'No saved stops yet. Tap “Add stop”.';
 
   @override
   String get favsStops => 'Stops';
@@ -1325,7 +1325,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get favsWillNotify => 'We\'ll notify you';
+  String get favsWillNotify => 'We’ll notify you';
 
   @override
   String get favsNoGpsBus => 'no buses with GPS right now';
@@ -1373,13 +1373,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addStopSub =>
-      'You\'ll find it in your favourites, with the lines you pick.';
+      'You’ll find it in your favourites, with the lines you pick.';
 
   @override
-  String get addStopSearchHint => 'Type the stop\'s name';
+  String get addStopSearchHint => 'Type the stop’s name';
 
   @override
-  String get addStopSearchHintOr => 'Or type the stop\'s name';
+  String get addStopSearchHintOr => 'Or type the stop’s name';
 
   @override
   String get addStopNone => 'No stop found. Type its name.';
@@ -1449,11 +1449,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stopHowToGet => 'Get there';
 
   @override
-  String get stopTripFrom => 'Trip from here';
+  String get stopTripFrom => 'Directions from here';
 
   @override
   String get stopEstimate =>
-      'Times are estimated from the latest data and the line\'s usual speed. They update as soon as there\'s signal.';
+      'Times are estimated from the latest data and the line’s usual speed. They update as soon as there’s signal.';
 
   @override
   String get stopNoBus => 'No bus with GPS is coming right now.';
@@ -1471,7 +1471,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stopMissed =>
-      'Didn\'t start · no bus was seen leaving the first stop';
+      'Didn’t start · no bus was seen leaving the first stop';
 
   @override
   String stopMissedRun(String headsign, String time) {
@@ -1501,11 +1501,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleOffline =>
-      'Can\'t load the bus: no connection. Trying again shortly.';
+      'Can’t load the bus: no connection. Trying again shortly.';
 
   @override
   String vehicleGone(String id) {
-    return 'Bus #$id isn\'t sending its position right now: it has probably finished its run.';
+    return 'Bus #$id isn’t sending its position right now: it has probably finished its run.';
   }
 
   @override
@@ -1573,7 +1573,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleUnknownTrip =>
-      'We don\'t know yet which trip this bus is running.';
+      'We don’t know yet which trip this bus is running.';
 
   @override
   String vehicleYourStop(String stop) {
@@ -1585,7 +1585,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleWhichStopSub =>
-      'We\'ll notify you before the bus gets there.';
+      'We’ll notify you before the bus gets there.';
 
   @override
   String get goHomeKickerHome => 'HEADING HOME';
@@ -1635,12 +1635,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String goHomeLast(int n, String runs) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: 'last',
-      one: 'last',
-    );
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: 'last');
     return '$_temp0: $runs';
   }
 
@@ -1654,7 +1649,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stopfixNotImmediate =>
-      'The stop doesn\'t move right away: every suggestion is checked against the buses\' GPS.';
+      'The stop doesn’t move right away: every suggestion is checked against the buses\' GPS.';
 
   @override
   String get stopfixTapMap => 'Tap the map where the stop pole is';
@@ -1686,7 +1681,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stopfixPrivacy =>
-      'We send the pin\'s position, the stop and a random device code.';
+      'The pin’s position, the stop and a random device code are sent.';
 
   @override
   String get menuCity => 'City';
@@ -1879,7 +1874,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get welcomePlanBody =>
-      '“Directions” in the menu finds how to get somewhere, with transfers and times from the buses running right now.';
+      '“Directions” in the menu finds how to get somewhere, with changes and times from the buses running right now.';
 
   @override
   String get welcomeSkip => 'Skip';
@@ -2347,15 +2342,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serviceLiveChannelName => 'Live bus progress';
 
   @override
-  String get serviceLiveChannelDescription =>
-      'Your bus\'s progress to the stop';
+  String get serviceLiveChannelDescription => 'Your bus’s progress to the stop';
 
   @override
   String get serviceExactAlarmTitle => 'Start exactly on time?';
 
   @override
   String get serviceExactAlarmBody =>
-      'Android needs the “Alarms & reminders” permission for this. Settings will open: turn the switch on and come back. Without it, the alert still starts, but maybe a few minutes late.';
+      'Android needs the “Alarms & reminders” permission for this. Settings will open: turn the switch on and come back. Without it, the rule still starts, but maybe a few minutes late.';
 
   @override
   String get serviceExactAlarmLater => 'Not now';
@@ -2370,7 +2364,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serviceRunningText => 'Your alerts are on';
 
   @override
-  String get serviceRuleStartsTitle => 'Your alert is starting';
+  String get serviceRuleStartsTitle => 'Your rule is starting';
 
   @override
   String get serviceRuleStartsBody => 'Open the app for live alerts.';
@@ -2393,12 +2387,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String serviceBoardedTitle(String line) {
-    return 'You\'re on the $line';
+    return 'You’re on the $line';
   }
 
   @override
   String serviceOneStopBefore(String stop) {
-    return 'We\'ll notify you one stop before $stop.';
+    return 'We’ll notify you one stop before $stop.';
   }
 
   @override
@@ -2408,11 +2402,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String serviceTripText(String stop) {
-    return 'Once you board, we\'ll notify you one stop before $stop.';
+    return 'Once you board, we’ll notify you one stop before $stop.';
   }
 
   @override
-  String get serviceIdleText => 'We\'ll notify you when the bus gets close.';
+  String get serviceIdleText => 'We’ll notify you when the bus gets close.';
 
   @override
   String get serviceNoBusYet => 'No bus with GPS in sight yet.';
@@ -2442,7 +2436,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serviceOffline => 'no signal';
 
   @override
-  String get serviceStop => 'Stop';
+  String get serviceStop => 'Stop alert';
 
   @override
   String get homeWidgetMyStop => 'My stop';
@@ -2529,7 +2523,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cityThessalonikiName => 'Thessaloniki';
 
   @override
-  String get cityThessalonikiAgency => 'OSETh';
+  String get cityThessalonikiAgency => 'OSETH';
 
   @override
   String get cityThessalonikiIn => 'in Thessaloniki';

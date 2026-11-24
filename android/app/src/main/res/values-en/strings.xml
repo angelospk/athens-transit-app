@@ -14,10 +14,10 @@
     <string name="home_last_empty">Open the app away from home</string>
     <string name="home_last_from">from %1$s</string>
     <string name="home_last_from_ago">from %1$s · %2$s ago</string>
-    <string name="home_last_all_gone">%1$s · the last ones have left</string>
-    <string name="home_last_all_gone_small">The last ones have left · %1$s</string>
+    <string name="home_last_all_gone">%1$s · the last ones have gone</string>
+    <string name="home_last_all_gone_small">The last ones have gone · %1$s</string>
     <string name="home_last_first_goes">%1$s · the %2$s goes first</string>
-    <string name="home_last_gone">left</string>
+    <string name="home_last_gone">gone</string>
     <string name="home_last_in">in %1$s</string>
     <string name="home_last_in_from">in %1$s · %2$s</string>
     <string name="duration_min">%1$d′</string>

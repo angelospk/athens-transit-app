@@ -694,7 +694,7 @@ class _PlacePickerState extends State<_PlacePicker> {
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
                   hintText: widget.home
-                      ? context.l10n.plannerPlaceHint(widget.name)
+                      ? context.l10n.plannerPlaceHint(widget.name == homeName ? context.l10n.commonHome : widget.name == workName ? context.l10n.commonWork : widget.name)
                       : widget.from
                           ? context.l10n.plannerFromHint
                           : context.l10n.plannerToHint,
