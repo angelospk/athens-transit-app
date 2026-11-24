@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Staseis</string>
+    <string name="favourites">Favourites</string>
+    <string name="nearby">Nearby</string>
+    <string name="no_favs">Open Staseis on your phone to see your favourite stops here.</string>
+    <string name="no_favs_short">Open Staseis on your phone</string>
+    <string name="no_bus">No bus with GPS is coming right now.</string>
+    <string name="now">now</string>
+    <string name="updated">Updated %1$s</string>
+    <string name="offline">Offline · last update %1$s</string>
+    <string name="no_data">No data</string>
+    <string name="location_rationale">See the stops near you. Your location stays on the watch.</string>
+    <string name="no_permission">No location permission.</string>
+    <string name="allow">Allow</string>
+    <string name="retry">Try again</string>
+    <string name="settings">Settings</string>
+    <string name="locating">Finding your location…</string>
+    <string name="loading_stops">Loading stops…</string>
+    <string name="no_location">Couldn\'t find your location.</string>
+    <string name="no_stops_nearby">No stops nearby</string>
+    <string name="next_bus">Next bus</string>
+</resources>

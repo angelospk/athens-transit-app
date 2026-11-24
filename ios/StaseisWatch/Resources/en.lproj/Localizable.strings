@@ -1,0 +1,19 @@
+/* Watch app (en). */
+"app.title" = "Staseis";
+"home.favourites" = "Favourites";
+"home.nearby" = "Nearby";
+"favs.empty" = "Open Staseis on your phone to see your favourite stops here.";
+"nearby.locating" = "Finding your location…";
+"nearby.loadingStops" = "Loading stops…";
+"nearby.none" = "No stops nearby.";
+"nearby.denied" = "Nearby stops need your location. Allow it in the watch's Settings: Privacy & Security › Location Services › Staseis.";
+"nearby.failed" = "Couldn't find your location.";
+"nearby.indexFailed" = "Couldn't load the stops. Check your connection.";
+"action.retry" = "Try again";
+"time.now" = "now";
+"stop.loading" = "Loading…";
+"stop.updated" = "Updated %@";
+"stop.offline" = "Offline · last update %@";
+"stop.nodata" = "No data";
+"stop.nobuses" = "No buses soon";
+"a11y.late" = "%@ minutes late";

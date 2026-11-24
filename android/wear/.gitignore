@@ -1,0 +1,3 @@
+# Screenshot test output (PNGs, contact sheets, edge reports): regenerate with
+#   ./gradlew :wear:recordRoborazziDebug
+src/test/screenshots/

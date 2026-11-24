@@ -1,0 +1,6 @@
+"time.now" = "now";
+"widget.name" = "Next bus";
+"widget.description" = "The next bus at your first favourite stop.";
+"widget.title" = "Staseis";
+"widget.short" = "Staseis";
+"widget.nofavs" = "Open Staseis on your phone";
