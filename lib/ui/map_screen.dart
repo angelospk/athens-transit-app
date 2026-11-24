@@ -1430,7 +1430,7 @@ class _WalkButton extends StatelessWidget {
 }
 
 // A line's pill: its badge, then (when known) where it goes and the minutes, largest.
-// [live]: the minutes come from a bus's GPS: the compact live ETA chip (accent fill and text, the live mark).
+// [live]: the minutes come from a bus's GPS: the compact live chip, amber on the dark plate (EtaChip).
 class _Pill extends StatelessWidget {
   const _Pill({super.key, required this.badge, this.towards, this.when, this.note, this.live = false});
   final Widget badge;
@@ -1443,7 +1443,7 @@ class _Pill extends StatelessWidget {
     return Container(
       height: 32,
       padding: EdgeInsets.fromLTRB(4, 0, when == null ? 4 : 10, 0),
-      decoration: BoxDecoration(color: live ? t.accentSoft : t.surface, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(16)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         badge,
         if (towards != null)
@@ -1454,11 +1454,7 @@ class _Pill extends StatelessWidget {
         if (note != null) Text(' $note', style: TextStyle(fontSize: 12, color: t.late, fontWeight: FontWeight.w600)),
         if (when != null) ...[
           const SizedBox(width: 8),
-          if (live) ...[LiveMark(size: 10, color: t.accent), const SizedBox(width: 3)],
-          Tick(
-            value: when!,
-            child: Text(when!, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, fontFeatures: Ds.tabular, color: live ? t.accent : t.ink)),
-          ),
+          EtaChip(when!, live: live),
         ],
       ]),
     );

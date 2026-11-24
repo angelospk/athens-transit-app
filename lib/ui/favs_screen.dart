@@ -290,7 +290,7 @@ class _FavCardState extends State<_FavCard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.fromLTRB(16, 14, 8, 6),
-      decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(24)),
+      decoration: Ds.card(t),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         InkWell(
           onTap: _open,
@@ -339,7 +339,8 @@ class _FavCardState extends State<_FavCard> {
                 Text(a.line, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: t.muted)),
                 const SizedBox(width: 8),
                 Expanded(child: Text('→ ${towards(a)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: t.muted))),
-                Text('${d.live.isOffline ? '~' : ''}${mins(a.etaS)}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.muted)),
+                EtaChip('${d.live.isOffline ? '~' : ''}${mins(a.etaS)}',
+                    live: !d.live.isOffline, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.muted, fontFeatures: Ds.tabular)),
               ]),
             ),
           ),

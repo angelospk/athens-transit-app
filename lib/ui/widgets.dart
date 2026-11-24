@@ -10,6 +10,7 @@ import '../data/api.dart';
 import '../data/live.dart';
 import '../data/store.dart';
 import 'map_sel.dart';
+import 'motion_fx.dart' show Tick, motionOff;
 import 'stop_screen.dart' show StopRef;
 import 'theme.dart';
 
@@ -94,67 +95,116 @@ class LineBadge extends StatelessWidget {
       );
 }
 
-// The live mark: a dot and two arcs, on a time that comes from a vehicle's GPS (the web's Icon «live» draws the
-// same shape on the same 20-unit grid).
-class LiveMark extends StatelessWidget {
-  const LiveMark({super.key, this.size = 12, this.color});
-  final double size;
-  final Color? color;
+// A number that changes in place (the minutes to the next bus): the old digits leave upward and the new ones
+// rise in, once, 150 ms (vertical slide + fade). Nothing moves when the system turns animations off.
+class Flip extends StatelessWidget {
+  const Flip({super.key, required this.value, required this.child});
+  final Object value;
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-        label: 'ζωντανά',
-        child: CustomPaint(size: Size.square(size), painter: _LivePainter(color ?? context.tones.accent)),
-      );
-}
-
-class _LivePainter extends CustomPainter {
-  _LivePainter(this.color);
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final k = size.width / 20;
-    final p = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.6 * k
-      ..strokeCap = StrokeCap.round;
-    const c = Offset(5, 15);
-    canvas.drawCircle(c * k, 2.2 * k, Paint()..color = color);
-    for (final r in [5.8, 11.4]) {
-      canvas.drawArc(Rect.fromCircle(center: c * k, radius: r * k), -pi / 2, pi / 2, false, p);
-    }
+  Widget build(BuildContext context) {
+    if (motionOff(context)) return child;
+    final key = ValueKey(value);
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 150),
+      transitionBuilder: (c, a) {
+        final entering = c.key == key;
+        return FadeTransition(
+          opacity: a,
+          child: SlideTransition(position: Tween(begin: Offset(0, entering ? .5 : -.5), end: Offset.zero).animate(a), child: c),
+        );
+      },
+      child: KeyedSubtree(key: key, child: child),
+    );
   }
-
-  @override
-  bool shouldRepaint(_LivePainter old) => old.color != color;
 }
 
-// An arrival time in the shared ETA style: a live time with the live mark in ink, an estimate or timetable time
-// muted with no mark, «τώρα» smaller and in the accent. [big]: the first row of a stop (28), else 24.
-class EtaText extends StatelessWidget {
-  const EtaText(this.text, {super.key, required this.live, this.big = false});
+// The board plate: a live arrival time (from a vehicle's GPS) as amber digits on a dark plate, as on a stop's
+// departure board. «5′»: the prime at 70 % of the digits. «τώρα»: the word on the same plate, 17.
+class BoardPlate extends StatelessWidget {
+  const BoardPlate(this.text, {super.key, this.size = 24});
   final String text;
-  final bool live, big;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
     final now = text.endsWith('τώρα');
-    final size = now ? (big ? 19.0 : 17.0) : (big ? 28.0 : 24.0);
-    return Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (live) Padding(padding: EdgeInsets.only(top: size * .2, right: 3), child: LiveMark(size: big ? 13 : 11)),
-      Text(text,
-          style: TextStyle(
-            fontSize: size,
-            height: 1.05,
-            fontWeight: live ? FontWeight.w800 : FontWeight.w700,
-            letterSpacing: now ? 0 : -0.4,
-            color: now ? t.accent : live ? t.ink : t.muted,
-            fontFeatures: Ds.tabular,
-          )),
-    ]);
+    final style = TextStyle(
+      color: t.amber,
+      fontSize: now ? 17 : size,
+      fontWeight: FontWeight.w800,
+      height: 1.05,
+      letterSpacing: now ? 0 : -0.4,
+      fontFeatures: Ds.tabular,
+    );
+    final prime = !now && text.endsWith('′');
+    return Semantics(
+      label: 'ζωντανά: $text',
+      excludeSemantics: true,
+      child: Flip(
+        value: text,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(color: t.plate, borderRadius: BorderRadius.circular(Ds.rXs), border: Border.all(color: t.plateEdge)),
+          child: prime
+              ? Text.rich(TextSpan(style: style, children: [
+                  TextSpan(text: text.substring(0, text.length - 1)),
+                  TextSpan(text: '′', style: TextStyle(fontSize: size * .7)),
+                ]))
+              : Text(text, style: style),
+        ),
+      ),
+    );
+  }
+}
+
+// An arrival time in the shared ETA style: live → the board plate; an estimate or timetable time → muted
+// number, no plate. Row size 24, «τώρα» 17.
+class EtaText extends StatelessWidget {
+  const EtaText(this.text, {super.key, required this.live});
+  final String text;
+  final bool live;
+
+  @override
+  Widget build(BuildContext context) {
+    if (live) return BoardPlate(text);
+    return Text(text,
+        style: TextStyle(
+          fontSize: text.endsWith('τώρα') ? 17 : 24,
+          height: 1.05,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.4,
+          color: context.tones.muted,
+          fontFeatures: Ds.tabular,
+        ));
+  }
+}
+
+// The compact form (home pills, favourites rows), height 24, stadium: live → plate fill and amber text; otherwise
+// the plain token style ([style], default ink 15 / 800).
+class EtaChip extends StatelessWidget {
+  const EtaChip(this.text, {super.key, required this.live, this.style});
+  final String text;
+  final bool live;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    if (!live) return Tick(value: text, child: Text(text, style: style ?? TextStyle(fontSize: 15, fontWeight: FontWeight.w800, fontFeatures: Ds.tabular, color: t.ink)));
+    return Semantics(
+      label: 'ζωντανά: $text',
+      excludeSemantics: true,
+      child: Container(
+        height: 24,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 9),
+        decoration: BoxDecoration(color: t.plate, borderRadius: BorderRadius.circular(Ds.rPill), border: Border.all(color: t.plateEdge)),
+        child: Flip(value: text, child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, height: 1, fontFeatures: Ds.tabular, color: t.amber))),
+      ),
+    );
   }
 }
 
@@ -187,11 +237,12 @@ String delayWords(int delayS) => delayS >= 90
 
 // One line at a stop: badge, headsign, note, the next arrival big and the one after.
 class ArrivalRow extends StatelessWidget {
-  const ArrivalRow({super.key, required this.first, this.then = const [], this.estimate = false, this.trailing, this.onTap, this.big = false});
+  const ArrivalRow({super.key, required this.first, this.then = const [], this.estimate = false, this.timetable = false, this.trailing, this.onTap, this.big = false});
 
   final Arrival first;
   final List<Arrival> then;
   final bool estimate; // offline: the times are estimates from the last data
+  final bool timetable; // no GPS: the time is from the timetable (muted, no plate, «από το πρόγραμμα»)
   final Widget? trailing;
   final VoidCallback? onTap;
   final bool big;
@@ -202,9 +253,12 @@ class ArrivalRow extends StatelessWidget {
     final note = delayNote(context, first.delayS);
     final left = first.stopsLeft;
     // One fact under the headsign: an estimate, or a delay, or how far the bus is.
-    final late = !estimate && (first.delayS ?? 0) >= 90;
-    final far = !estimate && !late && left != null;
-    final fact = estimate
+    final live = !estimate && !timetable;
+    final late = live && (first.delayS ?? 0) >= 90;
+    final far = live && !late && left != null;
+    final fact = timetable
+        ? 'από το πρόγραμμα'
+        : estimate
         ? 'εκτίμηση'
         : late
             ? note!.$1
@@ -228,13 +282,13 @@ class ArrivalRow extends StatelessWidget {
                 Flexible(
                   child: Text(fact,
                       overflow: TextOverflow.ellipsis,
-                      style: Ds.note.copyWith(color: late ? t.late : !estimate && !far && note != null ? t.onTime : t.muted)),
+                      style: Ds.note.copyWith(color: late ? t.late : live && !far && note != null ? t.onTime : t.muted)),
                 ),
               ]),
             ]),
           ),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            EtaText('$tilde${mins(first.etaS)}', live: !estimate, big: big),
+            EtaText('$tilde${mins(first.etaS)}', live: live),
             if (then.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 2),

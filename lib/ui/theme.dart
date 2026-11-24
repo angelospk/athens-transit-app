@@ -23,11 +23,16 @@ class Tones extends ThemeExtension<Tones> {
     required this.accentSoft,
     required this.onAccent,
     required this.star,
+    required this.plate,
+    required this.plateEdge,
+    required this.amber,
   });
 
   final Color ground, surface, ink, muted, rule, indicator, late, onTime, problemBg, problemFg, mapGround;
   final Color accent, outline; // actions and the smart card's minutes; the walk button's edge
-  final Color card, accentSoft, onAccent, star; // a card on the ground; a live ETA chip's fill; text on accent; a starred favourite
+  final Color card, accentSoft, onAccent, star; // a card on the ground; a selected wash; text on accent; a starred favourite
+  // The board plate: every LIVE arrival time sits on a dark plate with amber digits. Amber is used nowhere else.
+  final Color plate, plateEdge, amber; // the plate's fill (same in both themes); its 1 px edge (dark theme only); the digits
 
   static const light = Tones(
     ground: Color(0xFFF7F7F4),
@@ -47,6 +52,9 @@ class Tones extends ThemeExtension<Tones> {
     accentSoft: Color(0xFFE7EEFB),
     onAccent: Color(0xFFFFFFFF),
     star: Color(0xFFE8A100),
+    plate: Color(0xFF16181B),
+    plateEdge: Color(0x00000000),
+    amber: Color(0xFFFFB000),
   );
 
   static const dark = Tones(
@@ -67,6 +75,9 @@ class Tones extends ThemeExtension<Tones> {
     accentSoft: Color(0xFF1C2C47),
     onAccent: Color(0xFF0B1B3A),
     star: Color(0xFFF5B83D),
+    plate: Color(0xFF16181B),
+    plateEdge: Color(0xFF30353A),
+    amber: Color(0xFFFFB000),
   );
 
   @override
@@ -78,7 +89,7 @@ class Tones extends ThemeExtension<Tones> {
 
 // Radius, type and spacing shared with the web (docs/design-unify-2026-11.md §2; the web's --r-*, --fs-*).
 abstract final class Ds {
-  static const rXs = 6.0, rSm = 8.0, rMd = 12.0, rLg = 16.0, rXl = 24.0;
+  static const rXs = 6.0, rSm = 8.0, rMd = 12.0, rLg = 16.0, rXl = 24.0, rPill = 999.0;
   static const gutter = 16.0;
   static const tabular = [FontFeature.tabularFigures()];
   static const titleLg = TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: -0.3, height: 1.2);
