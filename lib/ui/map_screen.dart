@@ -895,7 +895,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 child: Material(
                   color: t.ground,
                   elevation: 8,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(Ds.rXl)),
                   child: SafeArea(
                     top: false,
                     child: Padding(
@@ -930,7 +930,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   color: t.ground,
                   elevation: 8,
                   shadowColor: const Color(0x33000000),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(Ds.rXl)),
                   clipBehavior: Clip.antiAlias,
                   child: switch (sel) {
                     StopSel(:final stop) => StopPanel(key: ObjectKey(stop), stop: stop, scroll: scroll),
@@ -1213,7 +1213,6 @@ class _HomeSheet extends StatelessWidget {
     }
     return [
       for (final (i, p) in groups.indexed) ...[
-        if (i > 0) Divider(height: 1, color: t.rule),
         Enter(key: ValueKey('near|${p.kind.name}|${p.name}|${p.lat},${p.lon}'), i: i, child: _StopGroup(place: p, ix: ix, mine: myLinesHere(p, d.store.myLines), others: true)),
         if (i == 1 && groups.length > 2)
           Padding(
@@ -1237,7 +1236,6 @@ class _HomeSheet extends StatelessWidget {
           child: Text('Καμία αποθηκευμένη στάση ακόμη. Άνοιξε μια στάση και πάτα το αστέρι.', style: TextStyle(color: t.muted)),
         ),
       for (final (i, f) in favs.indexed) ...[
-        if (i > 0) Divider(height: 1, color: t.rule),
         Enter(
           key: ValueKey('fav|${f.name}|${f.lat},${f.lon}'),
           i: i,
@@ -1334,16 +1332,17 @@ class _StopGroup extends StatelessWidget {
     final twice = {for (final a in next) if (next.where((b) => b.line == a.line).length > 1) a.line};
     final quiet = [for (final l in mine) if (!next.any((a) => a.line == l)) l];
     final rest = others ? [for (final l in p.lines) if (!mine.contains(l)) l].take(8).toList() : const <String>[];
-    return InkWell(
+    final body = InkWell(
       onTap: _open,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.fromLTRB(14, 10, 12, 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(titleCase(p.name), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                Text([kindLabel(p.kind), if (p.distM >= 0) distLabel(p.distM)].join(' · '), style: TextStyle(fontSize: 12, color: t.muted)),
+                Text(titleCase(p.name), maxLines: 1, overflow: TextOverflow.ellipsis, style: Ds.title),
+                const SizedBox(height: 2),
+                Text([kindLabel(p.kind), if (p.distM >= 0) distLabel(p.distM)].join(' · '), style: Ds.meta.copyWith(color: t.muted)),
               ]),
             ),
             const SizedBox(width: 8),
@@ -1361,6 +1360,7 @@ class _StopGroup extends StatelessWidget {
                     badge: _PillBadge(line: a.line),
                     towards: twice.contains(a.line) ? titleCase(a.headsign) : null, // two directions here: say which
                     when: '${d.live.isOffline ? '~' : ''}${mins(a.etaS)}',
+                    live: !d.live.isOffline,
                   ),
                 for (final l in rest) _Pill(key: ValueKey(l), badge: _PillBadge(line: l)),
               ]),
@@ -1372,6 +1372,13 @@ class _StopGroup extends StatelessWidget {
             ),
         ]),
       ),
+    );
+    // A stop is a card on the sheet's ground, as in the web's «Κοντά σου» (docs/design-unify-2026-11.md there).
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: Ds.card(t),
+      clipBehavior: Clip.antiAlias,
+      child: Material(type: MaterialType.transparency, child: body),
     );
   }
 }
@@ -1423,16 +1430,18 @@ class _WalkButton extends StatelessWidget {
 }
 
 // A line's pill: its badge, then (when known) where it goes and the minutes, largest.
+// [live]: the minutes come from a bus's GPS: the compact live chip, amber on the dark plate (EtaChip).
 class _Pill extends StatelessWidget {
-  const _Pill({super.key, required this.badge, this.towards, this.when, this.note});
+  const _Pill({super.key, required this.badge, this.towards, this.when, this.note, this.live = false});
   final Widget badge;
   final String? towards, when, note;
+  final bool live;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
     return Container(
-      height: 32,
+      constraints: const BoxConstraints(minHeight: 32), // grows with large text
       padding: EdgeInsets.fromLTRB(4, 0, when == null ? 4 : 10, 0),
       decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(16)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -1443,7 +1452,10 @@ class _Pill extends StatelessWidget {
             child: Text(' → $towards', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, color: t.muted)),
           ),
         if (note != null) Text(' $note', style: TextStyle(fontSize: 12, color: t.late, fontWeight: FontWeight.w600)),
-        if (when != null) Tick(value: when!, child: Text('  $when', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
+        if (when != null) ...[
+          const SizedBox(width: 8),
+          EtaChip(when!, live: live),
+        ],
       ]),
     );
   }
@@ -1455,16 +1467,24 @@ class _PillBadge extends StatelessWidget {
   final String line;
   final Color? bg, fg;
 
+  // The compact line badge: min 34 × 24, radius 6, 13 / 800.
   @override
-  Widget build(BuildContext context) {
-    final c = lineColor(Deps.of(context).store, line);
-    return Container(
-      constraints: const BoxConstraints(minWidth: 34),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(color: bg ?? c.bg, borderRadius: BorderRadius.circular(12)),
-      child: Text(line, textAlign: TextAlign.center, style: TextStyle(color: fg ?? c.fg, fontSize: 13, fontWeight: FontWeight.w700)),
-    );
-  }
+  Widget build(BuildContext context) => ValueListenableBuilder(
+        valueListenable: operatorColors,
+        builder: (context, _, _) {
+          final c = badgeColor(context, line);
+          return Container(
+            constraints: const BoxConstraints(minWidth: 34, minHeight: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            decoration: BoxDecoration(color: bg ?? c.bg, borderRadius: BorderRadius.circular(Ds.rXs)),
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: Text(line, textAlign: TextAlign.center, style: Ds.badge.copyWith(color: fg ?? c.fg, fontSize: 13)),
+            ),
+          );
+        },
+      );
 }
 
 // A near station's next departures, every line (a station has few): metro and tram from the STASY

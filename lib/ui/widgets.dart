@@ -10,6 +10,7 @@ import '../data/api.dart';
 import '../data/live.dart';
 import '../data/store.dart';
 import 'map_sel.dart';
+import 'motion_fx.dart' show motionOff;
 import 'stop_screen.dart' show StopRef;
 import 'theme.dart';
 
@@ -29,27 +30,183 @@ class Deps extends InheritedWidget {
   bool updateShouldNotify(Deps old) => old.api != api || old.live != live; // a city switch
 }
 
-// A line keeps its palette slot by its place among the user's lines; other lines are neutral.
-LineColor lineColor(AppStore store, String line) {
-  final i = store.myLines.indexOf(line);
-  return i < 0 ? const LineColor(Color(0xFFECEEEA), Color(0xFF1A1C1E)) : palette[i % palette.length];
+// Each line's operator colours (lines.json `color`, `text_color`) of the open city, as the web shows them. Empty
+// until the city's lines load; a city switch loads them again (main.dart).
+final operatorColors = ValueNotifier<Map<String, LineColor>>(const {});
+Api? _colorsOf;
+
+Future<void> loadLineColors(Api api) async {
+  _colorsOf = api;
+  try {
+    final lines = await api.lines();
+    if (!identical(_colorsOf, api)) return; // another city opened meanwhile
+    operatorColors.value = {
+      for (final l in lines)
+        if (hexColor(l.color) case final bg?) l.id: LineColor(bg, hexColor(l.textColor) ?? Colors.white),
+    };
+  } catch (_) {/* badges stay neutral */}
 }
 
+// "#1a56c4" → the colour; null for anything else.
+Color? hexColor(String s) {
+  final v = s.length == 7 && s.startsWith('#') ? int.tryParse(s.substring(1), radix: 16) : null;
+  return v == null ? null : Color(0xFF000000 | v);
+}
+
+const _neutral = LineColor(Color(0xFFEFF0EC), Color(0xFF16181B));
+
+// A badge's colours: the line's, or for a line with none the theme's surface and ink (light and dark).
+LineColor badgeColor(BuildContext context, String line) {
+  final c = lineColor(Deps.of(context).store, line);
+  final t = context.tones;
+  return identical(c, _neutral) ? LineColor(t.surface, t.ink) : c;
+}
+
+// A line keeps its palette slot by its place among the user's lines (its route on the map has that colour);
+// other lines take their operator colour, neutral until the lines load.
+LineColor lineColor(AppStore store, String line) {
+  final i = store.myLines.indexOf(line);
+  return i < 0 ? operatorColors.value[line] ?? _neutral : palette[i % palette.length];
+}
+
+// The shared line badge (docs/design-unify-2026-11.md in the web repo): min 44 × 30, radius 8, 14 / 800.
 class LineBadge extends StatelessWidget {
   const LineBadge(this.line, {super.key, this.big = false});
   final String line;
   final bool big;
 
   @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+        valueListenable: operatorColors,
+        builder: (context, _, _) {
+          final c = badgeColor(context, line);
+          return Container(
+            constraints: BoxConstraints(minWidth: big ? 50 : 44, minHeight: big ? 34 : 30),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(color: c.bg, borderRadius: BorderRadius.circular(Ds.rSm)),
+            // Factors of 1: only as wide as its text, also where the width offered is larger (a ListTile's leading).
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: Text(line, textAlign: TextAlign.center, style: Ds.badge.copyWith(color: c.fg, fontSize: big ? 16 : 14)),
+            ),
+          );
+        },
+      );
+}
+
+// A number that changes in place (the minutes to the next bus): the old digits leave upward and the new ones
+// rise in, once, 150 ms (vertical slide + fade). Nothing moves when the system turns animations off.
+class Flip extends StatelessWidget {
+  const Flip({super.key, required this.value, required this.child});
+  final Object value;
+  final Widget child;
+
+  @override
   Widget build(BuildContext context) {
-    final c = lineColor(Deps.of(context).store, line);
-    final size = big ? 17.0 : 15.0;
-    return Container(
-      constraints: BoxConstraints(minWidth: big ? 52 : 48),
-      padding: EdgeInsets.fromLTRB(6, big ? 7 : 6, 6, big ? 7 : 6),
-      decoration: BoxDecoration(color: c.bg, borderRadius: BorderRadius.circular(8)),
-      // No alignment: it would stretch the badge to all the width it is offered (a ListTile's leading).
-      child: Text(line, textAlign: TextAlign.center, style: TextStyle(color: c.fg, fontSize: size, fontWeight: FontWeight.w700)),
+    if (motionOff(context)) return child;
+    final key = ValueKey(value);
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 150),
+      transitionBuilder: (c, a) {
+        final entering = c.key == key;
+        return FadeTransition(
+          opacity: a,
+          child: SlideTransition(position: Tween(begin: Offset(0, entering ? .5 : -.5), end: Offset.zero).animate(a), child: c),
+        );
+      },
+      child: KeyedSubtree(key: key, child: child),
+    );
+  }
+}
+
+// The board plate: a live arrival time (from a vehicle's GPS) as amber digits on a dark plate, as on a stop's
+// departure board. «5′»: the prime at 70 % of the digits. «τώρα»: the word on the same plate, 17 (19 on a 28 plate).
+// Only the digits flip; the plate stays still.
+class BoardPlate extends StatelessWidget {
+  const BoardPlate(this.text, {super.key, this.size = 24});
+  final String text;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    final now = text.endsWith('τώρα');
+    final style = TextStyle(
+      color: t.amber,
+      fontSize: now ? (size > 24 ? 19 : 17) : size,
+      fontWeight: FontWeight.w800,
+      height: 1.05,
+      letterSpacing: now ? 0 : -0.4,
+      fontFeatures: Ds.tabular,
+    );
+    final prime = !now && text.endsWith('′');
+    return Semantics(
+      label: 'ζωντανά: $text',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(color: t.plate, borderRadius: BorderRadius.circular(Ds.rXs), border: Border.all(color: t.plateEdge)),
+        child: Flip(
+          value: text,
+          child: prime
+              ? Text.rich(TextSpan(style: style, children: [
+                  TextSpan(text: text.substring(0, text.length - 1)),
+                  TextSpan(text: '′', style: TextStyle(fontSize: size * .7)),
+                ]))
+              : Text(text, style: style),
+        ),
+      ),
+    );
+  }
+}
+
+// An arrival time in the shared ETA style: live → the board plate; an estimate or timetable time → muted
+// number, no plate. Row size 24, «τώρα» 17; [big] (a stop's first row) 28, «τώρα» 19.
+class EtaText extends StatelessWidget {
+  const EtaText(this.text, {super.key, required this.live, this.big = false});
+  final String text;
+  final bool live, big;
+
+  @override
+  Widget build(BuildContext context) {
+    if (live) return BoardPlate(text, size: big ? 28 : 24);
+    final now = text.endsWith('τώρα');
+    return Text(text,
+        style: TextStyle(
+          fontSize: now ? (big ? 19 : 17) : (big ? 28 : 24),
+          height: 1.05,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.4,
+          color: context.tones.muted,
+          fontFeatures: Ds.tabular,
+        ));
+  }
+}
+
+// The compact form (home pills, favourites rows), height 24, stadium: live → plate fill and amber text; otherwise
+// the plain token style ([style], default muted 15 / 800).
+class EtaChip extends StatelessWidget {
+  const EtaChip(this.text, {super.key, required this.live, this.style});
+  final String text;
+  final bool live;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tones;
+    // Not live (timetable, offline estimate): muted and still; motion is for live times only.
+    if (!live) return Text(text, style: style ?? TextStyle(fontSize: 15, fontWeight: FontWeight.w800, fontFeatures: Ds.tabular, color: t.muted));
+    return Semantics(
+      label: 'ζωντανά: $text',
+      excludeSemantics: true,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 9),
+        decoration: BoxDecoration(color: t.plate, borderRadius: BorderRadius.circular(Ds.rPill), border: Border.all(color: t.plateEdge)),
+        // heightFactor 1: 24 tall (more only for large text), never the full height of the row around it
+        child: Center(widthFactor: 1, heightFactor: 1, child: Flip(value: text, child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, height: 1, fontFeatures: Ds.tabular, color: t.amber)))),
+      ),
     );
   }
 }
@@ -83,11 +240,12 @@ String delayWords(int delayS) => delayS >= 90
 
 // One line at a stop: badge, headsign, note, the next arrival big and the one after.
 class ArrivalRow extends StatelessWidget {
-  const ArrivalRow({super.key, required this.first, this.then = const [], this.estimate = false, this.trailing, this.onTap, this.big = false});
+  const ArrivalRow({super.key, required this.first, this.then = const [], this.estimate = false, this.timetable = false, this.trailing, this.onTap, this.big = false});
 
   final Arrival first;
   final List<Arrival> then;
   final bool estimate; // offline: the times are estimates from the last data
+  final bool timetable; // no GPS: the time is from the timetable (muted, no plate, «από το πρόγραμμα»)
   final Widget? trailing;
   final VoidCallback? onTap;
   final bool big;
@@ -98,9 +256,12 @@ class ArrivalRow extends StatelessWidget {
     final note = delayNote(context, first.delayS);
     final left = first.stopsLeft;
     // One fact under the headsign: an estimate, or a delay, or how far the bus is.
-    final late = !estimate && (first.delayS ?? 0) >= 90;
-    final far = !estimate && !late && left != null;
-    final fact = estimate
+    final live = !estimate && !timetable;
+    final late = live && (first.delayS ?? 0) >= 90;
+    final far = live && !late && left != null;
+    final fact = timetable
+        ? 'από το πρόγραμμα'
+        : estimate
         ? 'εκτίμηση'
         : late
             ? note!.$1
@@ -117,22 +278,25 @@ class ArrivalRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('→ ${towards(first)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+              Text('→ ${towards(first)}', style: Ds.bodyStrong, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 3),
               Row(children: [
                 if (far) ...[StopsDots(left, color: lineColor(Deps.of(context).store, first.line).bg), const SizedBox(width: 6)],
                 Flexible(
                   child: Text(fact,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: late ? t.late : t.muted)),
+                      style: Ds.note.copyWith(color: late ? t.late : live && !far && note != null ? t.onTime : t.muted)),
                 ),
               ]),
             ]),
           ),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text('$tilde${mins(first.etaS)}',
-                style: TextStyle(fontSize: big ? 32 : 26, fontWeight: FontWeight.w700, height: 1, fontFeatures: const [FontFeature.tabularFigures()])),
-            if (then.isNotEmpty) Text('επόμενο ${then.take(2).map((a) => mins(a.etaS)).join(', ')}', style: TextStyle(fontSize: 12, color: t.muted)),
+            EtaText('$tilde${mins(first.etaS)}', live: live, big: big),
+            if (then.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text('μετά ${then.take(2).map((a) => mins(a.etaS)).join(', ')}', style: TextStyle(fontSize: 12, color: t.muted)),
+              ),
           ]),
           if (trailing != null) ...[const SizedBox(width: 10), trailing!],
         ]),
