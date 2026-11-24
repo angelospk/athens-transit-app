@@ -9,6 +9,7 @@ import '../core/nearby.dart';
 import '../data/api.dart';
 import '../data/live.dart';
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import 'map_sel.dart';
 import 'motion_fx.dart' show motionOff;
 import 'stop_screen.dart' show StopRef;
@@ -131,7 +132,7 @@ class BoardPlate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
-    final now = text.endsWith('τώρα');
+    final now = text.endsWith(l10n.commonNow);
     final style = TextStyle(
       color: t.amber,
       fontSize: now ? (size > 24 ? 19 : 17) : size,
@@ -142,7 +143,7 @@ class BoardPlate extends StatelessWidget {
     );
     final prime = !now && text.endsWith('′');
     return Semantics(
-      label: 'ζωντανά: $text',
+      label: context.l10n.widgetsLive(text),
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -171,7 +172,7 @@ class EtaText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (live) return BoardPlate(text, size: big ? 28 : 24);
-    final now = text.endsWith('τώρα');
+    final now = text.endsWith(l10n.commonNow);
     return Text(text,
         style: TextStyle(
           fontSize: now ? (big ? 19 : 17) : (big ? 28 : 24),
@@ -198,7 +199,7 @@ class EtaChip extends StatelessWidget {
     // Not live (timetable, offline estimate): muted and still; motion is for live times only.
     if (!live) return Text(text, style: style ?? TextStyle(fontSize: 15, fontWeight: FontWeight.w800, fontFeatures: Ds.tabular, color: t.muted));
     return Semantics(
-      label: 'ζωντανά: $text',
+      label: context.l10n.widgetsLive(text),
       excludeSemantics: true,
       child: Container(
         constraints: const BoxConstraints(minHeight: 24),
@@ -221,21 +222,22 @@ String clockAt(int s) {
 // "8″" under a minute, "4′" after.
 String ago(int s) => s < 60 ? '$s″' : '${s ~/ 60}′';
 
-String mins(int s) => s < 45 ? 'τώρα' : '${(s / 60).round()}′';
+// In the device's language (also in the background service): «τώρα» under 45 s, else «5′».
+String mins(int s) => s < 45 ? l10n.commonNow : l10n.minutesShort((s / 60).round());
 
 // A delay as words under the minutes: "αργεί 20′", "νωρίτερα 3′", "στην ώρα του" within 90 s.
 String delayWords(int delayS) => delayS >= 90
-    ? 'αργεί ${(delayS / 60).round()}′'
+    ? l10n.widgetsLate((delayS / 60).round())
     : delayS <= -90
-        ? 'νωρίτερα ${(-delayS / 60).round()}′'
-        : 'στην ώρα του';
+        ? l10n.widgetsEarly((-delayS / 60).round())
+        : l10n.commonOnTime;
 
 // "αργεί 2′", "στην ώρα του", or null when unmatched.
 (String, Color)? delayNote(BuildContext c, int? delayS) {
   final t = c.tones;
   if (delayS == null) return null;
   if (delayS >= 90) return (delayWords(delayS), t.late);
-  return ('στην ώρα του', t.onTime);
+  return (l10n.commonOnTime, t.onTime);
 }
 
 // One line at a stop: badge, headsign, note, the next arrival big and the one after.
@@ -259,14 +261,15 @@ class ArrivalRow extends StatelessWidget {
     final live = !estimate && !timetable;
     final late = live && (first.delayS ?? 0) >= 90;
     final far = live && !late && left != null;
+    final l = context.l10n;
     final fact = timetable
-        ? 'από το πρόγραμμα'
+        ? l.widgetsFromTimetable
         : estimate
-        ? 'εκτίμηση'
+        ? l.widgetsEstimate
         : late
             ? note!.$1
             : far
-                ? (left == 1 ? '1 στάση μακριά' : '$left στάσεις μακριά')
+                ? l.widgetsStopsAway(left)
                 : note?.$1 ?? '';
     final tilde = estimate ? '~' : '';
     return InkWell(
@@ -295,7 +298,7 @@ class ArrivalRow extends StatelessWidget {
             if (then.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
-                child: Text('μετά ${then.take(2).map((a) => mins(a.etaS)).join(', ')}', style: TextStyle(fontSize: 12, color: t.muted)),
+                child: Text(l.widgetsThen(then.take(2).map((a) => mins(a.etaS)).join(', ')), style: TextStyle(fontSize: 12, color: t.muted)),
               ),
           ]),
           if (trailing != null) ...[const SizedBox(width: 10), trailing!],
@@ -329,7 +332,7 @@ List<(Arrival, List<Arrival>)> groupArrivals(List<Arrival> all) {
 }
 
 // Where the bus goes: the headsign, or on a loop after the turn, the way back.
-String towards(Arrival a) => a.back == null ? titleCase(a.headsign) : '${titleCase(a.back!)} (επιστροφή)';
+String towards(Arrival a) => a.back == null ? titleCase(a.headsign) : l10n.widgetsReturn(titleCase(a.back!));
 
 // The bus (a dot in its line's colour), the stops in between, and your stop as a ring: "●··◯".
 class StopsDots extends StatelessWidget {
@@ -374,15 +377,16 @@ class LiveNote extends StatelessWidget {
       listenable: live,
       builder: (context, _) {
         final at = live.lastOkAt;
+        final l = context.l10n;
         if (live.isOffline) {
-          final when = at == null ? '' : ' · τελευταία δεδομένα πριν ${mins(live.nowS - at)}';
+          final when = at == null ? '' : ' · ${l.widgetsLastData(mins(live.nowS - at))}';
           // No Flexible: the note often sits in a Row beside an Expanded, where its width is unbounded.
-          return Row(mainAxisSize: MainAxisSize.min, children: [Dot(t.late), const SizedBox(width: 6), Text('Χωρίς σύνδεση$when', style: TextStyle(fontSize: 12, color: t.muted))]);
+          return Row(mainAxisSize: MainAxisSize.min, children: [Dot(t.late), const SizedBox(width: 6), Text('${l.widgetsOffline}$when', style: TextStyle(fontSize: 12, color: t.muted))]);
         }
         return Row(children: [
           Dot(t.onTime),
           const SizedBox(width: 6),
-          Text(at == null ? 'Live' : 'Τελευταία ενημέρωση ${clockAt(at)}', style: TextStyle(fontSize: 12, color: t.muted)),
+          Text(at == null ? l.widgetsLiveNote : l.widgetsUpdatedAt(clockAt(at)), style: TextStyle(fontSize: 12, color: t.muted)),
         ]);
       },
     );
@@ -408,7 +412,7 @@ class CloseSel extends StatelessWidget {
   const CloseSel({super.key});
   @override
   Widget build(BuildContext context) =>
-      IconButton(tooltip: 'Κλείσιμο', icon: const Icon(Icons.close), onPressed: () => mapSel.value = null);
+      IconButton(tooltip: context.l10n.commonClose, icon: const Icon(Icons.close), onPressed: () => mapSel.value = null);
 }
 
 // The sheet's «‹ Πίσω», top left, named after the level before (map_sel.dart backLabel); from the
@@ -443,7 +447,7 @@ class LineButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = lineColor(Deps.of(context).store, line);
     return Tooltip(
-      message: 'Η γραμμή $line',
+      message: context.l10n.widgetsLineTooltip(line),
       child: Material(
         color: c.bg,
         borderRadius: BorderRadius.circular(8),

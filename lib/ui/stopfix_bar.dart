@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../core/geo.dart';
 import '../core/stopfix.dart';
+import '../l10n/l10n.dart';
 import 'theme.dart';
 
 class StopFix {
@@ -62,16 +63,17 @@ class _StopFixBarState extends State<StopFixBar> {
     final ok = fixSendable(moved) && _status != _Status.sending;
     const title = TextStyle(fontSize: 16, fontWeight: FontWeight.w600);
     final hint = TextStyle(fontSize: 13.5, height: 1.35, color: t.muted);
+    final tx = context.l10n;
     if (_status == _Status.done) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Ευχαριστούμε, το λάβαμε!', style: title),
+          Text(tx.stopfixThanks, style: title),
           const SizedBox(height: 4),
-          Text('Η στάση δεν αλλάζει αμέσως: κάθε πρόταση ελέγχεται με το GPS των λεωφορείων.', style: hint),
+          Text(tx.stopfixNotImmediate, style: hint),
           const SizedBox(height: 12),
-          FilledButton(onPressed: widget.onClose, child: const Text('Κλείσιμο')),
+          FilledButton(onPressed: widget.onClose, child: Text(tx.commonClose)),
         ],
       );
     }
@@ -79,16 +81,16 @@ class _StopFixBarState extends State<StopFixBar> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text('Πάτα στον χάρτη εκεί που είναι το κολωνάκι', style: title),
+        Text(tx.stopfixTapMap, style: title),
         const SizedBox(height: 4),
         Text(
           tooFar
-              ? 'Πάνω από $maxMoveM μ. από τη στάση. Φέρε την πιο κοντά.'
+              ? tx.stopfixTooFar(maxMoveM)
               : _status == _Status.failed
-              ? 'Δεν στάλθηκε. Έλεγξε τη σύνδεση και ξαναδοκίμασε.'
+              ? tx.stopfixFailed
               : moved < minMoveM
-              ? 'Η μικρή τελεία είναι η θέση που ξέρουμε.'
-              : 'Μετακίνηση $moved μ.',
+              ? tx.stopfixKnown
+              : tx.stopfixMoved(moved),
           style: hint.copyWith(color: tooFar || _status == _Status.failed ? t.late : null),
         ),
         const SizedBox(height: 12),
@@ -97,24 +99,24 @@ class _StopFixBarState extends State<StopFixBar> {
             Expanded(
               child: OutlinedButton(
                 onPressed: _status == _Status.sending ? null : widget.onClose,
-                child: const Text('Άκυρο'),
+                child: Text(tx.commonCancel),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: FilledButton(
                 onPressed: ok ? _send : null,
-                child: Text(_status == _Status.sending ? 'Αποστολή…' : 'Αποστολή'),
+                child: Text(_status == _Status.sending ? tx.stopfixSending : tx.stopfixSend),
               ),
             ),
           ],
         ),
         TextButton(
           onPressed: () => launchUrl(Uri.parse(streetViewUrl(widget.at)), mode: LaunchMode.externalApplication),
-          child: const Text('Δες το σημείο στο Street View ›'),
+          child: Text(tx.stopfixStreetView),
         ),
         Text(
-          'Στέλνεται η θέση της πινέζας, η στάση και ένας τυχαίος κωδικός συσκευής.',
+          tx.stopfixPrivacy,
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 11.5, color: t.muted),
         ),

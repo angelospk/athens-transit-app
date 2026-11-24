@@ -5,19 +5,25 @@
 import 'package:flutter/material.dart';
 
 import '../core/stats.dart';
+import '../l10n/l10n.dart';
 import 'map_sel.dart';
 import 'widgets.dart';
 import 'theme.dart';
 
-const _days = ['Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο', 'Κυριακή'];
-const _months = ['Ιανουαρίου', 'Φεβρουαρίου', 'Μαρτίου', 'Απριλίου', 'Μαΐου', 'Ιουνίου', 'Ιουλίου', 'Αυγούστου', 'Σεπτεμβρίου', 'Οκτωβρίου', 'Νοεμβρίου', 'Δεκεμβρίου'];
+const _days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+const _months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
-String _date(String iso) {
+// «Δευτέρα 24 Νοεμβρίου», "Monday 24 November".
+String _date(AppLocalizations l, String iso) {
   final d = DateTime.tryParse(iso);
-  return d == null ? iso : '${_days[d.weekday - 1]} ${d.day} ${_months[d.month - 1]}';
+  return d == null ? iso : l.statsDate(l.statsDayName(_days[d.weekday - 1]), d.day, l.statsMonthName(_months[d.month - 1]));
 }
 
-String _kmh(double v) => v.toStringAsFixed(1).replaceAll('.', ',');
+// «12,3» in Greek, "12.3" in English.
+String _kmh(AppLocalizations l, double v) {
+  final s = v.toStringAsFixed(1);
+  return l.localeName == 'el' ? s.replaceAll('.', ',') : s;
+}
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -51,13 +57,14 @@ class _StatsScreenState extends State<StatsScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
+    final l = context.l10n;
     return DefaultTabController(
       length: 2,
       initialIndex: _tab,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Στατιστικά δικτύου'),
-          bottom: const TabBar(tabs: [Tab(text: 'Χθες'), Tab(text: 'Τάσεις')]),
+          title: Text(l.statsTitle),
+          bottom: TabBar(tabs: [Tab(text: l.statsTabYesterday), Tab(text: l.statsTabTrends)]),
         ),
         body: TabBarView(children: [_dayTab(t), _longTab(t)]),
       ),
@@ -68,18 +75,18 @@ class _StatsScreenState extends State<StatsScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(msg, style: TextStyle(color: t.muted)),
           const SizedBox(height: 8),
-          OutlinedButton(onPressed: again, child: const Text('Δοκίμασε ξανά')),
+          OutlinedButton(onPressed: again, child: Text(context.l10n.commonRetry)),
         ]),
       );
 
   Widget _longTab(Tones t) => FutureBuilder<List<DayStats>>(
         future: _long,
         builder: (context, snap) {
-          if (snap.hasError) return _retry(t, 'Δεν φόρτωσαν οι προηγούμενες μέρες.', _loadLong);
+          if (snap.hasError) return _retry(t, context.l10n.statsLongError, _loadLong);
           final all = snap.data;
           if (all == null) return const Center(child: CircularProgressIndicator());
           final days = [for (final d in all) if (complete(d)) d];
-          if (days.length < 2) return Center(child: Text('Χρειάζονται τουλάχιστον 2 πλήρεις μέρες.', style: TextStyle(color: t.muted)));
+          if (days.length < 2) return Center(child: Text(context.l10n.statsNeedDays, style: TextStyle(color: t.muted)));
           return _long$(t, days);
         },
       );
@@ -92,11 +99,12 @@ class _StatsScreenState extends State<StatsScreen> {
     final top = band.fold(10.0, (m, b) => (b.max ?? 0) > m ? b.max! : m);
     final vTop = [...types.weekday.hours, ...types.weekend.hours].fold(1.0, (m, h) => (h.vehicles ?? 0) > m ? h.vehicles! : m);
     const h = 120.0;
+    final l = context.l10n;
     return ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 24), children: [
-      Text('Οι τελευταίες ${days.length} πλήρεις μέρες', style: Theme.of(context).textTheme.titleLarge),
-      Text('${_date(days.first.date)} – ${_date(days.last.date)}', style: TextStyle(color: t.muted)),
-      _title('Μέση ταχύτητα ανά ώρα'),
-      Text('Η μπάρα: από την πιο αργή ως την πιο γρήγορη μέρα. Η τελεία: όλες μαζί.', style: TextStyle(fontSize: 13, color: t.muted)),
+      Text(l.statsLastDays(days.length), style: Theme.of(context).textTheme.titleLarge),
+      Text('${_date(l, days.first.date)} – ${_date(l, days.last.date)}', style: TextStyle(color: t.muted)),
+      _title(l.statsSpeedByHour),
+      Text(l.statsSpeedNote, style: TextStyle(fontSize: 13, color: t.muted)),
       const SizedBox(height: 8),
       SizedBox(
         height: h,
@@ -121,14 +129,14 @@ class _StatsScreenState extends State<StatsScreen> {
         ]),
       ),
       _hours(t),
-      _title('Καθημερινές και Σαββατοκύριακα'),
+      _title(l.statsWeekdaysWeekends),
       Row(children: [
-        _tile(t, types.weekday.kmh == null ? '–' : _kmh(types.weekday.kmh!), 'χλμ/ώ καθημερινές (${types.weekday.days})'),
+        _tile(t, types.weekday.kmh == null ? '–' : _kmh(l, types.weekday.kmh!), l.statsKmhWeekdays(types.weekday.days)),
         const SizedBox(width: 8),
-        _tile(t, types.weekend.kmh == null ? '–' : _kmh(types.weekend.kmh!), 'χλμ/ώ Σ/Κ (${types.weekend.days})'),
+        _tile(t, types.weekend.kmh == null ? '–' : _kmh(l, types.weekend.kmh!), l.statsKmhWeekends(types.weekend.days)),
       ]),
       const SizedBox(height: 10),
-      Text('Λεωφορεία ανά ώρα', style: TextStyle(fontSize: 13, color: t.muted)),
+      Text(l.statsBusesByHour, style: TextStyle(fontSize: 13, color: t.muted)),
       const SizedBox(height: 6),
       SizedBox(
         height: 90,
@@ -147,21 +155,21 @@ class _StatsScreenState extends State<StatsScreen> {
       Row(children: [
         Dot(t.onTime),
         const SizedBox(width: 4),
-        Text('καθημερινή', style: TextStyle(fontSize: 12, color: t.muted)),
+        Text(l.statsLegendWeekday, style: TextStyle(fontSize: 12, color: t.muted)),
         const SizedBox(width: 12),
         Dot(t.late),
         const SizedBox(width: 4),
-        Text('Σαββατοκύριακο', style: TextStyle(fontSize: 12, color: t.muted)),
+        Text(l.statsLegendWeekend, style: TextStyle(fontSize: 12, color: t.muted)),
       ]),
       ..._worst(t, days),
       if (trends != null) ...[
-        _title('Γραμμές που άλλαξαν (${_date(trends.date)})'),
-        Text('Σε σχέση με ${trends.baseDays} προηγούμενες ${trends.weekend ? 'μέρες Σαββατοκύριακου' : 'καθημερινές'}.', style: TextStyle(fontSize: 13, color: t.muted)),
+        _title(l.statsChanged(_date(l, trends.date))),
+        Text(trends.weekend ? l.statsComparedWeekends(trends.baseDays) : l.statsComparedWeekdays(trends.baseDays), style: TextStyle(fontSize: 13, color: t.muted)),
         for (final x in trends.slower) _trend(t, x),
         for (final x in trends.faster) _trend(t, x),
       ],
       const SizedBox(height: 20),
-      Text('Μόνο πλήρεις μέρες (χωρίς κενά στις καταγραφές). Πηγή: καταγραφές θέσεων του ΟΑΣΑ από τον server μας.',
+      Text(l.statsLongSource,
           style: TextStyle(fontSize: 12, color: t.muted)),
     ]);
   }
@@ -170,6 +178,7 @@ class _StatsScreenState extends State<StatsScreen> {
   List<Widget> _worst(Tones t, List<DayStats> days) {
     final last = days.length <= _period ? days : days.sublist(days.length - _period);
     final w = worstOver(last);
+    final l = context.l10n;
     Widget row(String line, String text, String note) => InkWell(
           onTap: () {
             keepPageState(context, _period); // back from the line reopens «Τάσεις» with this period
@@ -186,26 +195,26 @@ class _StatsScreenState extends State<StatsScreen> {
           ),
         );
     return [
-      _title('Χειρότερες γραμμές'),
+      _title(l.statsWorst),
       Wrap(spacing: 6, children: [
         for (final p in const [7, 14, 28])
           if (p == 7 || days.length > p ~/ 2)
-            ChoiceChip(label: Text('$p μέρες'), selected: _period == p, onSelected: (_) => setState(() => _period = p)),
+            ChoiceChip(label: Text(l.statsDaysCount(p)), selected: _period == p, onSelected: (_) => setState(() => _period = p)),
       ]),
-      Text('${_date(last.first.date)} – ${_date(last.last.date)} · ${last.length} ${last.length == 1 ? 'μέρα' : 'μέρες'}',
+      Text('${_date(l, last.first.date)} – ${_date(l, last.last.date)} · ${l.statsDaysCount(last.length)}',
           style: TextStyle(fontSize: 13, color: t.muted)),
       const SizedBox(height: 8),
-      Text('Δρομολόγια που δεν έγιναν', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.muted)),
-      if (w.missed.isEmpty) Text('Καμία γραμμή με αρκετά δρομολόγια.', style: TextStyle(color: t.muted)),
-      for (final x in w.missed) row(x.line, '${x.missed} από ${x.measured} δεν έγιναν', '${(100 * x.missed / x.measured).round()}%'),
+      Text(l.statsMissedTitle, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.muted)),
+      if (w.missed.isEmpty) Text(l.statsNoLines, style: TextStyle(color: t.muted)),
+      for (final x in w.missed) row(x.line, l.statsMissedOf(x.missed, x.measured), '${(100 * x.missed / x.measured).round()}%'),
       if (w.expiredDays > 0)
-        Text('${w.expiredDays} από τις ${last.length} μέρες μετρήθηκαν με παλιό πρόγραμμα: κάποια «χαμένα» δρομολόγια μπορεί να μην υπάρχουν πια.',
+        Text(l.statsExpiredDays(w.expiredDays, last.length),
             style: TextStyle(fontSize: 12, color: t.late)),
       const SizedBox(height: 10),
-      Text('Πιο αργές', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.muted)),
-      for (final x in w.slow) row(x.line, '${_kmh(x.kmh)} χλμ/ώ', '${x.hours} ώρες'),
+      Text(l.statsSlowest, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: t.muted)),
+      for (final x in w.slow) row(x.line, l.statsKmh(_kmh(l, x.kmh)), l.statsHours(x.hours)),
       const SizedBox(height: 4),
-      Text('Καθυστέρηση ανά δρομολόγιο δεν καταγράφεται ακόμη· εδώ μετράνε τα χαμένα δρομολόγια και η ταχύτητα.',
+      Text(l.statsNoDelayNote,
           style: TextStyle(fontSize: 12, color: t.muted)),
     ];
   }
@@ -223,7 +232,7 @@ class _StatsScreenState extends State<StatsScreen> {
         child: Row(children: [
           LineBadge(x.line),
           const SizedBox(width: 12),
-          Expanded(child: Text('${_kmh(x.kmh)} χλμ/ώ (συνήθως ${_kmh(x.base)})')),
+          Expanded(child: Text(context.l10n.statsTrend(_kmh(context.l10n, x.kmh), _kmh(context.l10n, x.base)))),
           Text('${x.change > 0 ? '+' : '−'}${(x.change.abs() * 100).round()}%',
               style: TextStyle(fontWeight: FontWeight.w700, color: x.change < 0 ? t.late : t.onTime)),
         ]),
@@ -232,7 +241,7 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget _dayTab(Tones t) => FutureBuilder<DayStats>(
         future: _day,
         builder: (context, snap) {
-          if (snap.hasError) return _retry(t, 'Δεν φόρτωσαν τα στατιστικά.', _load);
+          if (snap.hasError) return _retry(t, context.l10n.statsDayError, _load);
           final d = snap.data;
           if (d == null) return const Center(child: CircularProgressIndicator());
           return _body(d, t);
@@ -243,23 +252,24 @@ class _StatsScreenState extends State<StatsScreen> {
     final speed = d.kmh;
     final trips = tripShare(d);
     final r = ranking(d, 5);
+    final l = context.l10n;
     return ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 24), children: [
-      Text(_date(d.date), style: Theme.of(context).textTheme.titleLarge),
+      Text(_date(l, d.date), style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 12),
       Row(children: [
-        _tile(t, '${d.vehicles}', 'λεωφορεία'),
+        _tile(t, '${d.vehicles}', l.statsBuses),
         const SizedBox(width: 8),
-        _tile(t, '${d.lines}', 'γραμμές'),
+        _tile(t, '${d.lines}', l.statsLines),
         const SizedBox(width: 8),
-        _tile(t, speed == null ? '–' : _kmh(speed), 'μέση χλμ/ώ'),
+        _tile(t, speed == null ? '–' : _kmh(l, speed), l.statsAvgKmh),
       ]),
       if (trips != null) ..._tripsSection(t, trips),
-      _title('Λεωφορεία ανά ώρα'),
+      _title(l.statsBusesByHour),
       _bars(t, d),
-      if (r.slow.isNotEmpty) ...[_title('Πιο αργές γραμμές'), for (final x in r.slow) _rank(t, x)],
-      if (r.fast.isNotEmpty) ...[_title('Πιο γρήγορες γραμμές'), for (final x in r.fast) _rank(t, x)],
+      if (r.slow.isNotEmpty) ...[_title(l.statsSlowLines), for (final x in r.slow) _rank(t, x)],
+      if (r.fast.isNotEmpty) ...[_title(l.statsFastLines), for (final x in r.fast) _rank(t, x)],
       const SizedBox(height: 20),
-      Text('Πηγή: καταγραφές θέσεων του ΟΑΣΑ από τον server μας. Ανανεώνεται μία φορά τη μέρα.',
+      Text(l.statsDaySource,
           style: TextStyle(fontSize: 12, color: t.muted)),
     ]);
   }
@@ -281,13 +291,13 @@ class _StatsScreenState extends State<StatsScreen> {
       );
 
   List<Widget> _tripsSection(Tones t, TripShare s) => [
-        _title('Δρομολόγια'),
-        Text('Έγινε το ${(s.share * 100).round()}% των δρομολογίων', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-        Text('${s.run} από ${s.measured}', style: TextStyle(color: t.muted)),
+        _title(context.l10n.statsTrips),
+        Text(context.l10n.statsTripsShare((s.share * 100).round()), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+        Text(context.l10n.statsRunOf(s.run, s.measured), style: TextStyle(color: t.muted)),
         if (s.expired)
           Padding(
             padding: const EdgeInsets.only(top: 6),
-            child: Text('Η σύγκριση γίνεται με το πρόγραμμα του ΟΑΣΑ της ${s.gtfs.split('-').reversed.join('/')}, γιατί νεότερο δεν έχει δημοσιευτεί. Μερικά δρομολόγια που λείπουν μπορεί να μην υπάρχουν πια.',
+            child: Text(context.l10n.statsExpired(s.gtfs.split('-').reversed.join('/')),
                 style: TextStyle(fontSize: 13, color: t.late)),
           ),
         const SizedBox(height: 8),
@@ -297,13 +307,13 @@ class _StatsScreenState extends State<StatsScreen> {
             child: Row(children: [
               LineBadge(w.line),
               const SizedBox(width: 12),
-              Expanded(child: Text('${w.missed} από ${w.measured} δεν έγιναν')),
+              Expanded(child: Text(context.l10n.statsMissedOf(w.missed, w.measured))),
             ]),
           ),
         if (s.unseen > 0)
           Padding(
             padding: const EdgeInsets.only(top: 6),
-            child: Text('${s.unseen} γραμμές χωρίς κανένα δρομολόγιο', style: TextStyle(fontSize: 13, color: t.muted)),
+            child: Text(context.l10n.statsUnseen(s.unseen), style: TextStyle(fontSize: 13, color: t.muted)),
           ),
       ];
 
@@ -342,8 +352,8 @@ class _StatsScreenState extends State<StatsScreen> {
         child: Row(children: [
           LineBadge(x.line),
           const SizedBox(width: 12),
-          Expanded(child: Text('${_kmh(x.kmh)} χλμ/ώ')),
-          Text('${x.km} χλμ · ${x.hours} ώρες', style: TextStyle(fontSize: 12, color: t.muted)),
+          Expanded(child: Text(context.l10n.statsKmh(_kmh(context.l10n, x.kmh)))),
+          Text(context.l10n.statsKmHours(x.km, x.hours), style: TextStyle(fontSize: 12, color: t.muted)),
         ]),
       );
 }

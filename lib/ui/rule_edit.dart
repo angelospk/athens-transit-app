@@ -9,6 +9,7 @@ import '../core/models.dart';
 import '../core/rules.dart';
 import '../data/live.dart';
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import 'alert_sheet.dart' show lateAlertMin;
 import 'rules_screen.dart';
 import 'theme.dart';
@@ -142,6 +143,7 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
+    final s = context.l10n;
     final store = Deps.of(context).store;
     final accent = Theme.of(context).colorScheme.primary;
     Widget w(_Word k, String text) {
@@ -164,20 +166,20 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
     }
 
     final whenWord = switch (when) {
-      When.minutes => '$n′ πριν φτάσει',
-      When.stops => '$n ${n == 1 ? 'στάση' : 'στάσεις'} πριν φτάσει',
-      When.leave => 'πότε να φύγω',
+      When.minutes => s.ruleEditMinutesBefore(n),
+      When.stops => s.ruleEditStopsBefore(n),
+      When.leave => s.ruleEditWhenLeave,
     };
     final ready = variant != null && fav != null && line != null && days != 0 && end > start;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Κανόνας'),
+        title: Text(s.ruleEditTitle),
         backgroundColor: t.ground,
         surfaceTintColor: Colors.transparent,
         actions: [
           if (widget.rule != null)
             IconButton(
-              tooltip: 'Διαγραφή',
+              tooltip: s.commonDelete,
               icon: const Icon(Icons.delete_outline),
               onPressed: () async {
                 store.removeRule(widget.rule!.id);
@@ -185,27 +187,27 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
                 if (context.mounted) Navigator.pop(context);
               },
             ),
-          TextButton(onPressed: ready ? _save : null, child: const Text('Αποθήκευση')),
+          TextButton(onPressed: ready ? _save : null, child: Text(s.commonSave)),
         ],
       ),
       body: ListView(padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.paddingOf(context).bottom), children: [
         if (store.favs.isEmpty && fav == null)
-          Text('Πρώτα αποθήκευσε μια στάση (καρτέλα Στάσεις).', style: TextStyle(color: t.muted))
+          Text(s.ruleEditNoStop, style: TextStyle(color: t.muted))
         else
           DefaultTextStyle.merge(
             style: const TextStyle(fontSize: 24, height: 1.5),
             child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 6, children: [
-              const Text('Κάθε'),
+              Text(s.ruleEditEvery),
               w(_Word.days, daysText(days)),
-              const Text('από'),
+              Text(s.ruleEditFrom),
               w(_Word.start, hm(start)),
-              const Text('ως'),
+              Text(s.ruleEditUntil),
               w(_Word.end, hm(end)),
-              const Text('πες μου'),
+              Text(s.ruleEditTellMe),
               w(_Word.when, whenWord),
-              const Text('για το'),
+              Text(s.ruleEditForThe),
               w(_Word.line, line ?? '—'),
-              const Text('στο'),
+              Text(s.ruleEditAt),
               w(_Word.stop, titleCase(fav?.name ?? '—')),
             ]),
           ),
@@ -226,22 +228,22 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
         if (variants.length > 1)
           Wrap(spacing: 8, children: [
             for (final e in variants.entries)
-              ChoiceChip(label: Text('προς ${titleCase(e.value.$3)}'), selected: variant == e.key, onSelected: (_) => setState(() => variant = e.key)),
+              ChoiceChip(label: Text(s.alertToward(titleCase(e.value.$3))), selected: variant == e.key, onSelected: (_) => setState(() => variant = e.key)),
           ]),
         if (line != null && variants.isEmpty)
-          Text('Το $line δεν σταματά σε αυτή τη στάση (ή είναι το τέρμα του).', style: TextStyle(color: t.late)),
+          Text(s.ruleEditNotServed(line!), style: TextStyle(color: t.late)),
         if (when == When.leave)
           Padding(
             padding: const EdgeInsets.only(top: 12),
-            child: Text('Περπάτημα ${store.walkMin}′ + να είσαι εκεί 5′ νωρίτερα = ειδοποίηση $effectiveN′ πριν φτάσει.', style: TextStyle(color: t.muted)),
+            child: Text(s.ruleEditLeaveMath(store.walkMin, effectiveN), style: TextStyle(color: t.muted)),
           ),
-        if (end <= start) Text('Το τέλος πρέπει να είναι μετά την αρχή.', style: TextStyle(color: t.late)),
+        if (end <= start) Text(s.ruleEditEndAfterStart, style: TextStyle(color: t.late)),
         const SizedBox(height: 16),
-        SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Live στην οθόνη κλειδώματος'), value: live, onChanged: (x) => setState(() => live = x)),
+        SwitchListTile(contentPadding: EdgeInsets.zero, title: Text(s.alertLiveLockScreen), value: live, onChanged: (x) => setState(() => live = x)),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Πες μου και αν αργεί'),
-          subtitle: const Text('Όταν η καθυστέρηση φτάσει $lateAlertMin′'),
+          title: Text(s.alertLateToo),
+          subtitle: Text(s.ruleEditLateSub(lateAlertMin)),
           value: lateToo,
           onChanged: (x) => setState(() => lateToo = x),
         ),
@@ -256,6 +258,7 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
 
   // The choices of one word, under the sentence.
   Widget _choices(_Word k) {
+    final s = context.l10n;
     final store = Deps.of(context).store;
     Widget chip(String label, bool on, VoidCallback tap) => ChoiceChip(label: Text(label), selected: on, onSelected: (_) => tap());
     Widget wrap(List<Widget> c) => Wrap(spacing: 8, runSpacing: 8, children: c);
@@ -268,15 +271,15 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
               selected: days & (1 << i) != 0,
               onSelected: (_) => setState(() => days = (days ^ (1 << i)) == 0 ? days : days ^ (1 << i)),
             ),
-          chip('Δε–Πα', days == 0x1F, () => setState(() => days = 0x1F)),
-          chip('Κάθε μέρα', days == 0x7F, () => setState(() => days = 0x7F)),
+          chip(s.rulesMonFri, days == 0x1F, () => setState(() => days = 0x1F)),
+          chip(s.rulesEveryDay, days == 0x7F, () => setState(() => days = 0x7F)),
         ]);
       case _Word.start || _Word.end:
         final isStart = k == _Word.start;
         final m = isStart ? start : end;
         void set(int v) => setState(() => isStart ? start = v.clamp(0, 24 * 60 - 1) : end = v.clamp(0, 24 * 60 - 1));
         return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          IconButton.filledTonal(tooltip: '15′ νωρίτερα', onPressed: () => set(m - 15), icon: const Icon(Icons.remove)),
+          IconButton.filledTonal(tooltip: s.ruleEditEarlier, onPressed: () => set(m - 15), icon: const Icon(Icons.remove)),
           TextButton(
             onPressed: () async {
               final r = await showTimePicker(context: context, initialTime: TimeOfDay(hour: m ~/ 60, minute: m % 60));
@@ -284,17 +287,17 @@ class _RuleEditScreenState extends State<RuleEditScreen> {
             },
             child: Text(hm(m), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()])),
           ),
-          IconButton.filledTonal(tooltip: '15′ αργότερα', onPressed: () => set(m + 15), icon: const Icon(Icons.add)),
+          IconButton.filledTonal(tooltip: s.ruleEditLater, onPressed: () => set(m + 15), icon: const Icon(Icons.add)),
         ]);
       case _Word.when:
         return wrap([
-          for (final m in [3, 5, 10]) chip('$m′ πριν φτάσει', when == When.minutes && n == m, () => _setWhen(When.minutes, m)),
-          for (final x in [2, 3, 5]) chip('$x στάσεις πριν', when == When.stops && n == x, () => _setWhen(When.stops, x)),
-          chip('πότε να φύγω', when == When.leave, () => setState(() => when = When.leave)),
+          for (final m in [3, 5, 10]) chip(s.ruleEditMinutesBefore(m), when == When.minutes && n == m, () => _setWhen(When.minutes, m)),
+          for (final x in [2, 3, 5]) chip(s.rulesStopsBefore(x), when == When.stops && n == x, () => _setWhen(When.stops, x)),
+          chip(s.ruleEditWhenLeave, when == When.leave, () => setState(() => when = When.leave)),
         ]);
       case _Word.line:
         final f = fav;
-        if (f == null) return const Text('Διάλεξε πρώτα στάση.');
+        if (f == null) return Text(s.ruleEditPickStopFirst);
         return wrap([
           for (final l in f.lines)
             chip(l, line == l, () async {

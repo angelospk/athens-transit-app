@@ -45,7 +45,8 @@ void main() {
       api: api,
       child: MaterialApp(theme: buildTheme(Brightness.dark), home: const RuleEditScreen(rule: rule)),
     ));
-    for (var i = 0; i < 10; i++) {
+    // Real I/O (the fake api's futures): wait until the stop shows, up to 3 s, not a fixed 300 ms (flaky when busy).
+    for (var i = 0; i < 100 && find.text(titleCase('ΑΚΑΔΗΜΙΑ')).evaluate().isEmpty; i++) {
       await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
       await t.pump();
     }

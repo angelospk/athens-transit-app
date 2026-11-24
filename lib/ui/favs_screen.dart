@@ -15,6 +15,7 @@ import '../core/athens_time.dart';
 import '../core/last_bus.dart';
 import '../core/nearby.dart';
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import 'alert_sheet.dart' show dayClock, remindLast;
 import 'map_sel.dart';
 import 'menu.dart' show PlacesScreen;
@@ -29,6 +30,7 @@ class FavsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final d = Deps.of(context);
     final t = context.tones;
+    final s = context.l10n;
     return ListenableBuilder(
       listenable: Listenable.merge([d.store, d.live]),
       builder: (context, _) {
@@ -42,7 +44,7 @@ class FavsScreen extends StatelessWidget {
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddStopScreen())),
             icon: const Icon(Icons.add),
-            label: const Text('Στάση'),
+            label: Text(s.favsAddStop),
           ),
           body: SafeArea(
             child: ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 96), children: [
@@ -53,10 +55,10 @@ class FavsScreen extends StatelessWidget {
                 margin: const EdgeInsets.fromLTRB(4, 4, 4, 8),
                 child: ListTile(
                   leading: const Icon(Icons.place_outlined),
-                  title: Text(d.store.home == null ? 'Πού είναι το σπίτι σου;' : 'Σπίτι · ${d.store.home!.label}'),
-                  subtitle: Text('Μέρη: σπίτι, δουλειά και άλλα · μένουν μόνο στο κινητό', style: TextStyle(fontSize: 12.5, color: t.muted)),
+                  title: Text(d.store.home == null ? s.favsWhereHome : '${s.commonHome} · ${d.store.home!.label}'),
+                  subtitle: Text(s.favsPlacesSub, style: TextStyle(fontSize: 12.5, color: t.muted)),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => openPage('Μέρη', const PlacesScreen()),
+                  onTap: () => openPage(s.favsPlaces, const PlacesScreen()),
                 ),
               ),
               // The time-of-day order only matters once a stop is marked «Σπίτι» or «Δουλειά».
@@ -66,22 +68,22 @@ class FavsScreen extends StatelessWidget {
                   child: Row(children: [
                     Dot(t.onTime),
                     const SizedBox(width: 6),
-                    Text(morning ? 'Πρωί: πρώτα η στάση του σπιτιού' : 'Απόγευμα: πρώτα η στάση της δουλειάς', style: TextStyle(fontSize: 13, color: t.muted)),
+                    Text(morning ? s.favsMorning : s.favsAfternoon, style: TextStyle(fontSize: 13, color: t.muted)),
                   ]),
                 ),
               if (home != null) _LastHome(key: ValueKey('last-${home.key}'), fav: home),
               if (favs.isEmpty)
                 Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text('Καμία αποθηκευμένη στάση ακόμη. Πάτα «+ Στάση».', style: TextStyle(color: t.muted)),
+                  child: Text(s.favsEmpty, style: TextStyle(color: t.muted)),
                 ),
-              _section(t, 'Στάσεις'),
+              _section(t, s.favsStops),
               for (final f in favs) _FavCard(key: ValueKey(f.key), fav: f),
-              _section(t, 'Γραμμές'),
+              _section(t, s.favsLines),
               if (d.store.myLines.isEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-                  child: Text('Καμία γραμμή ακόμη. Πάτα το αστέρι σε μια γραμμή για να τη βλέπεις εδώ.', style: TextStyle(color: t.muted)),
+                  child: Text(s.favsLinesEmpty, style: TextStyle(color: t.muted)),
                 ),
               for (final l in d.store.myLines) _LineRow(line: l),
             ]),
@@ -123,6 +125,7 @@ class _LastHomeState extends State<_LastHome> {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
+    final s = context.l10n;
     final f = widget.fav;
     return FutureBuilder(
       future: _last,
@@ -140,26 +143,26 @@ class _LastHomeState extends State<_LastHome> {
               const Icon(Icons.nightlight_outlined),
               const SizedBox(width: 10),
               Expanded(
-                child: Text('Το τελευταίο $line για το σπίτι', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                child: Text(s.favsLastHome(line), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
             ]),
             const SizedBox(height: 4),
             Text(
-              'Φεύγει ${gtfsClock(h.t)} από ${titleCase(h.from)} και περνά ~${dayClock(h.atStopS)} από ${titleCase(f.name)}. Πρόγραμμα, όχι live.',
+              s.favsLastHomeBody(gtfsClock(h.t), titleCase(h.from), dayClock(h.atStopS), titleCase(f.name)),
               style: TextStyle(fontSize: 14, color: t.muted),
             ),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 icon: Icon(_set ? Icons.check : Icons.notifications_active_outlined, size: 18),
-                label: Text(_set ? 'Θα σε ειδοποιήσουμε' : 'Ειδοποίησέ με 30′ πριν'),
+                label: Text(_set ? s.favsWillNotify : s.alertNotifyMinutes(30)),
                 onPressed: _set
                     ? null
                     : () async {
                         final messenger = ScaffoldMessenger.of(context);
-                        final msg = await remindLast(context, line: line, st: st, variantId: h.variant, i: h.i, stopName: f.name, beforeMin: 30);
-                        if (mounted) setState(() => _set = msg.startsWith('Θα σε'));
-                        messenger.showSnackBar(SnackBar(content: Text(msg)));
+                        final r = await remindLast(context, line: line, st: st, variantId: h.variant, i: h.i, stopName: f.name, beforeMin: 30);
+                        if (mounted) setState(() => _set = r.ok);
+                        messenger.showSnackBar(SnackBar(content: Text(r.msg)));
                       },
               ),
             ),
@@ -179,6 +182,7 @@ class _LineRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final d = Deps.of(context);
     final t = context.tones;
+    final s = context.l10n;
     final vs = d.live.lives[line]?.vehicles ?? const <Vehicle>[];
     final late = vs.where((v) => (v.delayS ?? 0) > 300).length;
     return Card(
@@ -202,7 +206,7 @@ class _LineRow extends StatelessWidget {
                       maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 ),
                 Text(
-                  vs.isEmpty ? 'κανένα λεωφορείο με GPS τώρα' : '${vs.length} στον δρόμο · ${late == 0 ? 'όλα στην ώρα τους' : '$late ${late == 1 ? 'αργεί' : 'αργούν'}'}',
+                  vs.isEmpty ? s.favsNoGpsBus : '${s.favsOnRoad(vs.length)} · ${late == 0 ? s.favsAllOnTime : s.favsLate(late)}',
                   style: TextStyle(fontSize: 13, color: late == 0 ? t.muted : t.late),
                 ),
               ]),
@@ -282,11 +286,12 @@ class _FavCardState extends State<_FavCard> {
   Widget build(BuildContext context) {
     final d = Deps.of(context);
     final t = context.tones;
+    final s = context.l10n;
     final groups = groupArrivals(d.live.arrivalsNear(fav.name, fav.lat, fav.lon, only: fav.lines));
     // With no saved line coming, two of the others; with some, one.
     final also = groupArrivals(_otherArrivals()).take(groups.isEmpty ? 2 : 1).toList();
     final quiet = fav.lines.where((l) => !groups.any((g) => g.$1.line == l));
-    final place = switch (fav.place) { Place.home => 'Σπίτι', Place.work => 'Δουλειά', null => null };
+    final place = switch (fav.place) { Place.home => s.commonHome, Place.work => s.commonWork, null => null };
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.fromLTRB(16, 14, 8, 6),
@@ -303,18 +308,18 @@ class _FavCardState extends State<_FavCard> {
               ]),
             ),
             PopupMenuButton<String>(
-              tooltip: 'Επιλογές',
+              tooltip: s.favsOptions,
               onSelected: (v) => switch (v) {
                 'home' => d.store.updateFav(fav.copyWith(place: Place.home)),
                 'work' => d.store.updateFav(fav.copyWith(place: Place.work)),
                 'none' => d.store.updateFav(fav.copyWith(clearPlace: true)),
                 _ => d.store.removeFav(fav),
               },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'home', child: Text('Είναι το σπίτι')),
-                PopupMenuItem(value: 'work', child: Text('Είναι η δουλειά')),
-                PopupMenuItem(value: 'none', child: Text('Ούτε σπίτι ούτε δουλειά')),
-                PopupMenuItem(value: 'remove', child: Text('Αφαίρεση')),
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'home', child: Text(s.favsIsHome)),
+                PopupMenuItem(value: 'work', child: Text(s.favsIsWork)),
+                PopupMenuItem(value: 'none', child: Text(s.favsNeither)),
+                PopupMenuItem(value: 'remove', child: Text(s.favsRemove)),
               ],
             ),
           ]),
@@ -327,7 +332,7 @@ class _FavCardState extends State<_FavCard> {
         if (quiet.isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 8, 8, 4),
-            child: Text('Χωρίς λεωφορείο με GPS τώρα: ${quiet.join(', ')}', style: TextStyle(fontSize: 13, color: t.muted)),
+            child: Text(s.favsQuiet(quiet.join(', ')), style: TextStyle(fontSize: 13, color: t.muted)),
           ),
         // The other lines, small: the next one or two, and a way to all of them on the map.
         for (final (a, _) in also)
@@ -347,7 +352,7 @@ class _FavCardState extends State<_FavCard> {
         if (_all.length > fav.lines.length)
           Align(
             alignment: Alignment.centerLeft,
-            child: TextButton(onPressed: _open, child: Text('Όλες οι γραμμές εδώ (${_all.length}) ›')),
+            child: TextButton(onPressed: _open, child: Text(s.favsAllLines(_all.length))),
           ),
       ]),
     );

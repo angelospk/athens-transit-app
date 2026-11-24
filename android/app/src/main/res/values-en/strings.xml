@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English. Greek, the default, in values. -->
+<resources>
+    <string name="app_name">Staseis</string>
+    <string name="widget_description">My stop: the next buses</string>
+    <string name="home_widget_description">Going home: the last buses of the day</string>
+
+    <string name="stop_widget_pick">Open the app to pick a stop</string>
+    <string name="stop_widget_age">updated %1$d′ ago</string>
+    <string name="stop_widget_now">now</string>
+
+    <string name="home_last_kicker">LAST ONE HOME</string>
+    <string name="home_last_head">Going home · last runs</string>
+    <string name="home_last_empty">Open the app away from home</string>
+    <string name="home_last_from">from %1$s</string>
+    <string name="home_last_from_ago">from %1$s · %2$s ago</string>
+    <string name="home_last_all_gone">%1$s · the last ones have gone</string>
+    <string name="home_last_all_gone_small">The last ones have gone · %1$s</string>
+    <string name="home_last_first_goes">%1$s · the %2$s goes first</string>
+    <string name="home_last_gone">gone</string>
+    <string name="home_last_in">in %1$s</string>
+    <string name="home_last_in_from">in %1$s · %2$s</string>
+    <string name="duration_min">%1$d′</string>
+    <string name="duration_hour_min">%1$dh %2$d′</string>
+
+    <string name="preview_stop_sub">Home · updated 1′ ago</string>
+    <string name="preview_home_from">from Σύνταγμα · the 040 goes first</string>
+    <string name="preview_in_18">in 18′</string>
+    <string name="preview_in_48">in 48′</string>
+    <string name="preview_in_1h23">in 1h 23′</string>
+</resources>

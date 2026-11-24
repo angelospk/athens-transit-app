@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../core/geo.dart';
 import '../core/muni.dart';
+import '../l10n/l10n.dart';
 import 'favs_screen.dart';
 import 'planner_screen.dart';
 import 'stop_screen.dart';
@@ -100,12 +101,12 @@ bool canMapBack() => _history.isNotEmpty || _return != null || switch (mapSel.va
 String backLabel() {
   final prev = _history.lastOrNull ?? switch (mapSel.value) { BusSel(stop: final s?) => StopSel(s), _ => null };
   return switch (prev) {
-    null => _return == null ? 'Κοντά σου' : _return!.last.settings.name ?? 'Πίσω',
+    null => _return == null ? l10n.mapNearYou : _return!.last.settings.name ?? l10n.mapSelBack,
     StopSel(:final stop) => titleCase(stop.name),
-    BusSel(:final line) || LineSel(:final line) => 'Γραμμή $line',
+    BusSel(:final line) || LineSel(:final line) => l10n.mapSelLine(line),
     StationSel(:final name) || PlaceSel(:final name) => titleCase(name),
-    MuniSel(:final card) => card.ref == null ? card.name : 'Γραμμή ${card.ref}',
-    MuniStopSel(:final stop) => stop.name ?? 'Στάση',
+    MuniSel(:final card) => card.ref == null ? card.name : l10n.mapSelLine(card.ref!),
+    MuniStopSel(:final stop) => stop.name ?? l10n.mapSelStop,
   };
 }
 
@@ -202,7 +203,7 @@ final planRequest = ValueNotifier<({PlanEnd? from, PlanEnd? to})?>(null);
 void showPlanner({PlanEnd? from, PlanEnd? to}) {
   planRequest.value = (from: from, to: to);
   _toMap();
-  openPage('Διαδρομή', const PlannerScreen());
+  openPage(l10n.plannerTitle, const PlannerScreen());
 }
 
 /// Opens s on the map's sheet. From a page: back from s reopens the pages it closed.
@@ -226,5 +227,5 @@ void showFavs() {
   }
   _toMap();
   homeTab.value = 1;
-  openPage('Αγαπημένα', const FavsScreen());
+  openPage(l10n.mapFavorites, const FavsScreen());
 }

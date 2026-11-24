@@ -5,10 +5,10 @@
     android:background="@drawable/widget_bg" android:paddingHorizontal="14dp" android:paddingVertical="10dp">
     <TextView android:id="@+id/htitle" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:textColor="@color/widget_ink" android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end"
-        android:text="Γυρνάς σπίτι · τα τελευταία" />
+        android:text="@string/home_last_head" />
     <TextView android:id="@+id/hsub" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:textColor="@color/widget_muted" android:textSize="12sp" android:maxLines="1" android:ellipsize="end"
-        android:text="Άνοιξε την εφαρμογή μακριά από το σπίτι" />
+        android:text="@string/home_last_empty" />
     <LinearLayout android:id="@+id/hrow0" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="5dp" android:visibility="gone">
         <TextView android:id="@+id/hline0" android:layout_width="wrap_content" android:layout_height="wrap_content"

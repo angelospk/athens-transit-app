@@ -12,6 +12,7 @@ import '../background/widget.dart';
 import '../core/models.dart';
 import '../core/nearby.dart';
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import 'map_sel.dart';
 import 'planner_screen.dart';
 import 'rules_screen.dart';
@@ -28,6 +29,7 @@ class AppMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = Deps.of(context).store;
     final city = store.city;
+    final l = context.l10n;
     void go(String title, Widget page) {
       Scaffold.of(context).closeDrawer();
       openPage(title, page);
@@ -43,44 +45,44 @@ class AppMenu extends StatelessWidget {
     return Drawer(
       child: SafeArea(
         child: ListView(padding: const EdgeInsets.symmetric(vertical: 8), children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
-            child: Text('Στάσεις', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            child: Text(l.appName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
           ),
           ListTile(
             minTileHeight: 52,
             leading: const Icon(Icons.location_city_outlined),
-            title: const Text('Πόλη', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            subtitle: Text(city.name),
+            title: Text(l.menuCity, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            subtitle: Text(city.localName),
             onTap: () {
               Scaffold.of(context).closeDrawer();
               pickCity(context);
             },
           ),
           // What only Athens has (City flags): the planner, OASA's notices, stop alerts, the statistics.
-          if (city.plan) item(Icons.directions, 'Διαδρομή', () => go('Διαδρομή', const PlannerScreen())),
-          item(Icons.format_list_bulleted, 'Γραμμές', () => go('Γραμμές', const LinesScreen())),
-          if (city == City.athens) item(Icons.campaign_outlined, 'Ενημερώσεις', () => go('Ενημερώσεις', const _Updates())),
-          if (city.alerts) item(Icons.notifications_outlined, 'Ειδοποιήσεις', () => go('Ειδοποιήσεις', const RulesScreen())),
-          item(Icons.place_outlined, 'Μέρη', () => go('Μέρη', const PlacesScreen())),
+          if (city.plan) item(Icons.directions, l.menuPlanner, () => go(l.menuPlanner, const PlannerScreen())),
+          item(Icons.format_list_bulleted, l.menuLines, () => go(l.menuLines, const LinesScreen())),
+          if (city == City.athens) item(Icons.campaign_outlined, l.menuUpdates, () => go(l.menuUpdates, const _Updates())),
+          if (city.alerts) item(Icons.notifications_outlined, l.menuAlerts, () => go(l.menuAlerts, const RulesScreen())),
+          item(Icons.place_outlined, l.menuPlaces, () => go(l.menuPlaces, const PlacesScreen())),
           // Home-screen widgets exist only on Android.
           // The widget shows Athens's saved stops (pushWidget), like the alerts.
           if (defaultTargetPlatform == TargetPlatform.android && city == City.athens)
-            item(Icons.widgets_outlined, 'Widgets', () => go('Widgets', const _Widgets())),
+            item(Icons.widgets_outlined, l.menuWidgets, () => go(l.menuWidgets, const _Widgets())),
           if (city.stats)
-            item(Icons.query_stats, 'Στατιστικά', () {
+            item(Icons.query_stats, l.menuStats, () {
             Scaffold.of(context).closeDrawer();
             navKey.currentState?.push(MaterialPageRoute<void>(
-              settings: const RouteSettings(name: 'Στατιστικά'),
+              settings: RouteSettings(name: l.menuStats),
               builder: (_) => const StatsScreen(), // its own bar, with tabs
             ));
           }),
-          item(Icons.settings_outlined, 'Ρυθμίσεις', () => go('Ρυθμίσεις', const SettingsScreen())),
-          item(Icons.info_outline, 'Σχετικά', () => go('Σχετικά', const AboutScreen())),
-          item(Icons.help_outline, 'Πώς δουλεύει', () {
+          item(Icons.settings_outlined, l.menuSettings, () => go(l.menuSettings, const SettingsScreen())),
+          item(Icons.info_outline, l.menuAbout, () => go(l.menuAbout, const AboutScreen())),
+          item(Icons.help_outline, l.menuHowItWorks, () {
             Scaffold.of(context).closeDrawer();
             navKey.currentState?.push(MaterialPageRoute<void>(
-              settings: const RouteSettings(name: 'Πώς δουλεύει'),
+              settings: RouteSettings(name: l.menuHowItWorks),
               builder: (c) => WelcomeScreen(onDone: () => Navigator.pop(c)), // full screen, no bar
             ));
           }),
@@ -97,15 +99,17 @@ Future<void> pickCity(BuildContext context) async {
     context: context,
     builder: (c) => SafeArea(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
-          child: Align(alignment: Alignment.centerLeft, child: Text('Πόλη', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Align(alignment: Alignment.centerLeft, child: Text(c.l10n.menuCity, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
         ),
         for (final city in City.values)
           ListTile(
             leading: Icon(city == store.city ? Icons.radio_button_checked : Icons.radio_button_unchecked),
-            title: Text(city.name),
-            subtitle: Text(city.rail ? '${city.agency} · Μετρό · Τραμ · Προαστιακός' : '${city.agency} · λεωφορεία'),
+            title: Text(city.localName),
+            subtitle: Text(city.rail
+                ? '${city.localAgency} · ${c.l10n.commonMetro} · ${c.l10n.commonTram} · ${c.l10n.commonSuburban}'
+                : '${city.localAgency} · ${c.l10n.menuCityBuses}'),
             onTap: () => Navigator.pop(c, city),
           ),
         const SizedBox(height: 8),
@@ -140,7 +144,7 @@ class _LinesScreenState extends State<LinesScreen> {
       builder: (context, snap) {
         if (snap.hasError) {
           return Center(
-            child: TextButton(onPressed: () => setState(() => _all = Deps.of(context).api.lines()), child: const Text('Δεν φόρτωσαν. Δοκίμασε ξανά')),
+            child: TextButton(onPressed: () => setState(() => _all = Deps.of(context).api.lines()), child: Text(context.l10n.menuLinesError)),
           );
         }
         final all = snap.data;
@@ -154,7 +158,7 @@ class _LinesScreenState extends State<LinesScreen> {
               onChanged: (q) => setState(() => _q = q),
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
-                hintText: 'Αριθμός ή όνομα γραμμής',
+                hintText: context.l10n.menuLinesHint,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(28)),
               ),
             ),
@@ -183,7 +187,7 @@ class _Updates extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.all(24),
-        child: Text('Εδώ θα βλέπεις τις ανακοινώσεις του ΟΑΣΑ: απεργίες, αλλαγές γραμμών. Έρχεται σύντομα.',
+        child: Text(context.l10n.menuUpdatesSoon,
             style: TextStyle(fontSize: 15, height: 1.4, color: context.tones.muted)),
       );
 }
@@ -202,16 +206,19 @@ class PlacesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = Deps.of(context).store;
     final t = context.tones;
+    final l = context.l10n;
     return ListenableBuilder(
       listenable: store,
       builder: (context, _) {
+        // Σπίτι and Δουλειά are stored under their Greek names: shown in the app's language.
+        String shown(String name) => name == homeName ? l.commonHome : name == workName ? l.commonWork : name;
         Widget row(String name, IconData icon, SavedPlace? p) => ListTile(
               leading: Icon(icon),
-              title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text(p == null ? 'Πρόσθεσε διεύθυνση ή περιοχή' : '${p.label}${p.approx ? ' · περίπου' : ''}'),
+              title: Text(shown(name), style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text(p == null ? l.menuPlaceAdd : '${p.label}${p.approx ? ' · ${l.menuPlaceApprox}' : ''}'),
               trailing: p == null
                   ? const Icon(Icons.add)
-                  : IconButton(tooltip: 'Διαγραφή: $name', icon: const Icon(Icons.close), onPressed: () => store.removePlace(name)),
+                  : IconButton(tooltip: '${l.commonDelete}: ${shown(name)}', icon: const Icon(Icons.close), onPressed: () => store.removePlace(name)),
               onTap: () => askPlace(context, name),
             );
         return ListView(padding: const EdgeInsets.symmetric(vertical: 8), children: [
@@ -219,10 +226,10 @@ class PlacesScreen extends StatelessWidget {
           row(workName, Icons.work_outline, store.work),
           for (final p in store.places)
             if (p.name != homeName && p.name != workName) row(p.name, Icons.place_outlined, p),
-          ListTile(leading: const Icon(Icons.add_location_alt_outlined), title: const Text('Άλλο μέρος'), onTap: () => _addOther(context)),
+          ListTile(leading: const Icon(Icons.add_location_alt_outlined), title: Text(l.menuOtherPlace), onTap: () => _addOther(context)),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Text('Αρκεί μια περιοχή. Δεν κρατάμε κανένα δεδομένο: τα μέρη μένουν μόνο στο κινητό σου. Με το «Σπίτι» βλέπεις πώς γυρνάς· με τη «Δουλειά», πώς πας το πρωί.',
+            child: Text(l.menuPlacesNote,
                 style: TextStyle(fontSize: 13, color: t.muted)),
           ),
         ]);
@@ -249,11 +256,11 @@ class _NewPlaceState extends State<_NewPlace> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text('Νέο μέρος'),
-        content: TextField(controller: _c, autofocus: true, decoration: const InputDecoration(hintText: 'Όνομα, π.χ. Σχολείο')),
+        title: Text(context.l10n.menuNewPlace),
+        content: TextField(controller: _c, autofocus: true, decoration: InputDecoration(hintText: context.l10n.menuNewPlaceHint)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Άκυρο')),
-          TextButton(onPressed: () => Navigator.pop(context, _c.text.trim()), child: const Text('Επόμενο')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.commonCancel)),
+          TextButton(onPressed: () => Navigator.pop(context, _c.text.trim()), child: Text(context.l10n.commonNext)),
         ],
       );
 }
@@ -263,11 +270,12 @@ class _Widgets extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final d = Deps.of(context);
+    final l = context.l10n;
     return ListView(padding: const EdgeInsets.symmetric(vertical: 8), children: [
       ListTile(
         leading: const Icon(Icons.widgets_outlined),
-        title: const Text('«Η στάση μου»'),
-        subtitle: const Text('Οι επόμενες αφίξεις στην αγαπημένη σου στάση.'),
+        title: Text(l.menuWidgetStop),
+        subtitle: Text(l.menuWidgetStopBody),
         trailing: const Icon(Icons.add),
         onTap: () async {
           await pushWidget(d.store, d.live, force: true);
@@ -276,8 +284,8 @@ class _Widgets extends StatelessWidget {
       ),
       ListTile(
         leading: const Icon(Icons.home_outlined),
-        title: const Text('«Γυρνάς σπίτι»'),
-        subtitle: const Text('Τα τελευταία λεωφορεία για το σπίτι σήμερα. Γεμίζει όταν ανοίξεις την εφαρμογή μακριά από το σπίτι.'),
+        title: Text(l.menuWidgetHome),
+        subtitle: Text(l.menuWidgetHomeBody),
         trailing: const Icon(Icons.add),
         onTap: () => HomeWidget.requestPinWidget(androidName: 'HomeLastWidgetProvider'),
       ),
@@ -285,19 +293,15 @@ class _Widgets extends StatelessWidget {
   }
 }
 
-const _links = [
-  ('Πρότεινε μια ιδέα', 'https://docs.google.com/forms/d/e/1FAIpQLSdBJSeu7xzH0ma5GWn7hIlcaaPPmOSTP9bD5D_NA-f1FhHyLQ/viewform', Icons.lightbulb_outline),
-  ('Λάθος θέση στάσης; Πες μας', 'https://github.com/angelospk/athens-transit-map/issues/new', Icons.wrong_location_outlined),
-  ('Σχετικά · δεδομένα · ανοιχτό API', 'https://angelospk.github.io/staseis-rt/', Icons.info_outline),
-  ('Ο χάρτης στο web', 'https://bus.haroldpoi.dev', Icons.public),
-];
+List<(String, String, IconData)> _links(AppLocalizations l) => [
+      (l.menuLinkIdea, 'https://docs.google.com/forms/d/e/1FAIpQLSdBJSeu7xzH0ma5GWn7hIlcaaPPmOSTP9bD5D_NA-f1FhHyLQ/viewform', Icons.lightbulb_outline),
+      (l.menuLinkWrongStop, 'https://github.com/angelospk/athens-transit-map/issues/new', Icons.wrong_location_outlined),
+      (l.menuLinkAbout, 'https://angelospk.github.io/staseis-rt/', Icons.info_outline),
+      (l.menuLinkWeb, 'https://bus.haroldpoi.dev', Icons.public),
+    ];
 
 // The site's legal pages (athens-transit-map: staseis.gr).
 const termsUrl = 'https://staseis.gr/terms/', privacyUrl = 'https://staseis.gr/privacy/';
-
-/// Shown in «Σχετικά» and on the first welcome card: the app must not pass as an operator's official app.
-const unofficialNote = 'Ανεπίσημη εφαρμογή. Δεν έχει σχέση με τον ΟΑΣΑ, τον ΟΑΣΘ, τη ΣΤΑΣΥ ή την Hellenic Train, '
-    'και δεν εκπροσωπεί κανέναν από αυτούς.';
 
 /// «Σχετικά»: the version, links, the terms, the privacy policy and the open-source licenses.
 class AboutScreen extends StatelessWidget {
@@ -306,6 +310,7 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
+    final l = context.l10n;
     Widget link(String label, String url, IconData icon) => ListTile(
           leading: Icon(icon),
           title: Text(label),
@@ -320,28 +325,26 @@ class AboutScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Στάσεις', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+              Text(l.appName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
               const SizedBox(height: 2),
-              Text(v == null ? ' ' : 'Έκδοση $v', style: TextStyle(fontSize: 14, color: t.muted)),
+              Text(v == null ? ' ' : l.menuVersion(v), style: TextStyle(fontSize: 14, color: t.muted)),
             ]),
           ),
-          for (final (label, url, icon) in _links) link(label, url, icon),
+          for (final (label, url, icon) in _links(l)) link(label, url, icon),
           Divider(color: t.rule),
-          link('Όροι χρήσης', termsUrl, Icons.description_outlined),
-          link('Πολιτική απορρήτου', privacyUrl, Icons.lock_outline),
+          link(l.menuTerms, termsUrl, Icons.description_outlined),
+          link(l.menuPrivacy, privacyUrl, Icons.lock_outline),
           ListTile(
             leading: const Icon(Icons.code),
-            title: const Text('Άδειες ανοιχτού κώδικα'),
+            title: Text(l.menuLicenses),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => showLicensePage(context: context, applicationName: 'Στάσεις', applicationVersion: v),
+            onTap: () => showLicensePage(context: context, applicationName: l.appName, applicationVersion: v),
           ),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-                '$unofficialNote\n\n'
-                'Πηγές δεδομένων: ΟΑΣΑ (GTFS, άδεια CC BY-NC, και δημόσια δεδομένα telematics) · ΟΑΣΘ (δημόσια '
-                'δεδομένα, data.gov.gr) · ΣΤΑΣΥ (GTFS) · Hellenic Train (railway.gov.gr). Χάρτης: OpenFreeMap, '
-                '© OpenStreetMap contributors. Αναζήτηση διευθύνσεων: Photon (komoot), © OpenStreetMap contributors.\n\n'
+                '${l.menuUnofficialNote}\n\n'
+                '${l.menuDataSources}\n\n'
                 '© 2026 Άγγελος Παπαμιχαήλ & Antonios Freris',
                 style: TextStyle(fontSize: 12, color: t.muted)),
           ),

@@ -50,10 +50,10 @@ class HomeLastWidgetProvider : HomeWidgetProvider() {
     }
 
     // "από Σύνταγμα · πριν 25′": where the app last was, and how long ago.
-    private fun from(widgetData: SharedPreferences, now: Long): String? {
+    private fun from(context: Context, widgetData: SharedPreferences, now: Long): String? {
         val f = widgetData.getString("h_from", null) ?: return null
-        val at = (widgetData.all["h_at"] as? Number)?.toLong() ?: return "από $f"
-        return "από $f · πριν ${inWords(now - at)}"
+        val at = (widgetData.all["h_at"] as? Number)?.toLong() ?: return context.getString(R.string.home_last_from, f)
+        return context.getString(R.string.home_last_from_ago, f, inWords(context, now - at))
     }
 
     private fun list(context: Context, widgetData: SharedPreferences, maxRows: Int): RemoteViews {
@@ -61,10 +61,15 @@ class HomeLastWidgetProvider : HomeWidgetProvider() {
         val v = RemoteViews(context.packageName, R.layout.home_last_widget)
         v.setOnClickPendingIntent(R.id.hroot, HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java))
         val runs = runs(widgetData)
-        val f = from(widgetData, now)
+        val f = from(context, widgetData, now)
         val first = runs.firstOrNull { it.t > now - 60 }
         // Every text set each time: the launcher keeps the old view and applies only what is set.
-        v.setTextViewText(R.id.hsub, if (f == null) EMPTY else if (first == null) "$f · τα τελευταία έφυγαν" else "$f · πρώτα χάνεται το ${first.line}")
+        v.setTextViewText(
+            R.id.hsub,
+            if (f == null) context.getString(R.string.home_last_empty)
+            else if (first == null) context.getString(R.string.home_last_all_gone, f)
+            else context.getString(R.string.home_last_first_goes, f, first.line),
+        )
         for (k in ROW.indices) {
             val r = if (k < maxRows) runs.getOrNull(k) else null
             if (r == null) {
@@ -75,7 +80,7 @@ class HomeLastWidgetProvider : HomeWidgetProvider() {
             val gone = left < -60
             v.setViewVisibility(ROW[k], View.VISIBLE)
             badge(v, LINE[k], r)
-            v.setTextViewText(WHEN[k], if (gone) "έφυγε" else "σε ${inWords(left)}")
+            v.setTextViewText(WHEN[k], if (gone) context.getString(R.string.home_last_gone) else context.getString(R.string.home_last_in, inWords(context, left)))
             v.setTextViewText(TIME[k], clock(r.t))
             v.setInt(TIME[k], "setPaintFlags", if (gone) Paint.STRIKE_THRU_TEXT_FLAG or Paint.ANTI_ALIAS_FLAG else Paint.ANTI_ALIAS_FLAG)
             if (!gone && left < SOON_S) v.setTextColor(TIME[k], LATE) else v.setTextColor(TIME[k], context.getColor(R.color.widget_ink))
@@ -87,13 +92,13 @@ class HomeLastWidgetProvider : HomeWidgetProvider() {
         val now = System.currentTimeMillis() / 1000
         val v = RemoteViews(context.packageName, R.layout.home_last_small)
         v.setOnClickPendingIntent(R.id.hroot, HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java))
-        val f = from(widgetData, now)
+        val f = from(context, widgetData, now)
         val r = runs(widgetData).firstOrNull { it.t > now - 60 }
         if (f == null || r == null) {
             v.setTextViewText(R.id.hbig, "—")
             v.setTextColor(R.id.hbig, context.getColor(R.color.widget_ink))
             v.setViewVisibility(R.id.hbigline, View.GONE)
-            v.setTextViewText(R.id.hbigsub, if (f == null) EMPTY else "Τα τελευταία έφυγαν · $f")
+            v.setTextViewText(R.id.hbigsub, if (f == null) context.getString(R.string.home_last_empty) else context.getString(R.string.home_last_all_gone_small, f))
             return v
         }
         val left = r.t - now
@@ -101,7 +106,7 @@ class HomeLastWidgetProvider : HomeWidgetProvider() {
         v.setTextColor(R.id.hbig, if (left < SOON_S) LATE else context.getColor(R.color.widget_ink))
         v.setViewVisibility(R.id.hbigline, View.VISIBLE)
         badge(v, R.id.hbigline, r)
-        v.setTextViewText(R.id.hbigsub, "σε ${inWords(left)} · $f")
+        v.setTextViewText(R.id.hbigsub, context.getString(R.string.home_last_in_from, inWords(context, left), f))
         return v
     }
 
@@ -117,17 +122,17 @@ class HomeLastWidgetProvider : HomeWidgetProvider() {
         private val LINE = intArrayOf(R.id.hline0, R.id.hline1, R.id.hline2, R.id.hline3)
         private val WHEN = intArrayOf(R.id.hwhen0, R.id.hwhen1, R.id.hwhen2, R.id.hwhen3)
         private val TIME = intArrayOf(R.id.htime0, R.id.htime1, R.id.htime2, R.id.htime3)
-        private const val EMPTY = "Άνοιξε την εφαρμογή μακριά από το σπίτι" // as in the layouts
         private const val SOON_S = 30 * 60 // the warning colour within this
         private val LATE = Color.parseColor("#C2410C")
 
         private fun clock(t: Long): String =
             SimpleDateFormat("HH:mm", Locale.US).apply { timeZone = TimeZone.getTimeZone("Europe/Athens") }.format(Date(t * 1000))
 
-        // "45′", "1ώ 12′".
-        private fun inWords(s: Long): String {
-            val m = (s.coerceAtLeast(0) + 30) / 60
-            return if (m < 60) "$m′" else "${m / 60}ώ ${m % 60}′"
+        // "45′", "1ώ 12′" ("1h 12′").
+        private fun inWords(context: Context, s: Long): String {
+            val m = ((s.coerceAtLeast(0) + 30) / 60).toInt()
+            return if (m < 60) context.getString(R.string.duration_min, m)
+            else context.getString(R.string.duration_hour_min, m / 60, m % 60)
         }
     }
 }

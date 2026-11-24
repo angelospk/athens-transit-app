@@ -1,0 +1,6 @@
+# Flutter gen-l10n: Greek is the template and the default; English is the translation.
+arb-dir: lib/l10n
+template-arb-file: app_el.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

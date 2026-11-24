@@ -6,12 +6,14 @@ import 'package:flutter/material.dart';
 
 import '../core/models.dart';
 import '../core/stats.dart';
+import '../l10n/l10n.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-const _days = ['Δε', 'Τρ', 'Τε', 'Πε', 'Πα', 'Σα', 'Κυ'];
+List<String> get _days => [l10n.lineSpeedMon, l10n.lineSpeedTue, l10n.lineSpeedWed, l10n.lineSpeedThu, l10n.lineSpeedFri, l10n.lineSpeedSat, l10n.lineSpeedSun];
 
-String _dec(double v) => v.toStringAsFixed(1).replaceAll('.', ',');
+// The decimal comma in Greek, the point in English.
+String _dec(double v) => l10n.localeName == 'el' ? v.toStringAsFixed(1).replaceAll('.', ',') : v.toStringAsFixed(1);
 
 Future<void> showLineSpeed(BuildContext context, {required String line, Vehicle? vehicle}) => showModalBottomSheet<void>(
       context: context,
@@ -52,13 +54,13 @@ class _LineSpeedState extends State<_LineSpeed> {
       Row(children: [
         LineBadge(widget.line, big: true),
         const SizedBox(width: 12),
-        const Expanded(child: Text('Ταχύτητα γραμμής', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
+        Expanded(child: Text(context.l10n.lineSpeedTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
       ]),
       if (v != null) ..._ahead(t, v),
       FutureBuilder<List<DayStats>>(
         future: _days$,
         builder: (context, snap) {
-          if (snap.hasError) return Padding(padding: const EdgeInsets.only(top: 20), child: Text('Δεν φόρτωσαν τα στατιστικά των ημερών.', style: TextStyle(color: t.muted)));
+          if (snap.hasError) return Padding(padding: const EdgeInsets.only(top: 20), child: Text(context.l10n.lineSpeedDaysFailed, style: TextStyle(color: t.muted)));
           final days = snap.data;
           if (days == null) return const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()));
           return _history(t, days);
@@ -76,8 +78,8 @@ class _LineSpeedState extends State<_LineSpeed> {
     const h = 90.0;
     return [
       const SizedBox(height: 16),
-      const Text('Τα επόμενα 2 χλμ', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-      Text('Η συνήθης ταχύτητα ανά 200 μ. τέτοια μέρα και ώρα· η γραμμή είναι το λεωφορείο τώρα (${now.round()} χλμ/ώ).',
+      Text(context.l10n.lineSpeedNext2km, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+      Text(context.l10n.lineSpeedAheadHint(now.round()),
           style: TextStyle(fontSize: 13, color: t.muted)),
       const SizedBox(height: 8),
       SizedBox(
@@ -110,7 +112,7 @@ class _LineSpeedState extends State<_LineSpeed> {
         if (d.byLine.where((l) => l.line == line && l.timeS > 600).firstOrNull case final l?) (date: d.date, kmh: l.distM / l.timeS * 3.6, l: l),
     ];
     if (per.isEmpty) {
-      return Padding(padding: const EdgeInsets.only(top: 20), child: Text('Δεν υπάρχουν μετρήσεις για τη γραμμή τις τελευταίες μέρες.', style: TextStyle(color: t.muted)));
+      return Padding(padding: const EdgeInsets.only(top: 20), child: Text(context.l10n.lineSpeedNoData, style: TextStyle(color: t.muted)));
     }
     double? pooled(bool weekend) {
       var dist = 0.0, time = 0.0;
@@ -130,16 +132,16 @@ class _LineSpeedState extends State<_LineSpeed> {
     final top = per.fold(1.0, (m, p) => p.kmh > m ? p.kmh : m);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const SizedBox(height: 20),
-      Text('Τις τελευταίες ${per.length} μέρες', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+      Text(context.l10n.lineSpeedLastDays(per.length), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
       const SizedBox(height: 8),
       Row(children: [
-        if (wd != null) _tile(t, _dec(wd), 'χλμ/ώ καθημερινές'),
+        if (wd != null) _tile(t, _dec(wd), context.l10n.lineSpeedKmhWeekdays),
         if (wd != null && we != null) const SizedBox(width: 8),
-        if (we != null) _tile(t, _dec(we), 'χλμ/ώ Σαββατοκύριακα'),
+        if (we != null) _tile(t, _dec(we), context.l10n.lineSpeedKmhWeekends),
       ]),
       if (place >= 0) ...[
         const SizedBox(height: 8),
-        Text('Χθες: ${place + 1}η πιο αργή από ${all.length} γραμμές.', style: TextStyle(fontSize: 13, color: t.muted)),
+        Text(context.l10n.lineSpeedRank(place + 1, all.length), style: TextStyle(fontSize: 13, color: t.muted)),
       ],
       const SizedBox(height: 12),
       SizedBox(
@@ -148,7 +150,7 @@ class _LineSpeedState extends State<_LineSpeed> {
           for (final p in per)
             Expanded(
               child: Tooltip(
-                message: '${p.date}: ${_dec(p.kmh)} χλμ/ώ',
+                message: context.l10n.lineSpeedDayKmh(p.date, _dec(p.kmh)),
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 1),
                   height: 4 + 100 * p.kmh / top,
@@ -168,14 +170,14 @@ class _LineSpeedState extends State<_LineSpeed> {
       Row(children: [
         Dot(t.onTime),
         const SizedBox(width: 4),
-        Text('καθημερινή', style: TextStyle(fontSize: 12, color: t.muted)),
+        Text(context.l10n.lineSpeedWeekday, style: TextStyle(fontSize: 12, color: t.muted)),
         const SizedBox(width: 12),
         Dot(t.late),
         const SizedBox(width: 4),
-        Text('Σαββατοκύριακο', style: TextStyle(fontSize: 12, color: t.muted)),
+        Text(context.l10n.lineSpeedWeekend, style: TextStyle(fontSize: 12, color: t.muted)),
       ]),
       const SizedBox(height: 12),
-      Text('Μέση ταχύτητα όλης της μέρας, με τις στάσεις. Πηγή: καταγραφές θέσεων του ΟΑΣΑ από τον server μας.',
+      Text(context.l10n.lineSpeedFooter,
           style: TextStyle(fontSize: 12, color: t.muted)),
     ]);
   }

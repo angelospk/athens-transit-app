@@ -1,6 +1,7 @@
 // The home sheet (docs/DESIGN-home.md): the stops grouped by stop, the kind of each in words, the walk
 // button's link, and which smart card shows.
 
+import '../l10n/l10n.dart';
 import 'athens_time.dart';
 import 'geo.dart';
 import 'near_home.dart';
@@ -17,10 +18,10 @@ List<NearPlace> homeGroups(List<NearPlace> near, Iterable<String> myLines, {int 
 }
 
 String kindLabel(NearKind k) => switch (k) {
-      NearKind.bus => 'στάση λεωφορείων',
-      NearKind.metro => 'σταθμός μετρό',
-      NearKind.tram => 'στάση τραμ',
-      NearKind.rail => 'σταθμός προαστιακού',
+      NearKind.bus => l10n.coreKindBusStop,
+      NearKind.metro => l10n.coreKindMetro,
+      NearKind.tram => l10n.coreKindTram,
+      NearKind.rail => l10n.coreKindRail,
     };
 
 /// Google Maps walking directions to a point (the app); [walkWebUri] when the app is missing.

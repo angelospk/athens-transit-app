@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 
 import '../background/service.dart';
+import '../l10n/l10n.dart';
 import 'help.dart';
 import 'map_sel.dart';
 import 'theme.dart';
@@ -17,19 +18,20 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = Deps.of(context).store;
     final t = context.tones;
+    final l = context.l10n;
     return ListenableBuilder(
       listenable: store,
       builder: (context, _) => SafeArea(
         child: ListView(padding: const EdgeInsets.fromLTRB(20, 8, 20, 24), children: [
-          const Text('Θέμα', style: TextStyle(fontWeight: FontWeight.w600)),
+          Text(l.settingsTheme, style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
             child: SegmentedButton<ThemeMode>(
-              segments: const [
-                ButtonSegment(value: ThemeMode.system, label: Text('Σύστημα')),
-                ButtonSegment(value: ThemeMode.light, label: Text('Ανοιχτό')),
-                ButtonSegment(value: ThemeMode.dark, label: Text('Σκούρο')),
+              segments: [
+                ButtonSegment(value: ThemeMode.system, label: Text(l.settingsThemeSystem)),
+                ButtonSegment(value: ThemeMode.light, label: Text(l.settingsThemeLight)),
+                ButtonSegment(value: ThemeMode.dark, label: Text(l.settingsThemeDark)),
               ],
               selected: {store.theme},
               onSelectionChanged: (s) => store.setTheme(s.first),
@@ -37,26 +39,26 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Row(children: [
-            const Expanded(child: Text('Περπάτημα ως τη στάση του σπιτιού', style: TextStyle(fontWeight: FontWeight.w600))),
-            IconButton(tooltip: 'Λιγότερο', onPressed: () => store.setWalkMin(store.walkMin - 1), icon: const Icon(Icons.remove)),
-            Text('${store.walkMin}′', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            IconButton(tooltip: 'Περισσότερο', onPressed: () => store.setWalkMin(store.walkMin + 1), icon: const Icon(Icons.add)),
+            Expanded(child: Text(l.settingsWalk, style: const TextStyle(fontWeight: FontWeight.w600))),
+            IconButton(tooltip: l.commonLess, onPressed: () => store.setWalkMin(store.walkMin - 1), icon: const Icon(Icons.remove)),
+            Text(l.minutesShort(store.walkMin), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            IconButton(tooltip: l.commonMore, onPressed: () => store.setWalkMin(store.walkMin + 1), icon: const Icon(Icons.add)),
           ]),
-          Text('Για τον κανόνα «πότε να φύγω».', style: TextStyle(fontSize: 13, color: t.muted)),
+          Text(l.settingsWalkNote, style: TextStyle(fontSize: 13, color: t.muted)),
           const SizedBox(height: 12),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             secondary: const Icon(Icons.lock_clock_outlined),
-            title: const Text('Live κάρτα στις νέες ειδοποιήσεις'),
-            subtitle: const Text('Η πορεία του λεωφορείου στην οθόνη κλειδώματος. Αλλάζει και σε κάθε ειδοποίηση.'),
+            title: Text(l.settingsLiveCard),
+            subtitle: Text(l.settingsLiveCardBody),
             value: store.liveDefault,
             onChanged: store.setLiveDefault,
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             secondary: const Icon(Icons.nightlight_outlined),
-            title: const Text('Παρασκευή και Σάββατο βράδυ: το τελευταίο για το σπίτι'),
-            subtitle: const Text('Στις 21:00 μια ειδοποίηση με το τελευταίο λεωφορείο της στάσης «Σπίτι»'),
+            title: Text(l.settingsLastBus),
+            subtitle: Text(l.settingsLastBusBody),
             value: store.lastBusNudge,
             // The store listener moves the alarm (AlertService.init). On: ask for notifications first.
             onChanged: (on) async {
@@ -68,8 +70,8 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.help_outline),
-            title: const Text('Πώς διαβάζεται ο χάρτης'),
-            subtitle: const Text('Χρώματα, σύμβολα, από πού έρχονται οι χρόνοι'),
+            title: Text(l.settingsMapHelp),
+            subtitle: Text(l.settingsMapHelpBody),
             onTap: () => showMapHelp(context),
           ),
           Divider(color: t.rule),
@@ -78,8 +80,8 @@ class SettingsScreen extends StatelessWidget {
             iconColor: Theme.of(context).colorScheme.error,
             textColor: Theme.of(context).colorScheme.error,
             leading: const Icon(Icons.delete_forever_outlined),
-            title: const Text('Διαγραφή όλων των δεδομένων'),
-            subtitle: const Text('Αγαπημένα, μέρη, ειδοποιήσεις, ρυθμίσεις. Η εφαρμογή ξεκινά από την αρχή.'),
+            title: Text(l.settingsDeleteAll),
+            subtitle: Text(l.settingsDeleteAllBody),
             onTap: () => _deleteAll(context),
           ),
         ]),
@@ -95,14 +97,14 @@ Future<void> _deleteAll(BuildContext context) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
-      title: const Text('Διαγραφή όλων των δεδομένων;'),
-      content: const Text('Θα διαγραφούν από αυτό το κινητό τα αγαπημένα, τα μέρη, οι ειδοποιήσεις και οι ρυθμίσεις. Δεν αναιρείται.'),
+      title: Text(c.l10n.settingsDeleteAllTitle),
+      content: Text(c.l10n.settingsDeleteAllWarning),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Άκυρο')),
+        TextButton(onPressed: () => Navigator.pop(c, false), child: Text(c.l10n.commonCancel)),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error, foregroundColor: Theme.of(c).colorScheme.onError),
           onPressed: () => Navigator.pop(c, true),
-          child: const Text('Διαγραφή'),
+          child: Text(c.l10n.commonDelete),
         ),
       ],
     ),

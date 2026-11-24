@@ -14,6 +14,7 @@ import '../core/rules.dart';
 import '../data/live.dart';
 import '../data/stopfix_store.dart';
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import 'alert_sheet.dart';
 import 'lines_picker.dart';
 import 'theme.dart';
@@ -132,7 +133,7 @@ class _StopPanelState extends State<StopPanel> {
         final after = live.where((a) => a.line == l && a.headsign == h).fold<int?>(null, (m, a) => m == null || a.etaS > m ? a.etaS : m);
         // After the turn of a loop, the run shown goes back: name the place it heads back to.
         final back = st.returnsTo(vid, i);
-        final shown = back == null ? h : '${titleCase(back)} (επιστροφή)';
+        final shown = back == null ? h : context.l10n.stopReturn(titleCase(back));
         for (final eta in plannedEtas(deps, st, vid, i, nowWall, afterS: after).take(2)) {
           out.add((l, shown, eta));
         }
@@ -194,7 +195,7 @@ class _StopPanelState extends State<StopPanel> {
     final d = Deps.of(context);
     final set = hasAlert(d.store.rules, a.line, s.name, d.live.nowS);
     return IconButton.filled(
-      tooltip: set ? 'Ειδοποίηση για το ${a.line}: ενεργή' : 'Ειδοποίησέ με για το ${a.line}',
+      tooltip: set ? context.l10n.stopBellOn(a.line) : context.l10n.stopBellOff(a.line),
       style: IconButton.styleFrom(backgroundColor: set ? t.ink : t.surface, foregroundColor: set ? t.ground : t.ink),
       icon: Icon(set ? Icons.notifications_active : Icons.notifications_outlined),
       onPressed: () => showAlertSheet(context, stop: s, arrival: a),
@@ -205,6 +206,7 @@ class _StopPanelState extends State<StopPanel> {
   Widget build(BuildContext context) {
     final d = Deps.of(context);
     final t = context.tones;
+    final tx = context.l10n;
     return ListenableBuilder(
       listenable: Listenable.merge([d.store, d.live]),
       builder: (context, _) {
@@ -250,7 +252,7 @@ class _StopPanelState extends State<StopPanel> {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       // Which way the buses leave here (as the web) in place of the line count; the count without it.
-                      if ([if (fav?.place == Place.home) 'Σπίτι', if (fav?.place == Place.work) 'Δουλειά', if (toward == null) '${s.lines.length} γραμμές']
+                      if ([if (fav?.place == Place.home) tx.commonHome, if (fav?.place == Place.work) tx.commonWork, if (toward == null) tx.stopLinesCount(s.lines.length)]
                           case final words when words.isNotEmpty)
                         Text(words.join(' · '), style: TextStyle(fontSize: 13, color: t.muted)),
                       if (toward != null) ...[
@@ -262,7 +264,7 @@ class _StopPanelState extends State<StopPanel> {
                         GestureDetector(
                           onTap: () => mapSel.value =
                               StopSel(StopRef(name: a.name, lat: a.lat, lon: a.lon, lines: linesAt(_ix!, a.name, a.lat, a.lon))),
-                          child: Text('Απέναντι στάση · ${a.m} μ.',
+                          child: Text(tx.stopAcross(a.m),
                               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.primary)),
                         ),
                       ],
@@ -271,7 +273,7 @@ class _StopPanelState extends State<StopPanel> {
                 ]),
               ),
               IconButton.filledTonal(
-                tooltip: fav == null ? 'Αποθήκευση στάσης' : 'Αποθηκευμένη στάση',
+                tooltip: fav == null ? tx.stopSave : tx.stopSaved,
                 isSelected: fav != null,
                 icon: const Icon(Icons.star_outline),
                 selectedIcon: const Icon(Icons.star),
@@ -287,7 +289,7 @@ class _StopPanelState extends State<StopPanel> {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.directions, size: 18),
-                      label: const Text('Πώς πάω εκεί'),
+                      label: Text(tx.stopHowToGet),
                       onPressed: () => showPlanner(to: (label: titleCase(s.name), pts: [(s.lat, s.lon)])),
                     ),
                   ),
@@ -295,7 +297,7 @@ class _StopPanelState extends State<StopPanel> {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.trip_origin, size: 18),
-                      label: const Text('Ταξίδι από εδώ'),
+                      label: Text(tx.stopTripFrom),
                       onPressed: () => showPlanner(from: (label: titleCase(s.name), pts: [(s.lat, s.lon)])),
                     ),
                   ),
@@ -307,48 +309,48 @@ class _StopPanelState extends State<StopPanel> {
                 margin: const EdgeInsets.only(top: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(color: const Color(0xFFFFF0D1), borderRadius: BorderRadius.circular(14)),
-                child: const Text('Οι χρόνοι είναι εκτίμηση από τα τελευταία δεδομένα και την ταχύτητα που έχει συνήθως η γραμμή. Διορθώνονται μόλις βρεθεί σήμα.',
-                    style: TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF3D2800))),
+                child: Text(tx.stopEstimate,
+                    style: const TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF3D2800))),
               ),
             if (groups.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Text('Κανένα λεωφορείο με GPS δεν έρχεται τώρα.', style: TextStyle(color: t.muted)),
+                child: Text(tx.stopNoBus, style: TextStyle(color: t.muted)),
               ),
             if (rows.mine.isNotEmpty) ...[
-              head('Οι γραμμές σου'),
+              head(tx.stopYourLines),
               for (final g in rows.mine) row(g),
-              if (rows.others.isNotEmpty) head('Περνούν επίσης'),
+              if (rows.others.isNotEmpty) head(tx.stopAlsoHere),
             ],
             for (final g in rows.others) row(g),
             if (rows.hidden > 0)
               Align(
                 alignment: Alignment.centerLeft,
-                child: TextButton(onPressed: () => setState(() => all = true), child: Text('Όλες οι γραμμές · +${rows.hidden} ›')),
+                child: TextButton(onPressed: () => setState(() => all = true), child: Text(tx.stopAllLines(rows.hidden))),
               ),
             if (missed.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 16, bottom: 4),
-                child: Text('Δεν ξεκίνησαν · δεν φάνηκε λεωφορείο να φεύγει από την αφετηρία', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.late)),
+                child: Text(tx.stopMissed, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.late)),
               ),
               for (final m in missed)
                 Row(children: [
                   LineBadge(m.line),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text('→ ${titleCase(m.headsign)} · των ${m.t}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: t.muted)),
+                    child: Text(tx.stopMissedRun(titleCase(m.headsign), m.t), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: t.muted)),
                   ),
                   if (d.store.city.plan)
                     TextButton(
                       onPressed: () => showPlanner(from: (label: s.name, pts: [(s.lat, s.lon)]), to: m.end),
-                      child: const Text('Άλλη επιλογή'),
+                      child: Text(tx.stopOtherOption),
                     ),
                 ]),
             ],
             if (planned.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 16, bottom: 4),
-                child: Text('Δεν ξεκίνησαν ακόμη · από το πρόγραμμα', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+                child: Text(tx.stopPlanned, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
               ),
               for (final (line, h, eta) in planned)
                 InkWell(
@@ -366,11 +368,11 @@ class _StopPanelState extends State<StopPanel> {
                     ]),
                   ),
                 ),
-              Text('Ώρα αναχώρησης από την αφετηρία + η διαδρομή ως εδώ με μέση ταχύτητα. Όχι live.', style: TextStyle(fontSize: 12, color: t.muted)),
+              Text(tx.stopPlannedNote, style: TextStyle(fontSize: 12, color: t.muted)),
             ],
             if (quiet.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Text('Χωρίς λεωφορείο κοντά τώρα: ${quiet.join(', ')}', style: TextStyle(fontSize: 13, color: t.muted)),
+              Text(tx.stopQuiet(quiet.join(', ')), style: TextStyle(fontSize: 13, color: t.muted)),
             ],
             // «Λάθος θέση;» (as the web): the map takes a tap where the pole stands. One report per phone per stop.
             if (fix != null)
@@ -379,14 +381,14 @@ class _StopPanelState extends State<StopPanel> {
                 child: reported(d.store.prefs, fix.id)
                     ? Padding(
                         padding: const EdgeInsets.only(top: 12),
-                        child: Text('Έστειλες διόρθωση θέσης για αυτή τη στάση. Ευχαριστούμε!',
+                        child: Text(tx.stopFixSent,
                             style: TextStyle(fontSize: 12.5, color: t.muted)),
                       )
                     : Padding(
                         padding: const EdgeInsets.only(top: 12),
                         child: OutlinedButton.icon(
                           icon: const Icon(Icons.place_outlined, size: 18),
-                          label: const Text('Λάθος θέση;'),
+                          label: Text(tx.stopWrongPlace),
                           onPressed: () => stopFix.value = fix,
                         ),
                       ),

@@ -15,6 +15,7 @@ import '../core/models.dart';
 import '../core/rules.dart';
 import '../data/live.dart';
 import '../data/locate.dart';
+import '../l10n/l10n.dart';
 import 'stop_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -42,33 +43,49 @@ Future<void> showAlertSheet(BuildContext context, {required StopRef stop, requir
 String dayClock(int s) => '${(s ~/ 3600 % 24).toString().padLeft(2, '0')}:${(s % 3600 ~/ 60).toString().padLeft(2, '0')}';
 
 /// «Ειδοποίησέ με για το τελευταίο» (screen 24): a notification [beforeMin] minutes before the last run
-/// of today's timetable passes stop [i] of [variantId]. Returns what to tell the user.
-Future<String> remindLast(BuildContext context,
+/// of today's timetable passes stop [i] of [variantId]. Returns whether it is set and what to tell the user.
+Future<({bool ok, String msg})> remindLast(BuildContext context,
     {required String line, required LineStatic st, required String variantId, required int i, required String stopName, int beforeMin = 15}) async {
   final d = Deps.of(context);
+  final s = context.l10n;
   final now = DateTime.now().toUtc();
+  ({bool ok, String msg}) no(String msg) => (ok: false, msg: msg);
   try {
     final sched = await d.api.lineSchedule(line);
     final r = sched == null ? null : lastRun(sched, st, variantId, i);
-    if (r == null) return 'Δεν βρέθηκε πρόγραμμα για το $line.';
+    if (r == null) return no(s.alertNoSchedule(line));
     final at = athensDayUtc(now, r.atStopS);
-    if (at.isBefore(now)) return 'Το τελευταίο $line πέρασε ήδη (~${dayClock(r.atStopS)}).';
+    if (at.isBefore(now)) return no(s.alertLastGone(line, dayClock(r.atStopS)));
     if (!context.mounted || !await AlertService.ensurePermissions(context)) {
-      return 'Για να σε ειδοποιήσουμε, χρειάζεται άδεια ειδοποιήσεων.';
+      return no(s.commonNoNotificationPermission);
     }
     var fire = at.subtract(Duration(minutes: beforeMin));
     if (fire.isBefore(now)) fire = now.add(const Duration(seconds: 5));
     await AlertService.noteAt(
       fire,
-      'Σε λίγο περνά το τελευταίο $line',
-      'Από ${titleCase(stopName)} ~${dayClock(r.atStopS)} (φεύγει ${gtfsClock(r.t)} από την αφετηρία).',
+      s.alertLastNoteTitle(line),
+      s.alertLastNoteBody(titleCase(stopName), dayClock(r.atStopS), gtfsClock(r.t)),
     );
-    final day = lastRunDayLabel(now, at);
-    return 'Θα σε ειδοποιήσουμε $beforeMin′ πριν: το τελευταίο $line περνά ${day == null ? '' : '$day '}~${dayClock(r.atStopS)}.';
+    // A weekday only when the last run is more than a day away (see lastRunDayLabel).
+    final clock = dayClock(r.atStopS);
+    final msg = lastRunDayLabel(now, at) == null
+        ? s.alertLastSet(beforeMin, line, clock)
+        : s.alertLastSetDay(beforeMin, line, _onWeekday(s, athensWall(at).weekday), clock);
+    return (ok: true, msg: msg);
   } catch (_) {
-    return 'Δεν φόρτωσε το πρόγραμμα. Δοκίμασε ξανά με σύνδεση.';
+    return no(s.alertScheduleOffline);
   }
 }
+
+String _onWeekday(AppLocalizations s, int weekday) => switch (weekday) {
+      DateTime.monday => s.alertOnMonday,
+      DateTime.tuesday => s.alertOnTuesday,
+      DateTime.wednesday => s.alertOnWednesday,
+      DateTime.thursday => s.alertOnThursday,
+      DateTime.friday => s.alertOnFriday,
+      DateTime.saturday => s.alertOnSaturday,
+      _ => s.alertOnSunday,
+    };
 
 class AlertSheet extends StatefulWidget {
   const AlertSheet({super.key, required this.stop, required this.line, required this.variantId, required this.st, required this.stopIndex, this.etaS, this.leave = false});
@@ -102,7 +119,7 @@ class _AlertSheetState extends State<AlertSheet> {
       walk = p == null ? null : walkMinutes(distM(p, (widget.stop.lat, widget.stop.lon)));
     });
     if (p == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρέθηκε η θέση σου (άδεια ή GPS). Βάλε τον χρόνο περπατήματος με το χέρι.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.alertNoLocation)));
       setState(() => walk = Deps.of(context).store.walkMin.clamp(1, 60));
     }
   }
@@ -158,28 +175,30 @@ class _AlertSheetState extends State<AlertSheet> {
     d.store.putRule(_rule(weekly: weekly));
     await AlertService.sync(d.store);
     if (!mounted) return;
+    final s = context.l10n;
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(ok
           ? (weekly
-              ? 'Κανόνας: Δε–Πα τέτοια ώρα.${exact ? '' : ' Χωρίς άδεια για ακριβή ξυπνητήρια μπορεί να ξεκινά λίγα λεπτά αργότερα.'}'
+              ? '${s.alertWeeklySet}${exact ? '' : ' ${s.alertWeeklyInexact}'}'
               : leave
-                  ? 'Θα σου πούμε πότε να φύγεις για το ${widget.line}.'
-                  : 'Θα σε ειδοποιήσουμε για το ${widget.line}.')
-          : 'Για να σε ειδοποιήσουμε, χρειάζεται άδεια ειδοποιήσεων.'),
+                  ? s.alertLeaveSet(widget.line)
+                  : s.alertSet(widget.line))
+          : s.commonNoNotificationPermission),
     ));
   }
 
   Future<void> _last() async {
     final messenger = ScaffoldMessenger.of(context);
     final nav = Navigator.of(context);
-    final msg = await remindLast(context, line: widget.line, st: widget.st, variantId: widget.variantId, i: widget.stopIndex, stopName: widget.stop.name);
+    final r = await remindLast(context, line: widget.line, st: widget.st, variantId: widget.variantId, i: widget.stopIndex, stopName: widget.stop.name);
     if (mounted) nav.pop();
-    messenger.showSnackBar(SnackBar(content: Text(msg)));
+    messenger.showSnackBar(SnackBar(content: Text(r.msg)));
   }
 
   // Screen 16: "Φύγε σε N′", the bar now / walk / wait, and how early to be at the stop.
   List<Widget> _leave(Tones t) {
+    final s = context.l10n;
     final w = walk;
     if (w == null) {
       return [
@@ -188,15 +207,15 @@ class _AlertSheetState extends State<AlertSheet> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(14)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Πόσο απέχεις από τη στάση;', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            Text(s.alertWalkQuestion, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            Text('Με τη θέση σου υπολογίζεται πόσο περπατάς ως τη στάση και πότε να ξεκινήσεις, για να είσαι εκεί έγκαιρα. Η θέση μένει στο κινητό.',
+            Text(s.alertWalkExplain,
                 style: TextStyle(fontSize: 13.5, height: 1.35, color: t.muted)),
             const SizedBox(height: 10),
             FilledButton.tonalIcon(
               onPressed: locating ? null : _locate,
               icon: const Icon(Icons.my_location),
-              label: Text(locating ? 'Αναζήτηση θέσης…' : 'Χρήση της θέσης μου'),
+              label: Text(locating ? s.commonLocating : s.alertUseMyLocation),
             ),
           ]),
         ),
@@ -209,12 +228,12 @@ class _AlertSheetState extends State<AlertSheet> {
     return [
       const SizedBox(height: 16),
       if (inMin != null)
-        Text(inMin <= 0 ? 'Φύγε τώρα' : 'Φύγε σε $inMin′', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, height: 1.05)),
+        Text(inMin <= 0 ? s.alertLeaveNow : s.alertLeaveIn(inMin), style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, height: 1.05)),
       Text(
         [
-          if (inMin != null && inMin > 0) 'στις ${clockIn(inMin * 60)}',
-          'περπάτημα $w′ ως ${titleCase(widget.stop.name)}',
-          if (inMin != null && inMin < 0) 'μάλλον δεν προλαβαίνεις αυτό',
+          if (inMin != null && inMin > 0) s.alertAtClock(clockIn(inMin * 60)),
+          s.alertWalkTo(w, titleCase(widget.stop.name)),
+          if (inMin != null && inMin < 0) s.alertTooLate,
         ].join(' · '),
         style: TextStyle(fontSize: 14, color: inMin != null && inMin < 0 ? t.late : t.muted),
       ),
@@ -225,32 +244,32 @@ class _AlertSheetState extends State<AlertSheet> {
           child: SizedBox(
             height: 36,
             child: Row(children: [
-              if (inMin > 0) Expanded(flex: inMin, child: _bar(t.surface, t.ink, 'τώρα · $inMin′')),
-              Expanded(flex: w, child: _bar(t.indicator, t.ink, 'περπάτημα $w′')),
-              if ((wait ?? 0) > 0) Expanded(flex: wait!, child: _bar(lineColor(Deps.of(context).store, widget.line).bg, lineColor(Deps.of(context).store, widget.line).fg, 'περιμένεις $wait′')),
+              if (inMin > 0) Expanded(flex: inMin, child: _bar(t.surface, t.ink, s.alertBarNow(inMin))),
+              Expanded(flex: w, child: _bar(t.indicator, t.ink, s.alertBarWalk(w))),
+              if ((wait ?? 0) > 0) Expanded(flex: wait!, child: _bar(lineColor(Deps.of(context).store, widget.line).bg, lineColor(Deps.of(context).store, widget.line).fg, s.alertBarWait(wait))),
             ]),
           ),
         ),
       ],
       const SizedBox(height: 14),
-      Text('Θέλω να είμαι στη στάση', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+      Text(s.alertBeAtStop, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
       const SizedBox(height: 6),
       Row(children: [
         for (final m in const [1, 3, 5, 10])
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: ChoiceChip(label: Center(child: Text('$m′ πριν')), selected: margin == m, onSelected: (_) => setState(() => margin = m)),
+              child: ChoiceChip(label: Center(child: Text(s.alertMarginBefore(m))), selected: margin == m, onSelected: (_) => setState(() => margin = m)),
             ),
           ),
       ]),
       Row(children: [
-        Text('Περπάτημα', style: TextStyle(fontSize: 13, color: t.muted)),
-        IconButton(tooltip: 'Λιγότερο', onPressed: w > 1 ? () => setState(() => walk = w - 1) : null, icon: const Icon(Icons.remove)),
+        Text(s.alertWalk, style: TextStyle(fontSize: 13, color: t.muted)),
+        IconButton(tooltip: s.commonLess, onPressed: w > 1 ? () => setState(() => walk = w - 1) : null, icon: const Icon(Icons.remove)),
         Text('$w′', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-        IconButton(tooltip: 'Περισσότερο', onPressed: w < 60 ? () => setState(() => walk = w + 1) : null, icon: const Icon(Icons.add)),
+        IconButton(tooltip: s.commonMore, onPressed: w < 60 ? () => setState(() => walk = w + 1) : null, icon: const Icon(Icons.add)),
       ]),
-      Text('Αν το λεωφορείο αργήσει, σου λέμε να φύγεις αργότερα: ο χρόνος διορθώνεται με κάθε νέα θέση του λεωφορείου.', style: TextStyle(fontSize: 13, color: t.muted)),
+      Text(s.alertLeaveLateHint, style: TextStyle(fontSize: 13, color: t.muted)),
     ];
   }
 
@@ -263,9 +282,10 @@ class _AlertSheetState extends State<AlertSheet> {
   @override
   Widget build(BuildContext context) {
     final t = context.tones;
+    final s = context.l10n;
     final mean = meaning;
     final unit = mode == AlertMode.minutes ? '′' : '';
-    final under = mode == AlertMode.minutes ? 'πριν φτάσει' : (n == 1 ? 'στάση πριν' : 'στάσεις πριν');
+    final under = mode == AlertMode.minutes ? s.alertBeforeArrives : s.alertStopsBefore(n);
     // The options unfold below the button: the sheet scrolls when they no longer fit.
     return SingleChildScrollView(
       child: Padding(
@@ -276,15 +296,15 @@ class _AlertSheetState extends State<AlertSheet> {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Ειδοποίηση για τη στάση ${titleCase(widget.stop.name)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-              Text('προς ${titleCase(v.headsign)}', style: TextStyle(fontSize: 13, color: t.muted)),
+              Text(s.alertTitle(titleCase(widget.stop.name)), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              Text(s.alertToward(titleCase(v.headsign)), style: TextStyle(fontSize: 13, color: t.muted)),
             ]),
           ),
         ]),
         if (leave) ..._leave(t) else ...[
         const SizedBox(height: 16),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          IconButton.filledTonal(tooltip: 'Λιγότερο', onPressed: n > 1 ? () => setState(() => n--) : null, icon: const Icon(Icons.remove)),
+          IconButton.filledTonal(tooltip: s.commonLess, onPressed: n > 1 ? () => setState(() => n--) : null, icon: const Icon(Icons.remove)),
           const SizedBox(width: 24),
           SizedBox(
             width: 140,
@@ -295,7 +315,7 @@ class _AlertSheetState extends State<AlertSheet> {
           ),
           const SizedBox(width: 24),
           IconButton.filledTonal(
-              tooltip: 'Περισσότερο', onPressed: n < (mode == AlertMode.minutes ? 30 : 10) ? () => setState(() => n++) : null, icon: const Icon(Icons.add)),
+              tooltip: s.commonMore, onPressed: n < (mode == AlertMode.minutes ? 30 : 10) ? () => setState(() => n++) : null, icon: const Icon(Icons.add)),
         ]),
         const SizedBox(height: 12),
         Container(
@@ -303,23 +323,23 @@ class _AlertSheetState extends State<AlertSheet> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(14)),
           child: mean == null
-              ? const Text('Η στάση σου είναι κοντά στην αφετηρία: θα σε ειδοποιήσουμε μόλις ξεκινήσει.', style: TextStyle(fontSize: 14, height: 1.35))
+              ? Text(s.alertNearStart, style: TextStyle(fontSize: 14, height: 1.35))
               : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Τώρα αυτό σημαίνει', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
+                  Text(s.alertMeansNow, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
                   const SizedBox(height: 6),
                   Row(children: [
                     StopsDots(mean.$2, color: lineColor(Deps.of(context).store, widget.line).bg),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text.rich(TextSpan(children: [
-                        const TextSpan(text: 'όταν είναι στο '),
+                        TextSpan(text: s.alertWhenAt),
                         TextSpan(text: titleCase(mean.$1), style: const TextStyle(fontWeight: FontWeight.w700)),
-                        TextSpan(text: ', ${mean.$2} ${mean.$2 == 1 ? 'στάση' : 'στάσεις'} πριν'),
+                        TextSpan(text: s.alertWhenAtTail(mean.$2)),
                       ])),
                     ),
                   ]),
                   const SizedBox(height: 6),
-                  Text('Ο χρόνος διορθώνεται με κάθε νέα θέση του λεωφορείου.', style: TextStyle(fontSize: 13, color: t.muted)),
+                  Text(s.alertTimeUpdates, style: TextStyle(fontSize: 13, color: t.muted)),
                 ]),
         ),
         ],
@@ -329,7 +349,7 @@ class _AlertSheetState extends State<AlertSheet> {
           height: 52,
           child: FilledButton(
             onPressed: leave && walk == null ? null : () => _create(weekly: false),
-            child: Text(leave ? 'Πες μου πότε να φύγω' : mode == AlertMode.minutes ? 'Ειδοποίησέ με $n′ πριν' : 'Ειδοποίησέ με $n ${n == 1 ? 'στάση' : 'στάσεις'} πριν',
+            child: Text(leave ? s.alertLeaveButton : mode == AlertMode.minutes ? s.alertNotifyMinutes(n) : s.alertNotifyStops(n),
                 style: const TextStyle(fontSize: 16)),
           ),
         ),
@@ -339,17 +359,17 @@ class _AlertSheetState extends State<AlertSheet> {
           child: ExpansionTile(
             initiallyExpanded: widget.leave,
             tilePadding: EdgeInsets.zero,
-            title: const Text('Περισσότερες επιλογές', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            title: Text(s.alertMoreOptions, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             children: [
         const SizedBox(height: 4),
         SizedBox(
           width: double.infinity,
           child: SegmentedButton<int>(
             showSelectedIcon: false,
-            segments: const [
-              ButtonSegment(value: 0, label: Text('Λεπτά πριν')),
-              ButtonSegment(value: 1, label: Text('Στάσεις πριν')),
-              ButtonSegment(value: 2, label: Text('Φύγε εγκαίρως')),
+            segments: [
+              ButtonSegment(value: 0, label: Text(s.alertModeMinutes)),
+              ButtonSegment(value: 1, label: Text(s.alertModeStops)),
+              ButtonSegment(value: 2, label: Text(s.alertModeLeave)),
             ],
             selected: {leave ? 2 : mode.index},
             onSelectionChanged: (s) => setState(() {
@@ -362,30 +382,30 @@ class _AlertSheetState extends State<AlertSheet> {
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Live στην οθόνη κλειδώματος'),
-          subtitle: const Text('Δείχνει την πορεία ως τη στάση σου'),
+          title: Text(s.alertLiveLockScreen),
+          subtitle: Text(s.alertLiveLockScreenSub),
           value: live,
           onChanged: (x) => setState(() => live = x),
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Πες μου και αν αργεί'),
-          subtitle: const Text('Μία ειδοποίηση όταν ένα λεωφορείο για τη στάση σου έχει καθυστέρηση $lateAlertMin′ ή παραπάνω'),
+          title: Text(s.alertLateToo),
+          subtitle: Text(s.alertLateTooSub(lateAlertMin)),
           value: late,
           onChanged: (x) => setState(() => late = x),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.repeat),
-          title: const Text('Κάθε καθημερινή τέτοια ώρα;', style: TextStyle(fontWeight: FontWeight.w600)),
+          title: Text(s.alertWeekdays, style: TextStyle(fontWeight: FontWeight.w600)),
           trailing: const Icon(Icons.chevron_right),
           onTap: leave && walk == null ? null : () => _create(weekly: true),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.nightlight_outlined),
-          title: const Text('Για το τελευταίο της ημέρας', style: TextStyle(fontWeight: FontWeight.w600)),
-          subtitle: const Text('Ειδοποίηση 15′ πριν περάσει από εδώ, από το πρόγραμμα'),
+          title: Text(s.alertLastOfDay, style: TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: Text(s.alertLastOfDaySub),
           onTap: _last,
         ),
             ],

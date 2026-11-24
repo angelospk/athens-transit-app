@@ -15,6 +15,7 @@ import '../core/nearby.dart';
 import '../core/route_steps.dart';
 import '../core/trip.dart' show MetroStation;
 import '../data/live.dart' show nextArrivalsAt;
+import '../l10n/l10n.dart';
 import 'alert_sheet.dart';
 import 'follow.dart';
 import 'map_sel.dart';
@@ -31,7 +32,7 @@ void openRoute(BuildContext context,
         required bool live,
         List<MetroStation> stations = const []}) =>
     Navigator.of(context).push(MaterialPageRoute<void>(
-      settings: const RouteSettings(name: 'Διαδρομή'),
+      settings: RouteSettings(name: context.l10n.plannerTitle),
       builder: (_) => RouteScreen(ix: ix, steps: steps, from: from, to: to, live: live, stations: stations),
     ));
 
@@ -96,14 +97,14 @@ class RouteScreen extends StatelessWidget {
             Text('~$total′', style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700)),
             const SizedBox(width: 12),
             if (live)
-              Text('φτάνεις ~${arrive.hour}:${arrive.minute.toString().padLeft(2, '0')}', style: TextStyle(fontSize: 15, color: t.muted)),
+              Text(context.l10n.routeArrive('${arrive.hour}:${arrive.minute.toString().padLeft(2, '0')}'), style: TextStyle(fontSize: 15, color: t.muted)),
           ]),
           Text(
             bus == null
-                ? 'Εκτίμηση με αναμονή ~$metroWaitMin′ για το τρένο.'
+                ? context.l10n.routeEstimateMetro(metroWaitMin)
                 : live
-                    ? 'Εκτίμηση χωρίς την αναμονή του πρώτου λεωφορείου· η αναμονή φαίνεται live στο βήμα του.'
-                    : 'Για αργότερα: εκτίμηση χωρίς αναμονή.',
+                    ? context.l10n.routeEstimateLive
+                    : context.l10n.routeEstimateLater,
             style: TextStyle(fontSize: 12, color: t.muted),
           ),
           const SizedBox(height: 12),
@@ -149,18 +150,18 @@ class _StepTile extends StatelessWidget {
     final List<String> lines;
     switch (s.kind) {
       case StepKind.walk:
-        title = s.to.isEmpty ? 'Περπάτα ως τον προορισμό' : (s.from.isEmpty ? 'Περπάτα ως ${toStation ? 'τον σταθμό' : 'τη στάση'} ${titleCase(s.to)}' : 'Περπάτα ως ${titleCase(s.to)}');
+        title = s.to.isEmpty ? context.l10n.routeWalkToDest : (s.from.isEmpty ? (toStation ? context.l10n.routeWalkToStation(titleCase(s.to)) : context.l10n.routeWalkToStop(titleCase(s.to))) : context.l10n.routeWalkTo(titleCase(s.to)));
         lines = [];
       case StepKind.bus:
-        title = 'Ανέβα στο ${s.line}${s.toward == null ? '' : ' προς ${titleCase(s.toward!)}'}';
+        title = s.toward == null ? context.l10n.routeBoard('${s.line}') : context.l10n.routeBoardToward('${s.line}', titleCase(s.toward!));
         lines = [
-          'Στάση: ${titleCase(s.from)}',
-          'Κατέβα: ${titleCase(s.to)} · ${s.stops} ${s.stops == 1 ? 'στάση' : 'στάσεις'}',
-          if (s.wait > 0) 'Αλλαγή: αναμονή ~${s.wait}′',
+          context.l10n.routeStop(titleCase(s.from)),
+          '${context.l10n.routeGetOff(titleCase(s.to))} · ${context.l10n.stopsCount(s.stops)}',
+          if (s.wait > 0) context.l10n.routeChangeWait(s.wait),
         ];
       case StepKind.metro:
-        title = '${s.line!.startsWith('T') ? 'Τραμ' : 'Μετρό'} ${s.line}: ${titleCase(s.from)} → ${titleCase(s.to)}';
-        lines = ['Τρένο κάθε λίγα λεπτά (πρόγραμμα, όχι live), αναμονή ~${s.wait}′'];
+        title = '${s.line!.startsWith('T') ? context.l10n.commonTram : context.l10n.commonMetro} ${s.line}: ${titleCase(s.from)} → ${titleCase(s.to)}';
+        lines = [context.l10n.routeTrainEvery(s.wait)];
     }
     return IntrinsicHeight(
       child: Row(
@@ -196,7 +197,7 @@ class _StepTile extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: TextButton.icon(
                           icon: const Icon(Icons.flag_outlined, size: 18),
-                          label: const Text('Πού κατεβαίνω;'),
+                          label: Text(context.l10n.routeWhereGetOff),
                           onPressed: () => rideFromHere(context, line: s.line!, variant: s.variant!, alight: s.to),
                         ),
                       ),
@@ -276,7 +277,7 @@ class _NextBusState extends State<_NextBus> {
         const SizedBox(height: 6),
         if (next == null)
           Text(
-            _asked ? (_arrivals.isEmpty ? 'Κανένα λεωφορείο με GPS κοντά τώρα' : 'Δεν προλαβαίνεις αυτά που έρχονται τώρα') : 'Αναζήτηση επόμενου λεωφορείου…',
+            _asked ? (_arrivals.isEmpty ? context.l10n.routeNoBusNear : context.l10n.routeCantCatch) : context.l10n.routeSearchingNext,
             style: TextStyle(fontSize: 13, color: t.muted),
           )
         else
@@ -285,7 +286,7 @@ class _NextBusState extends State<_NextBus> {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                'Το επόμενο που προλαβαίνεις σε ${mins(next.eta)} (${clockIn(next.eta)})${leave == null ? '' : leave <= 0 ? ' · φύγε τώρα' : ' · φύγε σε $leave′'}',
+                '${context.l10n.routeNextCatch(mins(next.eta), clockIn(next.eta))}${leave == null ? '' : leave <= 0 ? ' · ${context.l10n.routeLeaveNow}' : ' · ${context.l10n.routeLeaveIn(leave)}'}',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: leave != null && leave <= 0 ? t.late : null),
               ),
             ),
@@ -294,7 +295,7 @@ class _NextBusState extends State<_NextBus> {
           if (widget.first && next != null)
             TextButton.icon(
               icon: const Icon(Icons.notifications_active_outlined, size: 18),
-              label: const Text('Φύγε εγκαίρως'),
+              label: Text(context.l10n.routeLeaveInTime),
               onPressed: () => showAlertSheet(
                 context,
                 stop: StopRef(name: name, lat: lat, lon: lon, lines: linesAt(widget.ix, name, lat, lon)),
@@ -304,7 +305,7 @@ class _NextBusState extends State<_NextBus> {
             ),
           TextButton.icon(
             icon: const Icon(Icons.flag_outlined, size: 18),
-            label: const Text('Πού κατεβαίνω;'),
+            label: Text(context.l10n.routeWhereGetOff),
             onPressed: () => rideFromHere(context, line: s.line!, variant: s.variant!, alight: s.to),
           ),
         ]),

@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../core/muni.dart';
 import '../data/api.dart';
+import '../l10n/l10n.dart';
 import 'map_sel.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -25,14 +26,14 @@ class MuniBadge extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: 48),
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         decoration: BoxDecoration(color: _muniColor, borderRadius: BorderRadius.circular(8)),
-        child: Text(ref ?? 'Δ',
+        child: Text(ref ?? context.l10n.muniBadge,
             textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
       );
 }
 
 /// «08:50 · 10:50 από Πολύδροσο», «≈ 08:40 · 09:00» for a frequency.
 String muniTimesText(({String? at, bool approx, List<String> times}) d) =>
-    '${d.approx ? '≈ ' : ''}${d.times.join(' · ')}${d.at == null ? '' : ' από ${d.at}'}';
+    '${d.approx ? '≈ ' : ''}${d.times.join(' · ')}${d.at == null ? '' : l10n.muniFromStop(d.at!)}';
 
 /// The next departures of a card's timetable lines, now in Athens; with two refs each row names its own.
 List<String> muniNextRows(MuniCard c, MuniClock clock, {int n = 3}) => [
@@ -85,7 +86,7 @@ Widget _scheduled(BuildContext context) => Padding(
       child: Row(children: [
         Icon(Icons.schedule, size: 16, color: context.tones.muted),
         const SizedBox(width: 6),
-        Text('Προγραμματισμένα · όχι live', style: TextStyle(fontSize: 13, color: context.tones.muted)),
+        Text(context.l10n.muniScheduled, style: TextStyle(fontSize: 13, color: context.tones.muted)),
       ]),
     );
 
@@ -124,7 +125,7 @@ class _MuniPanelState extends State<MuniPanel> with _MuniLoad {
         const SheetHandle(),
         _head(
           context,
-          'Δημοτική γραμμή · ${c.municipality}',
+          context.l10n.muniLine(c.municipality),
           Row(children: [
             MuniBadge(c.ref),
             const SizedBox(width: 10),
@@ -133,24 +134,24 @@ class _MuniPanelState extends State<MuniPanel> with _MuniLoad {
         ),
         _scheduled(context),
         if (table == null) ...[
-          _note(context, 'Δεν έχουμε ελεγμένο ωράριο για αυτή τη γραμμή.'),
-          if (page != null) _link('Ωράριο του δήμου', page),
+          _note(context, context.l10n.muniNoTimetable),
+          if (page != null) _link(context.l10n.muniTimetableLink, page),
         ] else ...[
           const SizedBox(height: 8),
-          const Text('Επόμενες αναχωρήσεις', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          Text(context.l10n.muniNextDepartures, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          if (rows.isEmpty) _note(context, 'Κανένα άλλο δρομολόγιο σήμερα, κατά το ωράριο.'),
+          if (rows.isEmpty) _note(context, context.l10n.muniNoMoreToday),
           for (final r in rows)
             Padding(padding: const EdgeInsets.symmetric(vertical: 4), child: Text(r, style: const TextStyle(fontSize: 16))),
-          if (rows.any((r) => r.contains('≈'))) _note(context, '≈: ο δήμος δίνει συχνότητα, όχι ακριβείς ώρες.'),
+          if (rows.any((r) => r.contains('≈'))) _note(context, context.l10n.muniApproxNote),
           for (final l in c.lines)
             if (l.note != null) _note(context, l.note!),
           const SizedBox(height: 8),
-          _note(context, 'Ωράριο: ${table.municipality}, ελέγχθηκε ${_date(table.checked)}.'),
-          if (isWebLink(table.source)) _link('Σελίδα του δήμου', table.source),
+          _note(context, context.l10n.muniTimetableChecked(table.municipality, _date(table.checked))),
+          if (isWebLink(table.source)) _link(context.l10n.muniPageLink, table.source),
         ],
         const SizedBox(height: 8),
-        Text('Διαδρομή και στάσεις: ${muni?.data.attribution ?? '© OpenStreetMap contributors (ODbL)'}',
+        Text(context.l10n.muniRouteSource(muni?.data.attribution ?? '© OpenStreetMap contributors (ODbL)'),
             style: TextStyle(fontSize: 11, color: context.tones.muted)),
       ],
     );
@@ -179,14 +180,14 @@ class _MuniStopPanelState extends State<MuniStopPanel> with _MuniLoad {
         const SheetHandle(),
         _head(
           context,
-          'Στάση δημοτικής γραμμής',
-          Text(widget.stop.name ?? 'Στάση', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+          context.l10n.muniStopKicker,
+          Text(widget.stop.name ?? context.l10n.mapSelStop, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
         ),
         _scheduled(context),
         if (!loaded)
           const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator()))
         else if (cards.isEmpty)
-          _note(context, 'Δεν φόρτωσαν οι δημοτικές γραμμές. Δοκίμασε ξανά σε λίγο.')
+          _note(context, context.l10n.muniLinesFailed)
         else ...[
           for (final c in cards)
             ListTile(
@@ -195,13 +196,13 @@ class _MuniStopPanelState extends State<MuniStopPanel> with _MuniLoad {
               title: Text(c.name, maxLines: 2, overflow: TextOverflow.ellipsis),
               subtitle: Text(
                 c.table == null
-                    ? 'Χωρίς ελεγμένο ωράριο'
-                    : switch (muniNextRows(c, now, n: 2)) { [] => 'Κανένα άλλο δρομολόγιο σήμερα', final rows => rows.join('\n') },
+                    ? context.l10n.muniNoCheckedTimetable
+                    : switch (muniNextRows(c, now, n: 2)) { [] => context.l10n.muniNoMoreTodayShort, final rows => rows.join('\n') },
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => mapSel.value = MuniSel(c),
             ),
-          _note(context, 'Οι ώρες είναι από την αφετηρία που γράφει ο δήμος, όχι από αυτή τη στάση.'),
+          _note(context, context.l10n.muniTimesFromStart),
         ],
       ],
     );

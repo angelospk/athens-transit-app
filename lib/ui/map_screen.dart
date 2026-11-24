@@ -33,6 +33,7 @@ import '../data/basemap.dart';
 import '../data/locate.dart';
 import '../data/stopfix_store.dart';
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import 'go_home_card.dart';
 import 'help.dart';
 import 'favs_screen.dart';
@@ -577,8 +578,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (mapSel.value case BusSel(line: final l, vehicleId: final v) when l == line && v == vehicle) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 20),
-      content: Text('Είσαι στο $line; Διάλεξε πού κατεβαίνεις.'),
-      action: SnackBarAction(label: 'Άνοιξέ το', onPressed: () => showOnMap(BusSel(line, vehicle))),
+      content: Text(context.l10n.mapOnBusSnack(line)),
+      action: SnackBarAction(label: context.l10n.mapOnBusSnackAction, onPressed: () => showOnMap(BusSel(line, vehicle))),
     ));
   }
 
@@ -873,10 +874,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   opacity: _extent > _peek + .03 ? 0 : 1,
                   duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 150),
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    _fab(t, 'layers', d.store.onlyMine ? 'Χάρτης: οι γραμμές μου' : 'Τι δείχνει ο χάρτης', Icons.layers_outlined,
+                    _fab(t, 'layers', d.store.onlyMine ? context.l10n.mapLayersMine : context.l10n.mapLayers, Icons.layers_outlined,
                         on: d.store.onlyMine, () => _mapSheet(context, d.store)),
                     const SizedBox(height: 12),
-                    _fab(t, 'locate', 'Πού είμαι', Icons.my_location, () async {
+                    _fab(t, 'locate', context.l10n.mapWhereAmI, Icons.my_location, () async {
                       final p = await myPosition();
                       if (p == null) return;
                       setState(() => _me = p);
@@ -969,7 +970,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   Flexible(
                     child: SearchField(
                       ix: _ix,
-                      leading: IconButton(tooltip: 'Μενού', icon: const Icon(Icons.menu), onPressed: () => Scaffold.of(context).openDrawer()),
+                      leading: IconButton(tooltip: context.l10n.mapMenu, icon: const Icon(Icons.menu), onPressed: () => Scaffold.of(context).openDrawer()),
                     ),
                   ),
                   if (d.live.isOffline) ...[const SizedBox(height: 4), _OfflineBanner(at: d.live.lastOkAt, now: d.live.nowS)],
@@ -1002,19 +1003,19 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
                 child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    const Expanded(child: Text('Χάρτης', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
-                    IconButton(tooltip: 'Τι σημαίνει κάθε σύμβολο', icon: const Icon(Icons.help_outline), onPressed: () => showMapHelp(c)),
+                    Expanded(child: Text(context.l10n.mapTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
+                    IconButton(tooltip: context.l10n.mapLegend, icon: const Icon(Icons.help_outline), onPressed: () => showMapHelp(c)),
                   ]),
                   const SizedBox(height: 4),
                   if (store.myLines.isEmpty)
-                    Text('Λεωφορεία: όλα. Βάλε αστέρι σε μια γραμμή για να βλέπεις μόνο τις δικές σου.', style: TextStyle(fontSize: 13, color: c.tones.muted))
+                    Text(context.l10n.mapBusesAllHint, style: TextStyle(fontSize: 13, color: c.tones.muted))
                   else ...[
                     SizedBox(
                       width: double.infinity,
                       child: SegmentedButton<bool>(
-                        segments: const [
-                          ButtonSegment(value: false, label: Text('Όλα τα λεωφορεία')),
-                          ButtonSegment(value: true, label: Text('Οι γραμμές μου')),
+                        segments: [
+                          ButtonSegment(value: false, label: Text(context.l10n.mapAllBuses)),
+                          ButtonSegment(value: true, label: Text(context.l10n.mapMyLines)),
                         ],
                         selected: {store.onlyMine},
                         onSelectionChanged: (v) => only(v.first),
@@ -1035,9 +1036,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   ],
                   const SizedBox(height: 12),
                   if (store.city.rail) Wrap(spacing: 8, runSpacing: 8, children: [
-                    FilterChip(avatar: const Icon(Icons.subway_outlined, size: 18), label: const Text('Μετρό'), selected: store.showMetro, onSelected: (v) => store.setRail(metro: v)),
-                    FilterChip(avatar: const Icon(Icons.tram_outlined, size: 18), label: const Text('Τραμ'), selected: store.showTram, onSelected: (v) => store.setRail(tram: v)),
-                    FilterChip(avatar: const Icon(Icons.train_outlined, size: 18), label: const Text('Προαστιακός'), selected: store.showRail, onSelected: (v) => store.setRail(rail: v)),
+                    FilterChip(avatar: const Icon(Icons.subway_outlined, size: 18), label: Text(context.l10n.commonMetro), selected: store.showMetro, onSelected: (v) => store.setRail(metro: v)),
+                    FilterChip(avatar: const Icon(Icons.tram_outlined, size: 18), label: Text(context.l10n.commonTram), selected: store.showTram, onSelected: (v) => store.setRail(tram: v)),
+                    FilterChip(avatar: const Icon(Icons.train_outlined, size: 18), label: Text(context.l10n.commonSuburban), selected: store.showRail, onSelected: (v) => store.setRail(rail: v)),
                   ]),
                   const SizedBox(height: 12),
                   const DelayLegend(),
@@ -1045,17 +1046,17 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     data: Theme.of(c).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
                       tilePadding: EdgeInsets.zero,
-                      title: const Text('Για προχωρημένους', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                      title: Text(context.l10n.mapAdvanced, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                       children: [
-                        const Align(alignment: Alignment.centerLeft, child: Text('Όταν πατάς ένα λεωφορείο ή μια γραμμή, τα άλλα:')),
+                        Align(alignment: Alignment.centerLeft, child: Text(context.l10n.mapOthersWhenSelected)),
                         const SizedBox(height: 6),
                         SizedBox(
                           width: double.infinity,
                           child: SegmentedButton<Others>(
-                            segments: const [
-                              ButtonSegment(value: Others.normal, label: Text('Φαίνονται')),
-                              ButtonSegment(value: Others.dim, label: Text('Αχνά')),
-                              ButtonSegment(value: Others.hide, label: Text('Κρύβονται')),
+                            segments: [
+                              ButtonSegment(value: Others.normal, label: Text(context.l10n.mapOthersNormal)),
+                              ButtonSegment(value: Others.dim, label: Text(context.l10n.mapOthersDim)),
+                              ButtonSegment(value: Others.hide, label: Text(context.l10n.mapOthersHide)),
                             ],
                             selected: {store.others},
                             onSelectionChanged: (v) => store.setMapView(others: v.first),
@@ -1063,29 +1064,29 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         ),
                         SwitchListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: const Text('Μόνο με πρόσφατη θέση'),
-                          subtitle: const Text('Έστειλαν θέση τα τελευταία 1½ λεπτά.'),
+                          title: Text(context.l10n.mapRecentOnly),
+                          subtitle: Text(context.l10n.mapRecentOnlyHint),
                           value: store.onlyFresh,
                           onChanged: (v) => store.setMapView(fresh: v),
                         ),
                         SwitchListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: const Text('Μόνο στην ώρα τους'),
-                          subtitle: const Text('Έως 5 λεπτά καθυστέρηση.'),
+                          title: Text(context.l10n.mapOnTimeOnly),
+                          subtitle: Text(context.l10n.mapOnTimeOnlyHint),
                           value: store.onlyOnTime,
                           onChanged: (v) => store.setMapView(onTime: v),
                         ),
                         SwitchListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: const Text('Πόσο παλιά είναι η θέση'),
-                          subtitle: const Text('Δίπλα σε κάθε λεωφορείο. Οι παλιές φαίνονται πάντα.'),
+                          title: Text(context.l10n.mapShowAge),
+                          subtitle: Text(context.l10n.mapShowAgeHint),
                           value: store.showAges,
                           onChanged: (v) => store.setMapView(ages: v),
                         ),
                       ],
                     ),
                   ),
-                  Text('Χάρτης: © OpenStreetMap contributors · OpenFreeMap', style: TextStyle(fontSize: 12, color: c.tones.muted)),
+                  Text(context.l10n.mapAttribution, style: TextStyle(fontSize: 12, color: c.tones.muted)),
                 ]),
               ),
             );
@@ -1119,7 +1120,7 @@ class _OfflineBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final wall = at == null ? null : athensWall(DateTime.fromMillisecondsSinceEpoch(at! * 1000, isUtc: true));
-    final when = wall == null ? '' : 'Τελευταία δεδομένα ${hm(wall.hour * 60 + wall.minute)} · πριν ${mins(now - at!)}';
+    final when = wall == null ? '' : context.l10n.mapLastData(hm(wall.hour * 60 + wall.minute), mins(now - at!));
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(color: const Color(0xFF2F3033), borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 8, offset: Offset(0, 3))]),
@@ -1128,7 +1129,7 @@ class _OfflineBanner extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Χωρίς σύνδεση', style: TextStyle(color: Color(0xFFF2F3F0), fontSize: 14, fontWeight: FontWeight.w600)),
+            Text(context.l10n.mapOffline, style: const TextStyle(color: Color(0xFFF2F3F0), fontSize: 14, fontWeight: FontWeight.w600)),
             if (when.isNotEmpty) Text(when, style: const TextStyle(color: Color(0xFFC9CCD1), fontSize: 12)),
           ]),
         ),
@@ -1176,7 +1177,7 @@ class _HomeSheet extends StatelessWidget {
             child: Row(children: [
               const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
               const SizedBox(width: 10),
-              Text('Αναζήτηση θέσης…', style: TextStyle(color: t.muted)),
+              Text(context.l10n.commonLocating, style: TextStyle(color: t.muted)),
             ]),
           )
         else
@@ -1186,14 +1187,14 @@ class _HomeSheet extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(14)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Δες τι περνάει κοντά σου', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text(context.l10n.mapSeeNearby, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
-              Text('Με την τοποθεσία σου βλέπεις τις πιο κοντινές στάσεις και πότε έρχεται το λεωφορείο. Η θέση μένει στο κινητό.',
+              Text(context.l10n.mapLocationPitch,
                   style: TextStyle(fontSize: 13.5, height: 1.35, color: t.muted)),
               const SizedBox(height: 10),
-              FilledButton.icon(onPressed: onLocate, icon: const Icon(Icons.my_location), label: const Text('Χρήση της θέσης μου')),
+              FilledButton.icon(onPressed: onLocate, icon: const Icon(Icons.my_location), label: Text(context.l10n.mapUseMyLocation)),
               const SizedBox(height: 4),
-              Text('Ή γράψε μια στάση ή γραμμή στην αναζήτηση.', style: TextStyle(fontSize: 12.5, color: t.muted)),
+              Text(context.l10n.mapOrSearch, style: TextStyle(fontSize: 12.5, color: t.muted)),
             ]),
           ),
       ];
@@ -1207,7 +1208,7 @@ class _HomeSheet extends StatelessWidget {
       return [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text(ix == null ? 'Φόρτωση στάσεων…' : 'Καμία στάση σε 2,5 χλμ.', style: TextStyle(color: t.muted)),
+          child: Text(ix == null ? context.l10n.mapLoadingStops : context.l10n.mapNoStopWithin, style: TextStyle(color: t.muted)),
         ),
       ];
     }
@@ -1217,7 +1218,7 @@ class _HomeSheet extends StatelessWidget {
         if (i == 1 && groups.length > 2)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Center(child: Text('σύρε για περισσότερες στάσεις', style: TextStyle(fontSize: 12.5, color: t.muted))),
+            child: Center(child: Text(context.l10n.mapDragForMore, style: TextStyle(fontSize: 12.5, color: t.muted))),
           ),
       ],
       const Padding(padding: EdgeInsets.only(top: 8), child: LiveNote()),
@@ -1233,7 +1234,7 @@ class _HomeSheet extends StatelessWidget {
       if (favs.isEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text('Καμία αποθηκευμένη στάση ακόμη. Άνοιξε μια στάση και πάτα το αστέρι.', style: TextStyle(color: t.muted)),
+          child: Text(context.l10n.mapNoSavedStops, style: TextStyle(color: t.muted)),
         ),
       for (final (i, f) in favs.indexed) ...[
         Enter(
@@ -1250,7 +1251,7 @@ class _HomeSheet extends StatelessWidget {
       if (d.store.myLines.isNotEmpty) ...[
         Padding(
           padding: const EdgeInsets.only(top: 12, bottom: 8),
-          child: Text('Οι γραμμές μου', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: t.muted)),
+          child: Text(context.l10n.mapMyLines, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: t.muted)),
         ),
         Wrap(spacing: 6, runSpacing: 6, children: [for (final l in d.store.myLines) LineButton(l)]),
       ],
@@ -1258,9 +1259,9 @@ class _HomeSheet extends StatelessWidget {
       Align(
         alignment: Alignment.centerLeft,
         child: TextButton.icon(
-          onPressed: () => openPage('Αγαπημένα', const FavsScreen()),
+          onPressed: () => openPage(context.l10n.mapFavorites, const FavsScreen()),
           icon: const Icon(Icons.edit_outlined, size: 18),
-          label: const Text('Όλα τα αγαπημένα · προσθήκη, σπίτι, δουλειά'),
+          label: Text(context.l10n.mapAllFavorites),
         ),
       ),
     ];
@@ -1297,7 +1298,7 @@ class _Tabs extends StatelessWidget {
       );
     }
 
-    return Row(children: [one(0, 'Κοντά σου'), one(1, 'Αγαπημένα', icon: Icons.star_outline)]);
+    return Row(children: [one(0, context.l10n.mapNearYou), one(1, context.l10n.mapFavorites, icon: Icons.star_outline)]);
   }
 }
 
@@ -1368,7 +1369,7 @@ class _StopGroup extends StatelessWidget {
           if (quiet.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Text('${quiet.join(', ')}: κανένα λεωφορείο με GPS τώρα', style: TextStyle(fontSize: 12.5, color: t.muted)),
+              child: Text(context.l10n.mapQuietLines(quiet.join(', ')), style: TextStyle(fontSize: 12.5, color: t.muted)),
             ),
         ]),
       ),
@@ -1401,7 +1402,7 @@ class _WalkButton extends StatelessWidget {
     final t = context.tones;
     final m = place.distM >= 0 ? walkMin(place.distM) : null;
     return Semantics(
-      label: m == null ? 'Οδηγίες με τα πόδια' : 'Οδηγίες με τα πόδια, $m λεπτά',
+      label: m == null ? context.l10n.mapWalkDirections : context.l10n.mapWalkDirectionsMin(m),
       button: true,
       excludeSemantics: true,
       child: SizedBox(
@@ -1573,7 +1574,7 @@ class _StationNextState extends State<_StationNext> {
           key: ValueKey((d.train, d.scheduled)), // the number can be empty
           badge: const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Icon(Icons.train_outlined, size: 18)),
           towards: ends.isNotEmpty ? ends.map(titleCase).join(' / ') : titleCase(d.next),
-          when: d.cancelled ? 'ακυρώθηκε' : mins(d.expected.difference(now).inSeconds),
+          when: d.cancelled ? context.l10n.mapCancelled : mins(d.expected.difference(now).inSeconds),
           note: late ? '+${d.delayMin}′' : null,
         ));
       }
@@ -1594,7 +1595,7 @@ class _StationNextState extends State<_StationNext> {
       final p = widget.place;
       return Padding(
         padding: const EdgeInsets.only(top: 4),
-        child: Text(p.railId != null ? 'Προαστιακός · ${p.lines.join(', ')}' : p.lines.join(', '), style: TextStyle(fontSize: 13, color: t.muted)),
+        child: Text(p.railId != null ? '${context.l10n.commonSuburban} · ${p.lines.join(', ')}' : p.lines.join(', '), style: TextStyle(fontSize: 13, color: t.muted)),
       );
     }
     return Padding(
@@ -1603,7 +1604,7 @@ class _StationNextState extends State<_StationNext> {
         Wrap(spacing: 6, runSpacing: 6, children: pills),
         Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(widget.place.railId != null ? 'live από railway.gov.gr' : 'πρόγραμμα ΣΤΑΣΥ, όχι live', style: TextStyle(fontSize: 11.5, color: t.muted)),
+          child: Text(widget.place.railId != null ? context.l10n.mapRailLive : context.l10n.mapMetroSchedule, style: TextStyle(fontSize: 11.5, color: t.muted)),
         ),
       ]),
     );
@@ -1628,20 +1629,20 @@ class _PlacePanel extends StatelessWidget {
         const BackSel(),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Στάσεις κοντά', style: TextStyle(fontSize: 13, color: t.muted, fontWeight: FontWeight.w500)),
+            Text(context.l10n.mapStopsNear, style: TextStyle(fontSize: 13, color: t.muted, fontWeight: FontWeight.w500)),
             Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
           ]),
         ),
         const CloseSel(),
       ]),
       const SizedBox(height: 4),
-      if (stops.isEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text('Καμία στάση σε 600 μ.', style: TextStyle(color: t.muted))),
+      if (stops.isEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text(context.l10n.mapNoStopWithin600, style: TextStyle(color: t.muted))),
       for (final s in stops)
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.directions_bus_outlined),
           title: Text(titleCase(s.name)),
-          subtitle: Text('${s.distM.round()} μ. · ${s.lines.take(8).join(', ')}', maxLines: 1, overflow: TextOverflow.ellipsis),
+          subtitle: Text(context.l10n.mapStopDistLines(s.distM.round(), s.lines.take(8).join(', ')), maxLines: 1, overflow: TextOverflow.ellipsis),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => mapSel.value = StopSel(StopRef(name: s.name, lat: s.lat, lon: s.lon, lines: linesAt(ix!, s.name, s.lat, s.lon))),
         ),
@@ -1676,8 +1677,8 @@ class _MyLines extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('${vs.length} ${vs.length == 1 ? 'λεωφορείο' : 'λεωφορεία'} στον δρόμο', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                Text(late == 0 ? 'όλα στην ώρα τους' : '$late ${late == 1 ? 'αργεί' : 'αργούν'} πάνω από 5′',
+                Text(context.l10n.mapBusesOnRoad(vs.length), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                Text(late == 0 ? context.l10n.mapAllOnTime : context.l10n.mapLateCount(late),
                     style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: late == 0 ? t.onTime : t.late)),
               ]),
             ),
@@ -1691,13 +1692,13 @@ class _MyLines extends StatelessWidget {
       ));
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Οι γραμμές μου τώρα', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-      Text('τα άλλα λεωφορεία κρυμμένα · πάτα μια γραμμή για τη διαδρομή της', style: TextStyle(fontSize: 13, color: t.muted)),
+      Text(context.l10n.mapMyLinesNow, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+      Text(context.l10n.mapMyLinesHint, style: TextStyle(fontSize: 13, color: t.muted)),
       ...rows,
       if (rows.isEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text('Καμία γραμμή επιλεγμένη. Διάλεξε από το κουμπί του χάρτη (σύρε το πλαίσιο προς τα κάτω).', style: TextStyle(color: t.muted)),
+          child: Text(context.l10n.mapNoLineSelected, style: TextStyle(color: t.muted)),
         ),
     ]);
   }

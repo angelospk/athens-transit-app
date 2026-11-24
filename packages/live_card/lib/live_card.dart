@@ -9,7 +9,7 @@ class LiveCard {
   static const _ch = MethodChannel('dev.haroldpoi/live_card');
 
   /// [progress] is 0..100, or negative for no bar. [chip] is the short status-bar text ("3′"). The end
-  /// button reports [ruleId] through [takeEnded]; a tap on the card opens the app with [open], which
+  /// button ([endLabel], the caller's language) reports [ruleId] through [takeEnded]; a tap on the card opens the app with [open], which
   /// [takeOpen] returns.
   static Future<void> show({
     required int id,
@@ -18,7 +18,7 @@ class LiveCard {
     String? sub,
     int progress = -1,
     String? chip,
-    String endLabel = 'Σταμάτα',
+    String? endLabel, // null: the plugin's own «Σταμάτα» / "Stop" in the device's language
     String ruleId = '',
     String? open,
   }) async {

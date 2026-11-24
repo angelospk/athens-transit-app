@@ -17,6 +17,7 @@ dependencies:
   geolocator: ^14.1.2
   home_widget: ^0.10.0
   http: ^1.6.0
+  intl: any
   live_card:
     path: packages/live_card
   maplibre_gl: ^0.27.1
@@ -33,6 +34,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/accents.json

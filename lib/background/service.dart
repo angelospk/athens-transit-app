@@ -28,6 +28,7 @@ import '../core/rules.dart';
 import '../data/api.dart' hide Place;
 import '../data/live.dart' show stopIdsNear;
 import '../data/store.dart';
+import '../l10n/l10n.dart';
 import '../ui/map_sel.dart' show showFavs;
 import '../ui/widgets.dart' show mins, titleCase;
 
@@ -50,8 +51,9 @@ const _stoppedPrefix = 'stopped_v1.'; // + rule id → until (Unix s): stopped f
 // per rule, so the app (resume) and the service (stop) never overwrite each other's entries.
 final _notes = FlutterLocalNotificationsPlugin();
 
-const _hitChannel = AndroidNotificationDetails('hits', 'Το λεωφορείο έρχεται',
-    channelDescription: 'Ειδοποίηση όταν το λεωφορείο πλησιάζει στη στάση σου',
+// The channel's name and description are read when a notification is shown: in the device's language then.
+AndroidNotificationDetails get _hitChannel => AndroidNotificationDetails('hits', l10n.serviceHitChannelName,
+    channelDescription: l10n.serviceHitChannelDescription,
     importance: Importance.high, priority: Priority.high, category: AndroidNotificationCategory.reminder, icon: 'ic_stat_bus');
 
 Future<void> _initNotes({void Function(String payload)? onOpen}) => _notes.initialize(
@@ -119,8 +121,8 @@ class AlertService {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'live',
-        channelName: 'Live πορεία λεωφορείου',
-        channelDescription: 'Η πορεία του λεωφορείου σου ως τη στάση',
+        channelName: l10n.serviceLiveChannelName,
+        channelDescription: l10n.serviceLiveChannelDescription,
         onlyAlertOnce: true,
         visibility: NotificationVisibility.VISIBILITY_PUBLIC,
       ),
@@ -181,12 +183,11 @@ class AlertService {
       final go = await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Να ξεκινά ακριβώς στην ώρα του;'),
-          content: const Text('Το Android θέλει την άδεια «Ξυπνητήρια και υπενθυμίσεις» για αυτό. Θα ανοίξουν οι ρυθμίσεις: '
-              'άνοιξε τον διακόπτη και γύρνα πίσω. Χωρίς αυτήν, ο κανόνας ξεκινά, αλλά ίσως λίγα λεπτά αργότερα.'),
+          title: Text(c.l10n.serviceExactAlarmTitle),
+          content: Text(c.l10n.serviceExactAlarmBody),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Όχι τώρα')),
-            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Άνοιξε τις ρυθμίσεις')),
+            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(c.l10n.serviceExactAlarmLater)),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(c.l10n.serviceExactAlarmOpenSettings)),
           ],
         ),
       );
@@ -267,8 +268,8 @@ class AlertService {
     return FlutterForegroundTask.startService(
       serviceId: _serviceId,
       serviceTypes: [ForegroundServiceTypes.dataSync, if (location) ForegroundServiceTypes.location],
-      notificationTitle: 'Στάσεις · live',
-      notificationText: 'Οι ειδοποιήσεις σου είναι ενεργές',
+      notificationTitle: l10n.serviceRunningTitle,
+      notificationText: l10n.serviceRunningText,
       callback: startCallback,
     );
   }
@@ -316,7 +317,7 @@ class AlertService {
       }
       final at = startsWithin(rules, now, max: _iosStarts);
       for (var i = 0; i < at.length; i++) {
-        await _iosAt(_iosStartBase + i, at[i], 'Ξεκινά ο κανόνας σου', 'Άνοιξε την εφαρμογή για live ειδοποιήσεις.');
+        await _iosAt(_iosStartBase + i, at[i], l10n.serviceRuleStartsTitle, l10n.serviceRuleStartsBody);
       }
       return;
     }
@@ -347,7 +348,7 @@ Future<void> alarmFired() async {
   await AlertService._scheduleNext(rules, now); // strictly after now: never this same start again
   if (!rules.any((r) => r.activeAt(now.add(const Duration(minutes: 1))))) return;
   FlutterForegroundTask.init(
-    androidNotificationOptions: AndroidNotificationOptions(channelId: 'live', channelName: 'Live πορεία λεωφορείου', onlyAlertOnce: true),
+    androidNotificationOptions: AndroidNotificationOptions(channelId: 'live', channelName: l10n.serviceLiveChannelName, onlyAlertOnce: true),
     iosNotificationOptions: const IOSNotificationOptions(),
     foregroundTaskOptions: ForegroundTaskOptions(eventAction: ForegroundTaskEventAction.repeat(_tickMs), allowWakeLock: true),
   );
@@ -356,9 +357,9 @@ Future<void> alarmFired() async {
     await _initNotes();
     await _notes.show(
       id: 1,
-      title: 'Ξεκινά ο κανόνας σου',
-      body: 'Άνοιξε την εφαρμογή για live ειδοποιήσεις.',
-      notificationDetails: const NotificationDetails(android: _hitChannel),
+      title: l10n.serviceRuleStartsTitle,
+      body: l10n.serviceRuleStartsBody,
+      notificationDetails: NotificationDetails(android: _hitChannel),
     );
   }
 }
@@ -377,7 +378,7 @@ Future<void> noteFired(int id) async {
     id: id,
     title: j['title'] as String?,
     body: j['body'] as String?,
-    notificationDetails: const NotificationDetails(android: _hitChannel),
+    notificationDetails: NotificationDetails(android: _hitChannel),
     payload: j['payload'] as String?,
   );
 }
@@ -401,28 +402,28 @@ Future<void> nudgeFired() async {
     final st = await api.lineStatic(line);
     final sched = await api.lineSchedule(line);
     final h = sched == null ? null : homeLast(sched, st, stopIdsNear(st, home.name, home.lat, home.lon));
-    if (h != null) body = 'Το τελευταίο $line φεύγει ${gtfsClock(h.t)} από ${titleCase(h.from)}. Θες ειδοποίηση;';
+    if (h != null) body = l10n.serviceNudgeLastRun(line, gtfsClock(h.t), titleCase(h.from));
   } catch (_) {/* the general text */}
   await _initNotes();
   await _notes.show(
     id: _nudgeAlarmId,
     title: _nudgeTitle(DateTime.now().toUtc()),
     body: body,
-    notificationDetails: const NotificationDetails(android: _hitChannel),
+    notificationDetails: NotificationDetails(android: _hitChannel),
     payload: _favsPayload,
   );
 }
 
 String _nudgeTitle(DateTime utc) =>
-    'Βράδυ ${athensWall(utc).weekday == DateTime.friday ? 'Παρασκευής' : 'Σαββάτου'} · το τελευταίο για το σπίτι';
+    athensWall(utc).weekday == DateTime.friday ? l10n.serviceNudgeTitleFriday : l10n.serviceNudgeTitleSaturday;
 
-String _nudgeBody(FavStop home) => 'Δες πότε φεύγει το τελευταίο ${home.lines.first} για ${titleCase(home.name)} και βάλε ειδοποίηση.';
+String _nudgeBody(FavStop home) => l10n.serviceNudgeBody(home.lines.first, titleCase(home.name));
 
 // iOS: a notification at [utc], kept by the system; no code runs then.
 Future<void> _iosAt(int id, DateTime utc, String title, String body, {String? payload}) => _notes.zonedSchedule(
       id: id,
       scheduledDate: tz.TZDateTime.from(utc, tz.UTC),
-      notificationDetails: const NotificationDetails(android: _hitChannel),
+      notificationDetails: NotificationDetails(android: _hitChannel),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       title: title,
       body: body,
@@ -526,7 +527,7 @@ class RuleTask extends TaskHandler {
           id: (h.late ? 'late|${h.vehicleId}' : h.vehicleId).hashCode & 0x7fffffff, // the delay alert must not replace the arrival
           title: title,
           body: body,
-          notificationDetails: const NotificationDetails(android: _hitChannel),
+          notificationDetails: NotificationDetails(android: _hitChannel),
           payload: _openPayload(r, h.vehicleId, _statics[r.line]?.stops[r.stopId], lives[r.line]),
         );
       }
@@ -560,9 +561,9 @@ class RuleTask extends TaskHandler {
       await p.setString('$_boardedPrefix${r.id}', id);
       await _notes.show(
         id: 'board|${r.id}'.hashCode & 0x7fffffff,
-        title: 'Είσαι στο ${r.line}',
-        body: 'Θα σε ειδοποιήσουμε μία στάση πριν από ${titleCase(r.stopName)}.',
-        notificationDetails: const NotificationDetails(android: _hitChannel),
+        title: l10n.serviceBoardedTitle(r.line),
+        body: l10n.serviceOneStopBefore(titleCase(r.stopName)),
+        notificationDetails: NotificationDetails(android: _hitChannel),
       );
     }
   }
@@ -574,14 +575,14 @@ class RuleTask extends TaskHandler {
     if (rules.isEmpty && looking.isNotEmpty) {
       final r = looking.first;
       await FlutterForegroundTask.updateService(
-          notificationTitle: 'Ταξίδι με το ${r.line}', notificationText: 'Μόλις ανέβεις, θα σε ειδοποιήσουμε μία στάση πριν από ${titleCase(r.stopName)}.');
+          notificationTitle: l10n.serviceTripTitle(r.line), notificationText: l10n.serviceTripText(titleCase(r.stopName)));
       return;
     }
     if (rules.isEmpty) {
-      await FlutterForegroundTask.updateService(notificationTitle: 'Στάσεις', notificationText: 'Θα σε ειδοποιήσουμε όταν πλησιάσει το λεωφορείο.');
+      await FlutterForegroundTask.updateService(notificationTitle: l10n.appName, notificationText: l10n.serviceIdleText);
       return;
     }
-    String title = '${rules.first.line} · ${titleCase(rules.first.stopName)}', text = 'Δεν φαίνεται ακόμη λεωφορείο με GPS.';
+    String title = '${rules.first.line} · ${titleCase(rules.first.stopName)}', text = l10n.serviceNoBusYet;
     var progress = -1;
     String? chip, open;
     var ruleId = rules.first.id;
@@ -594,15 +595,15 @@ class RuleTask extends TaskHandler {
       if (arr.isEmpty) continue;
       final a = arr.first;
       final left = a.stopsLeft;
-      final late = (a.delayS ?? 0) >= 90 ? '+${(a.delayS! / 60).round()}′' : 'στην ώρα του';
+      final late = (a.delayS ?? 0) >= 90 ? '+${(a.delayS! / 60).round()}′' : l10n.commonOnTime;
       final stop = titleCase(r.stopName);
       final at = athensWall(DateTime.fromMillisecondsSinceEpoch((nowS + a.etaS) * 1000, isUtc: true));
       final tilde = offline ? '~' : '';
-      title = a.etaS < 45 ? '${r.line} · φτάνει τώρα στο $stop' : '${r.line} · $stop σε $tilde${mins(a.etaS)}';
+      title = a.etaS < 45 ? l10n.serviceArrivingNow(r.line, stop) : l10n.serviceArrivingIn(r.line, stop, '$tilde${mins(a.etaS)}');
       text = [
-        if (a.etaS >= 45) 'φτάνει $tilde${at.hour}:${at.minute.toString().padLeft(2, '0')}',
-        if (left != null) left == 1 ? 'επόμενη στάση' : '$left στάσεις',
-        if (offline) 'χωρίς σήμα, εκτίμηση' else late,
+        if (a.etaS >= 45) l10n.serviceArrivesAt('$tilde${at.hour}:${at.minute.toString().padLeft(2, '0')}'),
+        if (left != null) left == 1 ? l10n.serviceNextStop : l10n.stopsCount(left),
+        if (offline) l10n.serviceOfflineEstimate else late,
       ].join(' · ');
       chip = mins(a.etaS);
       ruleId = r.id;
@@ -614,6 +615,6 @@ class RuleTask extends TaskHandler {
       break;
     }
     await LiveCard.show(
-        id: _serviceId, title: title, text: text, sub: offline ? 'χωρίς σήμα' : 'live', progress: progress, chip: chip, ruleId: ruleId, open: open);
+        id: _serviceId, title: title, text: text, sub: offline ? l10n.serviceOffline : 'live', progress: progress, chip: chip, endLabel: l10n.serviceStop, ruleId: ruleId, open: open);
   }
 }

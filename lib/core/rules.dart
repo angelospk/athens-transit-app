@@ -1,5 +1,6 @@
 import 'athens_time.dart';
 import 'eta.dart';
+import '../l10n/l10n.dart';
 import 'models.dart';
 
 enum AlertMode { minutes, stops }
@@ -276,26 +277,29 @@ bool _pastStop(LineStatic st, List<String> stops, int i, Vehicle v) {
 /// "Το 622 είναι 2 στάσεις πριν από ΑΓΟΡΑ (καθυστέρηση 3′), σε ~5′."
 String hitText(RuleHit h, String stop) {
   final d = h.delayS;
-  final late = d != null && d >= 60 ? ' (καθυστέρηση ${(d / 60).round()}′)' : '';
+  final late = d != null && d >= 60 ? ' (${l10n.ruleHitDelay((d / 60).round())})' : '';
   final e = h.etaS;
-  final inMin = e == null ? '' : ', σε ~${(e / 60).round()}′';
   final left = h.stopsLeft;
-  if (left == 1) return 'Το ${h.line} έρχεται: επόμενη στάση $stop$late.';
-  if (left == null) return 'Το ${h.line} φτάνει στη στάση $stop$late${e == null ? '' : ' σε ~${(e / 60).round()}′'}.';
-  return 'Το ${h.line} είναι $left στάσεις πριν από $stop$late$inMin.';
+  if (left == 1) return l10n.ruleHitNextStop(h.line, stop, late);
+  if (left == null) return l10n.ruleHitArrives(h.line, stop, late, e == null ? '' : ' ${l10n.ruleHitIn((e / 60).round())}');
+  return l10n.ruleHitStopsAway(h.line, l10n.stopsCount(left), stop, late, e == null ? '' : ', ${l10n.ruleHitIn((e / 60).round())}');
 }
 
 /// The notification's title and text for a hit of [r]: the arrival wording, or "leave now", or "get
 /// off at the next stop".
 (String, String) ruleHitText(Rule r, RuleHit h, String stop) => h.late
     ? (
-        '${h.line} αργεί ${((h.delayS ?? 0) / 60).round()}′',
-        'Για τη στάση $stop${h.etaS == null ? '' : ': φτάνει σε ~${(h.etaS! / 60).round()}′'}${h.stopsLeft == null ? '' : ' (${h.stopsLeft} ${h.stopsLeft == 1 ? 'στάση' : 'στάσεις'})'}.'
+        l10n.ruleHitLateTitle(h.line, ((h.delayS ?? 0) / 60).round()),
+        l10n.ruleHitLateBody(stop, h.etaS == null ? '' : ': ${l10n.ruleHitLateEta((h.etaS! / 60).round())}',
+            h.stopsLeft == null ? '' : ' (${l10n.stopsCount(h.stopsLeft!)})')
       )
     : switch (r.kind) {
       RuleKind.arrive => ('${h.line} → $stop', hitText(h, stop)),
-      RuleKind.leave => ('Φύγε τώρα για το ${h.line}', 'Για να είσαι στη στάση $stop πριν έρθει${h.etaS == null ? '' : ' (σε ~${(h.etaS! / 60).round()}′)'}.'),
-      RuleKind.ride || RuleKind.board => ('Κατέβα στην επόμενη', 'Επόμενη στάση: $stop.'),
+      RuleKind.leave => (
+          l10n.ruleHitLeaveTitle(h.line),
+          l10n.ruleHitLeaveBody(stop, h.etaS == null ? '' : ' (${l10n.ruleHitIn((h.etaS! / 60).round())})')
+        ),
+      RuleKind.ride || RuleKind.board => (l10n.ruleHitRideTitle, l10n.ruleHitRideBody(stop)),
     };
 
 /// When a weekly rule next starts (strictly after [nowUtc]), or null for one-off and disabled rules.

@@ -5,23 +5,27 @@ import 'package:flutter/material.dart';
 import '../background/service.dart';
 import '../core/athens_time.dart';
 import '../core/rules.dart';
+import '../l10n/l10n.dart';
 import 'rule_edit.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-const dayNames = ['Δε', 'Τρ', 'Τε', 'Πε', 'Πα', 'Σα', 'Κυ'];
+/// The two-letter weekdays, Monday first.
+List<String> get dayNames =>
+    [l10n.rulesDayMon, l10n.rulesDayTue, l10n.rulesDayWed, l10n.rulesDayThu, l10n.rulesDayFri, l10n.rulesDaySat, l10n.rulesDaySun];
 
 String daysText(int days) {
-  if (days == 0x1F) return 'Δε–Πα';
-  if (days == 0x7F) return 'Κάθε μέρα';
-  if (days == 0x60) return 'Σα–Κυ';
-  return [for (var i = 0; i < 7; i++) if (days & (1 << i) != 0) dayNames[i]].join(', ');
+  if (days == 0x1F) return l10n.rulesMonFri;
+  if (days == 0x7F) return l10n.rulesEveryDay;
+  if (days == 0x60) return l10n.rulesWeekend;
+  final names = dayNames;
+  return [for (var i = 0; i < 7; i++) if (days & (1 << i) != 0) names[i]].join(', ');
 }
 
 String hm(int m) => '${(m ~/ 60).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
 
 String whenText(Rule r) =>
-    (r.mode == AlertMode.minutes ? '${r.n}′ πριν' : '${r.n} ${r.n == 1 ? 'στάση' : 'στάσεις'} πριν') + (r.lateMin == null ? '' : ' · και αν αργεί');
+    (r.mode == AlertMode.minutes ? l10n.rulesMinutesBefore(r.n) : l10n.rulesStopsBefore(r.n)) + (r.lateMin == null ? '' : ' · ${l10n.rulesAndIfLate}');
 
 class RulesScreen extends StatefulWidget {
   const RulesScreen({super.key});
@@ -62,6 +66,7 @@ class _RulesScreenState extends State<RulesScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final d = Deps.of(context);
     final t = context.tones;
+    final s = context.l10n;
     return ListenableBuilder(
       listenable: d.store,
       builder: (context, _) {
@@ -78,39 +83,39 @@ class _RulesScreenState extends State<RulesScreen> with WidgetsBindingObserver {
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RuleEditScreen())),
             icon: const Icon(Icons.add),
-            label: const Text('Νέος κανόνας'),
+            label: Text(s.rulesNewRule),
           ),
           body: SafeArea(
             child: ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 96), children: [
-              head('Τώρα'),
+              head(s.rulesNow),
               if (oneOff.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('Πάτα το καμπανάκι δίπλα σε μια γραμμή στη στάση σου.', style: TextStyle(color: t.muted)),
+                  child: Text(s.rulesNowEmpty, style: TextStyle(color: t.muted)),
                 ),
               for (final r in oneOff)
                 _RuleCard(
                   rule: r,
-                  text: r.kind == RuleKind.board ? 'Ταξίδι με το ${r.line} · κατεβαίνεις ${titleCase(r.stopName)}' : '${titleCase(r.stopName)} · ${whenText(r)}',
-                  sub: stopped.contains(r.id) ? 'Σταμάτησε από την κάρτα live' : '${r.live ? 'Live στην οθόνη κλειδώματος · ' : ''}ως ${hm(_wallMin(r.untilS!))}',
+                  text: r.kind == RuleKind.board ? s.rulesTrip(r.line, titleCase(r.stopName)) : '${titleCase(r.stopName)} · ${whenText(r)}',
+                  sub: stopped.contains(r.id) ? s.rulesStoppedFromCard : '${r.live ? '${s.alertLiveLockScreen} · ' : ''}${s.rulesUntil(hm(_wallMin(r.untilS!)))}',
                   resume: stopped.contains(r.id) ? () => _resume(d, r) : null,
                   onDelete: () async {
                     d.store.removeRule(r.id);
                     await AlertService.sync(d.store);
                   },
                 ),
-              head('Κάθε εβδομάδα'),
+              head(s.rulesWeekly),
               if (weekly.any((r) => r.enabled)) const _ExactHint(),
               if (weekly.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('Π.χ. «Δε–Πα 08:00–08:40, 5′ πριν το 602 στη στάση σου».', style: TextStyle(color: t.muted)),
+                  child: Text(s.rulesWeeklyEmpty, style: TextStyle(color: t.muted)),
                 ),
               for (final r in weekly)
                 _RuleCard(
                   rule: r,
-                  text: '${daysText(r.days)}, ${hm(r.startMin)}–${hm(r.endMin)}, ${whenText(r)} ${r.stopIndex >= 0 ? 'στο' : ''} ${titleCase(r.stopName)}',
-                  sub: !r.enabled ? 'Σε παύση' : stopped.contains(r.id) ? 'Σταμάτησε για σήμερα' : (r.activeAt(now) ? 'Τρέχει τώρα' : _next(r, now)),
+                  text: '${daysText(r.days)}, ${hm(r.startMin)}–${hm(r.endMin)}, ${whenText(r)} ${r.stopIndex >= 0 ? s.ruleEditAt : ''} ${titleCase(r.stopName)}',
+                  sub: !r.enabled ? s.rulesPaused : stopped.contains(r.id) ? s.rulesStoppedToday : (r.activeAt(now) ? s.rulesRunningNow : _next(s, r, now)),
                   resume: r.enabled && stopped.contains(r.id) ? () => _resume(d, r) : null,
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RuleEditScreen(rule: r))),
                   toggle: (on) async {
@@ -139,13 +144,13 @@ class _RulesScreenState extends State<RulesScreen> with WidgetsBindingObserver {
     return a.hour * 60 + a.minute;
   }
 
-  static String _next(Rule r, DateTime now) {
+  static String _next(AppLocalizations s, Rule r, DateTime now) {
     final n = nextStartUtc(r, now);
     if (n == null) return '';
     final a = athensWall(now), b = athensWall(n);
     final days = DateTime.utc(b.year, b.month, b.day).difference(DateTime.utc(a.year, a.month, a.day)).inDays;
-    final when = days == 0 ? 'σήμερα' : days == 1 ? 'αύριο' : 'σε $days μέρες';
-    return 'Επόμενη: $when ${hm(r.startMin)}';
+    final when = days == 0 ? s.rulesToday : days == 1 ? s.rulesTomorrow : s.rulesInDays(days);
+    return s.rulesNext(when, hm(r.startMin));
   }
 }
 
@@ -178,9 +183,9 @@ class _RuleCard extends StatelessWidget {
                 if (sub.isNotEmpty) Text(sub, style: TextStyle(fontSize: 13, color: t.muted)),
               ]),
             ),
-            if (resume != null) TextButton(onPressed: resume, child: const Text('Συνέχισε')),
+            if (resume != null) TextButton(onPressed: resume, child: Text(context.l10n.rulesResume)),
             if (toggle != null) Switch(value: rule.enabled, onChanged: toggle),
-            if (onDelete != null) IconButton(tooltip: 'Διαγραφή', onPressed: onDelete, icon: const Icon(Icons.close)),
+            if (onDelete != null) IconButton(tooltip: context.l10n.commonDelete, onPressed: onDelete, icon: const Icon(Icons.close)),
           ]),
         ),
       ),
@@ -232,9 +237,9 @@ class _ExactHintState extends State<_ExactHint> with WidgetsBindingObserver {
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
       decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(16)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Οι κανόνες μπορεί να ξεκινούν λίγα λεπτά αργότερα: το Android δεν μας έχει δώσει άδεια για ακριβή ξυπνητήρια.',
+        Text(context.l10n.rulesExactHint,
             style: TextStyle(fontSize: 14, height: 1.35)),
-        Align(alignment: Alignment.centerRight, child: TextButton(onPressed: AlertService.askExact, child: const Text('Δώσε άδεια'))),
+        Align(alignment: Alignment.centerRight, child: TextButton(onPressed: AlertService.askExact, child: Text(context.l10n.rulesGrant))),
       ]),
     );
   }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English. Greek, the default, in values. -->
+<resources>
+    <string name="live_card_channel_name">Live on the lock screen</string>
+    <string name="live_card_channel_description">Your bus\'s progress to the stop</string>
+    <string name="live_card_stop">Stop alert</string>
+    <string name="live_card_stopped_title">Alert stopped</string>
+    <string name="live_card_stopped_text">We won\'t notify you about this again today.</string>
+</resources>

@@ -1,0 +1,3 @@
+/* Greek: the default language. */
+"CFBundleDisplayName" = "Στάσεις";
+"NSLocationWhenInUseUsageDescription" = "Για να βλέπεις τις στάσεις κοντά σου και πόσο περπατάς ως τη στάση σου. Η θέση σου μένει στο κινητό.";

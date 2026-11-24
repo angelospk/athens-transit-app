@@ -11,6 +11,7 @@ import '../core/models.dart';
 import '../core/nearby.dart' show fold;
 import '../core/rules.dart';
 import '../data/locate.dart';
+import '../l10n/l10n.dart';
 import 'map_sel.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -39,7 +40,7 @@ Future<void> rideFromHere(BuildContext context, {required String line, required 
   final st = d.live.statics[line];
   if (!context.mounted) return;
   if (st == null || bus == null) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρέθηκε λεωφορείο κοντά σου. Διάλεξέ το στον χάρτη και πάτα «Πού κατεβαίνω;».')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.rideNoBus)));
     showOnMap(LineSel(line, variants: {variant}));
     return;
   }
@@ -56,7 +57,7 @@ Future<void> showRide(BuildContext context, {required String line, required Line
   final etas = [for (var k = next; k < stops.length; k++) etaSeconds(st, vehicle, k, now)];
   final from = next + firstAlight(etas); // the stop it is at is too late to get off at
   if (from >= stops.length) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Το λεωφορείο είναι στο τέρμα: καμία στάση μετά.')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.rideAtTerminus)));
     return;
   }
   final t = context.tones;
@@ -73,10 +74,10 @@ Future<void> showRide(BuildContext context, {required String line, required Line
         Row(children: [
           LineBadge(line),
           const SizedBox(width: 12),
-          const Expanded(child: Text('Πού κατεβαίνεις;', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
+          Expanded(child: Text(c.l10n.rideWhere, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600))),
         ]),
         const SizedBox(height: 4),
-        Text('Θα δονηθεί το κινητό μία στάση πριν: «Κατέβα στην επόμενη».', style: TextStyle(fontSize: 13, color: t.muted)),
+        Text(c.l10n.rideVibrate, style: TextStyle(fontSize: 13, color: t.muted)),
         const SizedBox(height: 8),
         for (var k = from; k < stops.length; k++)
           ListTile(
@@ -126,28 +127,28 @@ Future<void> showRide(BuildContext context, {required String line, required Line
           Row(children: [
             LineBadge(line),
             const SizedBox(width: 12),
-            Expanded(child: Text(ok ? 'Είσαι μέσα · θα σε ειδοποιήσουμε' : 'Χωρίς άδεια ειδοποιήσεων', style: TextStyle(fontSize: 14, color: c.tones.muted))),
+            Expanded(child: Text(ok ? c.l10n.rideOnBoard : c.l10n.rideNoPermission, style: TextStyle(fontSize: 14, color: c.tones.muted))),
           ]),
           const SizedBox(height: 14),
-          Text('Κατεβαίνεις στο', style: TextStyle(fontSize: 14, color: c.tones.muted)),
+          Text(c.l10n.rideGetOffAt, style: TextStyle(fontSize: 14, color: c.tones.muted)),
           Text(titleCase(name), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, height: 1.1)),
           const SizedBox(height: 4),
           Text.rich(TextSpan(children: [
-            TextSpan(text: '$left ${left == 1 ? 'στάση' : 'στάσεις'}', style: const TextStyle(fontWeight: FontWeight.w700)),
-            if (eta != null) TextSpan(text: ' · περίπου ${mins(eta)} · ${clockIn(eta)}'),
+            TextSpan(text: c.l10n.stopsCount(left), style: const TextStyle(fontWeight: FontWeight.w700)),
+            if (eta != null) TextSpan(text: ' · ${c.l10n.rideAbout(mins(eta))} · ${clockIn(eta)}'),
           ]), style: const TextStyle(fontSize: 15)),
           const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: c.tones.surface, borderRadius: BorderRadius.circular(16)),
-            child: const Row(children: [
-              Icon(Icons.vibration),
-              SizedBox(width: 12),
-              Expanded(child: Text('Θα δονηθεί το κινητό μία στάση πριν: «Κατέβα στην επόμενη». Το βλέπεις και στις Ειδοποιήσεις.', style: TextStyle(fontSize: 14, height: 1.35))),
+            child: Row(children: [
+              const Icon(Icons.vibration),
+              const SizedBox(width: 12),
+              Expanded(child: Text(c.l10n.rideVibrateAlerts, style: const TextStyle(fontSize: 14, height: 1.35))),
             ]),
           ),
           const SizedBox(height: 12),
-          SizedBox(width: double.infinity, height: 48, child: FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Εντάξει'))),
+          SizedBox(width: double.infinity, height: 48, child: FilledButton(onPressed: () => Navigator.pop(c), child: Text(c.l10n.commonOk))),
         ]),
       ),
     ),

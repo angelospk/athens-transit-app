@@ -1,0 +1,2601 @@
+{
+  "@@locale": "el",
+  "appName": "Στάσεις",
+  "@appName": {
+    "description": "The app's name on the store and the home screen. Keep «Στάσεις» / «Staseis»."
+  },
+  "commonCancel": "Άκυρο",
+  "commonDelete": "Διαγραφή",
+  "commonSave": "Αποθήκευση",
+  "commonRetry": "Δοκίμασε ξανά",
+  "commonLess": "Λιγότερο",
+  "commonMore": "Περισσότερο",
+  "commonClose": "Κλείσιμο",
+  "commonNext": "Επόμενο",
+  "commonOk": "Εντάξει",
+  "commonNow": "τώρα",
+  "commonOnTime": "στην ώρα του",
+  "commonSearching": "Αναζήτηση…",
+  "commonLocating": "Αναζήτηση θέσης…",
+  "commonHome": "Σπίτι",
+  "commonWork": "Δουλειά",
+  "commonMetro": "Μετρό",
+  "commonTram": "Τραμ",
+  "commonSuburban": "Προαστιακός",
+  "commonBuses": "Λεωφορεία",
+  "commonNoNotificationPermission": "Για να σε ειδοποιήσουμε, χρειάζεται άδεια ειδοποιήσεων.",
+  "stopsCount": "{count, plural, =1{1 στάση} other{{count} στάσεις}}",
+  "@stopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesShort": "{n}′",
+  "@minutesShort": {
+    "description": "A short minutes value as on the boards: 5′",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "mapOnBusSnack": "Είσαι στο {line}; Διάλεξε πού κατεβαίνεις.",
+  "@mapOnBusSnack": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "mapOnBusSnackAction": "Άνοιξέ το",
+  "@mapOnBusSnackAction": {
+    "description": "Snack bar button: opens the bus on the map"
+  },
+  "mapLayersMine": "Χάρτης: οι γραμμές μου",
+  "mapLayers": "Τι δείχνει ο χάρτης",
+  "@mapLayers": {
+    "description": "Map button that opens the layers sheet"
+  },
+  "mapWhereAmI": "Πού είμαι",
+  "@mapWhereAmI": {
+    "description": "Map button: centre on my location"
+  },
+  "mapMenu": "Μενού",
+  "mapTitle": "Χάρτης",
+  "mapLegend": "Τι σημαίνει κάθε σύμβολο",
+  "mapBusesAllHint": "Λεωφορεία: όλα. Βάλε αστέρι σε μια γραμμή για να βλέπεις μόνο τις δικές σου.",
+  "mapAllBuses": "Όλα τα λεωφορεία",
+  "mapMyLines": "Οι γραμμές μου",
+  "mapAdvanced": "Για προχωρημένους",
+  "mapOthersWhenSelected": "Όταν πατάς ένα λεωφορείο ή μια γραμμή, τα άλλα:",
+  "mapOthersNormal": "Φαίνονται",
+  "@mapOthersNormal": {
+    "description": "The other buses: are shown"
+  },
+  "mapOthersDim": "Αχνά",
+  "@mapOthersDim": {
+    "description": "The other buses: faded"
+  },
+  "mapOthersHide": "Κρύβονται",
+  "@mapOthersHide": {
+    "description": "The other buses: hidden"
+  },
+  "mapRecentOnly": "Μόνο με πρόσφατη θέση",
+  "mapRecentOnlyHint": "Έστειλαν θέση τα τελευταία 1½ λεπτά.",
+  "mapOnTimeOnly": "Μόνο στην ώρα τους",
+  "mapOnTimeOnlyHint": "Έως 5 λεπτά καθυστέρηση.",
+  "mapShowAge": "Πόσο παλιά είναι η θέση",
+  "mapShowAgeHint": "Δίπλα σε κάθε λεωφορείο. Οι παλιές φαίνονται πάντα.",
+  "mapAttribution": "Χάρτης: © OpenStreetMap contributors · OpenFreeMap",
+  "mapLastData": "Τελευταία δεδομένα {time} · πριν {ago}",
+  "@mapLastData": {
+    "description": "Offline banner. ago is a short duration such as 5′",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "mapOffline": "Χωρίς σύνδεση",
+  "mapSeeNearby": "Δες τι περνάει κοντά σου",
+  "mapLocationPitch": "Με την τοποθεσία σου βλέπεις τις πιο κοντινές στάσεις και πότε έρχεται το λεωφορείο. Η θέση μένει στο κινητό.",
+  "mapUseMyLocation": "Χρήση της θέσης μου",
+  "mapOrSearch": "Ή γράψε μια στάση ή γραμμή στην αναζήτηση.",
+  "mapLoadingStops": "Φόρτωση στάσεων…",
+  "mapNoStopWithin": "Καμία στάση σε 2,5 χλμ.",
+  "mapDragForMore": "σύρε για περισσότερες στάσεις",
+  "mapNoSavedStops": "Καμία αποθηκευμένη στάση ακόμη. Άνοιξε μια στάση και πάτα το αστέρι.",
+  "mapFavorites": "Αγαπημένα",
+  "@mapFavorites": {
+    "description": "Tab and page title: saved stops, lines and places"
+  },
+  "mapAllFavorites": "Όλα τα αγαπημένα · προσθήκη, σπίτι, δουλειά",
+  "mapNearYou": "Κοντά σου",
+  "@mapNearYou": {
+    "description": "Tab of the home sheet; also the back label to it"
+  },
+  "mapQuietLines": "{lines}: κανένα λεωφορείο με GPS τώρα",
+  "@mapQuietLines": {
+    "placeholders": {
+      "lines": {
+        "type": "String"
+      }
+    }
+  },
+  "mapWalkDirections": "Οδηγίες με τα πόδια",
+  "mapWalkDirectionsMin": "Οδηγίες με τα πόδια, {m} λεπτά",
+  "@mapWalkDirectionsMin": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "mapCancelled": "ακυρώθηκε",
+  "@mapCancelled": {
+    "description": "A departure that was cancelled"
+  },
+  "mapRailLive": "live από railway.gov.gr",
+  "mapMetroSchedule": "πρόγραμμα ΣΤΑΣΥ, όχι live",
+  "mapStopsNear": "Στάσεις κοντά",
+  "mapNoStopWithin600": "Καμία στάση σε 600 μ.",
+  "mapStopDistLines": "{dist} μ. · {lines}",
+  "@mapStopDistLines": {
+    "description": "Distance to a stop in metres and its lines",
+    "placeholders": {
+      "dist": {
+        "type": "int"
+      },
+      "lines": {
+        "type": "String"
+      }
+    }
+  },
+  "mapBusesOnRoad": "{count, plural, =1{1 λεωφορείο στον δρόμο} other{{count} λεωφορεία στον δρόμο}}",
+  "@mapBusesOnRoad": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapAllOnTime": "όλα στην ώρα τους",
+  "mapLateCount": "{count, plural, =1{1 αργεί πάνω από 5′} other{{count} αργούν πάνω από 5′}}",
+  "@mapLateCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapMyLinesNow": "Οι γραμμές μου τώρα",
+  "mapMyLinesHint": "τα άλλα λεωφορεία κρυμμένα · πάτα μια γραμμή για τη διαδρομή της",
+  "mapNoLineSelected": "Καμία γραμμή επιλεγμένη. Διάλεξε από το κουμπί του χάρτη (σύρε το πλαίσιο προς τα κάτω).",
+  "plannerTitle": "Διαδρομή",
+  "@plannerTitle": {
+    "description": "The trip planner page title, also the back label to it"
+  },
+  "plannerMyLocation": "Η θέση μου",
+  "plannerFrom": "Από",
+  "plannerTo": "Προς",
+  "plannerWhereAreYou": "Πού είσαι;",
+  "plannerWhereTo": "Πού πας; στάση, περιοχή, κατάστημα, διεύθυνση",
+  "plannerSwap": "Αντιστροφή",
+  "@plannerSwap": {
+    "description": "Button: swap start and destination"
+  },
+  "plannerNow": "Τώρα",
+  "@plannerNow": {
+    "description": "Chip: leave now"
+  },
+  "plannerLater": "Αργότερα",
+  "@plannerLater": {
+    "description": "Chip: leave later"
+  },
+  "plannerLeaveAt": "Φεύγω {time}",
+  "@plannerLeaveAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "plannerWithMetro": "Με μετρό",
+  "plannerLinesFailed": "Δεν φόρτωσαν οι γραμμές. Χρειάζεται σύνδεση την πρώτη φορά.",
+  "plannerPickFrom": "Διάλεξε από πού φεύγεις ή δώσε άδεια τοποθεσίας: έτσι υπολογίζεται πόσο περπατάς ως τη στάση.",
+  "plannerPickTo": "Διάλεξε πού πας. Θα δεις λεωφορεία χωρίς αλλαγή ή με μία, και το μετρό όταν σε βολεύει.",
+  "plannerNoBus": "Δεν βρέθηκε λεωφορείο σε 500 μ. από την αφετηρία και τον προορισμό σου, ούτε με μία αλλαγή. Δοκίμασε μια κοντινή στάση ή το μετρό.",
+  "plannerDirect": "Χωρίς αλλαγή",
+  "plannerOneChange": "Με μία αλλαγή",
+  "plannerTimesLive": "Χρόνοι: περπάτημα 4,5 χλμ/ώ, λεωφορείο 15 χλμ/ώ με τις στάσεις· η αναμονή είναι live από το GPS των λεωφορείων.",
+  "plannerTimesLater": "Για αργότερα δεν ξέρουμε ποιο λεωφορείο θα έρθει: οι χρόνοι είναι χωρίς αναμονή.",
+  "plannerMetroWalk": "Περπάτημα {walk}′ συνολικά · τρένο κάθε λίγα λεπτά (πρόγραμμα, όχι live)",
+  "@plannerMetroWalk": {
+    "placeholders": {
+      "walk": {
+        "type": "int"
+      }
+    }
+  },
+  "plannerMetroWait": "Μετρό με το πρόγραμμα (όχι live), αναμονή ~5′.",
+  "plannerBoardChange": "Ανεβαίνεις: {board} · αλλαγή: {change}",
+  "@plannerBoardChange": {
+    "placeholders": {
+      "board": {
+        "type": "String"
+      },
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "plannerTransferWalk": " ({m} μ. με τα πόδια)",
+  "@plannerTransferWalk": {
+    "description": "Appended after a transfer stop; keep the leading space",
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "plannerStopsWalk": "{stops} στάσεις · περπάτημα {walk}′",
+  "@plannerStopsWalk": {
+    "placeholders": {
+      "stops": {
+        "type": "int"
+      },
+      "walk": {
+        "type": "int"
+      }
+    }
+  },
+  "plannerBoard": "Ανεβαίνεις: {stop}",
+  "@plannerBoard": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "plannerGetOff": "Κατεβαίνεις: {stop}",
+  "@plannerGetOff": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "plannerNearMyLocation": "κοντά στη θέση σου",
+  "@plannerNearMyLocation": {
+    "description": "Saved as the label of an approximate place"
+  },
+  "plannerNearStop": "κοντά σε {stop}",
+  "@plannerNearStop": {
+    "description": "Saved as the label of an approximate place",
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "plannerNearMeApprox": "Κοντά στη θέση μου (περίπου)",
+  "plannerPlaceHint": "{name}: διεύθυνση ή περιοχή",
+  "@plannerPlaceHint": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "plannerFromHint": "Από: στάση, περιοχή, διεύθυνση",
+  "plannerToHint": "Προς: στάση, περιοχή, κατάστημα, διεύθυνση",
+  "plannerPlacePrivacy": "Αρκεί μια περιοχή κοντά. Δεν κρατάμε τίποτα: το μέρος μένει μόνο στο κινητό σου.",
+  "plannerNoLocation": "Δεν βρέθηκε η θέση σου. Ενεργοποίησε την τοποθεσία ή διάλεξε ένα μέρος.",
+  "routeArrive": "φτάνεις ~{time}",
+  "@routeArrive": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "routeEstimateMetro": "Εκτίμηση με αναμονή ~{wait}′ για το τρένο.",
+  "@routeEstimateMetro": {
+    "placeholders": {
+      "wait": {
+        "type": "int"
+      }
+    }
+  },
+  "routeEstimateLive": "Εκτίμηση χωρίς την αναμονή του πρώτου λεωφορείου· η αναμονή φαίνεται live στο βήμα του.",
+  "routeEstimateLater": "Για αργότερα: εκτίμηση χωρίς αναμονή.",
+  "routeWalkToDest": "Περπάτα ως τον προορισμό",
+  "routeWalkToStation": "Περπάτα ως τον σταθμό {name}",
+  "@routeWalkToStation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "routeWalkToStop": "Περπάτα ως τη στάση {name}",
+  "@routeWalkToStop": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "routeWalkTo": "Περπάτα ως {name}",
+  "@routeWalkTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "routeBoard": "Ανέβα στο {line}",
+  "@routeBoard": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "routeBoardToward": "Ανέβα στο {line} προς {toward}",
+  "@routeBoardToward": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "toward": {
+        "type": "String"
+      }
+    }
+  },
+  "routeStop": "Στάση: {name}",
+  "@routeStop": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "routeGetOff": "Κατέβα: {name}",
+  "@routeGetOff": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "routeChangeWait": "Αλλαγή: αναμονή ~{wait}′",
+  "@routeChangeWait": {
+    "placeholders": {
+      "wait": {
+        "type": "int"
+      }
+    }
+  },
+  "routeTrainEvery": "Τρένο κάθε λίγα λεπτά (πρόγραμμα, όχι live), αναμονή ~{wait}′",
+  "@routeTrainEvery": {
+    "placeholders": {
+      "wait": {
+        "type": "int"
+      }
+    }
+  },
+  "routeWhereGetOff": "Πού κατεβαίνω;",
+  "@routeWhereGetOff": {
+    "description": "Button: alert before the stop to get off"
+  },
+  "routeLeaveInTime": "Φύγε εγκαίρως",
+  "@routeLeaveInTime": {
+    "description": "Button: notify when it is time to leave for the bus"
+  },
+  "routeNoBusNear": "Κανένα λεωφορείο με GPS κοντά τώρα",
+  "routeCantCatch": "Δεν προλαβαίνεις αυτά που έρχονται τώρα",
+  "routeSearchingNext": "Αναζήτηση επόμενου λεωφορείου…",
+  "routeNextCatch": "Το επόμενο που προλαβαίνεις σε {eta} ({clock})",
+  "@routeNextCatch": {
+    "description": "eta is short, like 5′ or now",
+    "placeholders": {
+      "eta": {
+        "type": "String"
+      },
+      "clock": {
+        "type": "String"
+      }
+    }
+  },
+  "routeLeaveNow": "φύγε τώρα",
+  "routeLeaveIn": "φύγε σε {n}′",
+  "@routeLeaveIn": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "mapSelBack": "Πίσω",
+  "mapSelLine": "Γραμμή {line}",
+  "@mapSelLine": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "mapSelStop": "Στάση",
+  "@mapSelStop": {
+    "description": "A stop without a name"
+  },
+  "searchClear": "Καθαρισμός",
+  "searchHint": "Στάση, γραμμή ή μέρος",
+  "searchHiddenResults": "{count, plural, =1{1 αποτέλεσμα σε κρυμμένα μέσα} other{{count} αποτελέσματα σε κρυμμένα μέσα}}",
+  "@searchHiddenResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchShow": "Εμφάνιση",
+  "searchMunicipal": "Δημοτική · {municipality}",
+  "@searchMunicipal": {
+    "placeholders": {
+      "municipality": {
+        "type": "String"
+      }
+    }
+  },
+  "stationRail": "Σταθμός Προαστιακού",
+  "stationMetroTram": "Σταθμός μετρό / τραμ",
+  "stationDeparturesFailed": "Δεν φόρτωσαν οι αναχωρήσεις. Νέα προσπάθεια σε λίγο.",
+  "stationBusStopsNear": "Στάσεις λεωφορείων κοντά",
+  "stationNoTrain": "Κανένα τρένο στις επόμενες ώρες.",
+  "stationTrain": "Τρένο {train}",
+  "@stationTrain": {
+    "placeholders": {
+      "train": {
+        "type": "String"
+      }
+    }
+  },
+  "stationDelay": "+{n}′ καθυστέρηση",
+  "@stationDelay": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "stationLine": "γραμμή",
+  "@stationLine": {
+    "description": "Small label under a rail line badge"
+  },
+  "stationRailNote": "Live από railway.gov.gr. Ο πίνακας δίνει μόνο την επόμενη στάση· το «προς» είναι το τέρμα της γραμμής.",
+  "stationToward": "προς {name}",
+  "@stationToward": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stationNextStop": "επόμενη στάση {name}",
+  "@stationNextStop": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stationNoMetroTimes": "Τα δρομολόγια μετρό και τραμ δεν είναι ακόμη διαθέσιμα.",
+  "stationNoDeparture": "Καμία αναχώρηση στην επόμενη ώρα.",
+  "stationIndicative": "Ενδεικτικά, από το πρόγραμμα της ΣΤΑΣΥ (όχι live).",
+  "stationSchedule": "Από το πρόγραμμα της ΣΤΑΣΥ (όχι live).",
+  "muniBadge": "Δ",
+  "@muniBadge": {
+    "description": "One letter on the badge of a municipal line without a number (Δ for Δημοτική, M for Municipal)"
+  },
+  "muniFromStop": " από {stop}",
+  "@muniFromStop": {
+    "description": "After departure times: the stop they leave from; keep the leading space",
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "muniScheduled": "Προγραμματισμένα · όχι live",
+  "muniLine": "Δημοτική γραμμή · {municipality}",
+  "@muniLine": {
+    "placeholders": {
+      "municipality": {
+        "type": "String"
+      }
+    }
+  },
+  "muniNoTimetable": "Δεν έχουμε ελεγμένο ωράριο για αυτή τη γραμμή.",
+  "muniTimetableLink": "Ωράριο του δήμου",
+  "muniNextDepartures": "Επόμενες αναχωρήσεις",
+  "muniNoMoreToday": "Κανένα άλλο δρομολόγιο σήμερα, κατά το ωράριο.",
+  "muniApproxNote": "≈: ο δήμος δίνει συχνότητα, όχι ακριβείς ώρες.",
+  "muniTimetableChecked": "Ωράριο: {municipality}, ελέγχθηκε {date}.",
+  "@muniTimetableChecked": {
+    "placeholders": {
+      "municipality": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "muniPageLink": "Σελίδα του δήμου",
+  "muniRouteSource": "Διαδρομή και στάσεις: {source}",
+  "@muniRouteSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "muniStopKicker": "Στάση δημοτικής γραμμής",
+  "muniLinesFailed": "Δεν φόρτωσαν οι δημοτικές γραμμές. Δοκίμασε ξανά σε λίγο.",
+  "muniNoCheckedTimetable": "Χωρίς ελεγμένο ωράριο",
+  "muniNoMoreTodayShort": "Κανένα άλλο δρομολόγιο σήμερα",
+  "muniTimesFromStart": "Οι ώρες είναι από την αφετηρία που γράφει ο δήμος, όχι από αυτή τη στάση.",
+  "helpDelayUpTo2": "έως 2′ ή νωρίτερα",
+  "helpDelayOver10": "πάνω από 10′",
+  "helpDelayNoTrip": "χωρίς δρομολόγιο",
+  "helpDelayTitle": "Καθυστέρηση από το πρόγραμμα",
+  "helpBus": "Λεωφορείο. Το χρώμα του δείχνει πόσο αργεί σε σχέση με το πρόγραμμα.",
+  "helpMyBus": "Λεωφορείο μιας από τις γραμμές σου: έχει το χρώμα της γραμμής, και το δαχτυλίδι γύρω του δείχνει την καθυστέρηση.",
+  "helpDirection": "Η κατεύθυνση που πηγαίνει. Λείπει όταν δεν είναι γνωστή.",
+  "helpFaded": "Αχνό: η θέση του είναι παλιά, πάνω από 1½ λεπτό. Δίπλα γράφει πόσο παλιά (π.χ. 2′).",
+  "helpBlueRing": "Μπλε δαχτυλίδι: το λεωφορείο ή η γραμμή που άνοιξες.",
+  "helpRoute": "Η διαδρομή, με βέλη προς τα πού πηγαίνει. Κάθε κατεύθυνση έχει τη δική της λωρίδα.",
+  "helpStop": "Στάση. Πάτα τη για να δεις τι έρχεται.",
+  "helpTapEmpty": "Πάτα σε κενό σημείο του χάρτη για να κλείσεις ό,τι είναι ανοιχτό.",
+  "helpDataTitle": "Από πού έρχονται τα δεδομένα",
+  "helpPosition": "Θέση",
+  "helpPositionText": "Κάθε λεωφορείο στέλνει το GPS του στον ΟΑΣΑ. Ο server μας το διαβάζει κάθε 30″ περίπου. Ανάμεσα σε δύο θέσεις η εφαρμογή κινεί το λεωφορείο πάνω στη διαδρομή του, με την ταχύτητά του.",
+  "helpEta": "Χρόνος άφιξης",
+  "helpEtaText": "Τον υπολογίζει η εφαρμογή: από το πού είναι το λεωφορείο και την τυπική ταχύτητα κάθε κομματιού του δρόμου (από τις θέσεις των τελευταίων 14 ημερών). Δεν είναι η πρόβλεψη του ΟΑΣΑ.",
+  "helpDelay": "Καθυστέρηση",
+  "helpDelayText": "Σύγκριση με το πρόγραμμα του ΟΑΣΑ για το δρομολόγιο που κάνει το λεωφορείο.",
+  "helpTilde": "«~» πριν από έναν χρόνο",
+  "helpTildeText": "Χωρίς σύνδεση: εκτίμηση από τα τελευταία δεδομένα. Διορθώνεται μόλις βρεθεί σήμα.",
+  "lineSpeedTitle": "Ταχύτητα γραμμής",
+  "lineSpeedDaysFailed": "Δεν φόρτωσαν τα στατιστικά των ημερών.",
+  "lineSpeedNext2km": "Τα επόμενα 2 χλμ",
+  "lineSpeedAheadHint": "Η συνήθης ταχύτητα ανά 200 μ. τέτοια μέρα και ώρα· η γραμμή είναι το λεωφορείο τώρα ({kmh} χλμ/ώ).",
+  "@lineSpeedAheadHint": {
+    "placeholders": {
+      "kmh": {
+        "type": "int"
+      }
+    }
+  },
+  "lineSpeedNoData": "Δεν υπάρχουν μετρήσεις για τη γραμμή τις τελευταίες μέρες.",
+  "lineSpeedLastDays": "Τις τελευταίες {n} μέρες",
+  "@lineSpeedLastDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lineSpeedKmhWeekdays": "χλμ/ώ καθημερινές",
+  "lineSpeedKmhWeekends": "χλμ/ώ Σαββατοκύριακα",
+  "lineSpeedRank": "Χθες: {place}η πιο αργή από {total} γραμμές.",
+  "@lineSpeedRank": {
+    "description": "place 1 is the slowest line",
+    "placeholders": {
+      "place": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lineSpeedDayKmh": "{date}: {kmh} χλμ/ώ",
+  "@lineSpeedDayKmh": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "kmh": {
+        "type": "String"
+      }
+    }
+  },
+  "lineSpeedWeekday": "καθημερινή",
+  "lineSpeedWeekend": "Σαββατοκύριακο",
+  "lineSpeedFooter": "Μέση ταχύτητα όλης της μέρας, με τις στάσεις. Πηγή: καταγραφές θέσεων του ΟΑΣΑ από τον server μας.",
+  "lineSpeedMon": "Δε",
+  "@lineSpeedMon": {
+    "description": "2-letter weekday: Monday"
+  },
+  "lineSpeedTue": "Τρ",
+  "@lineSpeedTue": {
+    "description": "2-letter weekday: Tuesday"
+  },
+  "lineSpeedWed": "Τε",
+  "@lineSpeedWed": {
+    "description": "2-letter weekday: Wednesday"
+  },
+  "lineSpeedThu": "Πε",
+  "@lineSpeedThu": {
+    "description": "2-letter weekday: Thursday"
+  },
+  "lineSpeedFri": "Πα",
+  "@lineSpeedFri": {
+    "description": "2-letter weekday: Friday"
+  },
+  "lineSpeedSat": "Σα",
+  "@lineSpeedSat": {
+    "description": "2-letter weekday: Saturday"
+  },
+  "lineSpeedSun": "Κυ",
+  "@lineSpeedSun": {
+    "description": "2-letter weekday: Sunday"
+  },
+  "alertNoSchedule": "Δεν βρέθηκε πρόγραμμα για το {line}.",
+  "@alertNoSchedule": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "alertLastGone": "Το τελευταίο {line} πέρασε ήδη (~{time}).",
+  "@alertLastGone": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "alertLastNoteTitle": "Σε λίγο περνά το τελευταίο {line}",
+  "@alertLastNoteTitle": {
+    "description": "Notification title: the last run of the day is about to pass the stop.",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "alertLastNoteBody": "Από {stop} ~{time} (φεύγει {departs} από την αφετηρία).",
+  "@alertLastNoteBody": {
+    "description": "Notification body for the last run of the day.",
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "departs": {
+        "type": "String"
+      }
+    }
+  },
+  "alertLastSet": "Θα σε ειδοποιήσουμε {before}′ πριν: το τελευταίο {line} περνά ~{time}.",
+  "@alertLastSet": {
+    "placeholders": {
+      "before": {
+        "type": "int"
+      },
+      "line": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "alertLastSetDay": "Θα σε ειδοποιήσουμε {before}′ πριν: το τελευταίο {line} περνά {day} ~{time}.",
+  "@alertLastSetDay": {
+    "description": "{day} is one of alertOnMonday…alertOnSunday.",
+    "placeholders": {
+      "before": {
+        "type": "int"
+      },
+      "line": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "alertOnMonday": "τη Δευτέρα",
+  "alertOnTuesday": "την Τρίτη",
+  "alertOnWednesday": "την Τετάρτη",
+  "alertOnThursday": "την Πέμπτη",
+  "alertOnFriday": "την Παρασκευή",
+  "alertOnSaturday": "το Σάββατο",
+  "alertOnSunday": "την Κυριακή",
+  "alertScheduleOffline": "Δεν φόρτωσε το πρόγραμμα. Δοκίμασε ξανά με σύνδεση.",
+  "alertNoLocation": "Δεν βρέθηκε η θέση σου (άδεια ή GPS). Βάλε τον χρόνο περπατήματος με το χέρι.",
+  "alertWeeklySet": "Κανόνας: Δε–Πα τέτοια ώρα.",
+  "alertWeeklyInexact": "Χωρίς άδεια για ακριβή ξυπνητήρια μπορεί να ξεκινά λίγα λεπτά αργότερα.",
+  "alertLeaveSet": "Θα σου πούμε πότε να φύγεις για το {line}.",
+  "@alertLeaveSet": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "alertSet": "Θα σε ειδοποιήσουμε για το {line}.",
+  "@alertSet": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "alertWalkQuestion": "Πόσο απέχεις από τη στάση;",
+  "alertWalkExplain": "Με τη θέση σου υπολογίζεται πόσο περπατάς ως τη στάση και πότε να ξεκινήσεις, για να είσαι εκεί έγκαιρα. Η θέση μένει στο κινητό.",
+  "alertUseMyLocation": "Χρήση της θέσης μου",
+  "@alertUseMyLocation": {
+    "description": "A button."
+  },
+  "alertLeaveNow": "Φύγε τώρα",
+  "alertLeaveIn": "Φύγε σε {n}′",
+  "@alertLeaveIn": {
+    "description": "Large heading: minutes until the user should set off.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "alertAtClock": "στις {time}",
+  "@alertAtClock": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "alertWalkTo": "περπάτημα {n}′ ως {stop}",
+  "@alertWalkTo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "alertTooLate": "μάλλον δεν προλαβαίνεις αυτό",
+  "alertBarNow": "τώρα · {n}′",
+  "@alertBarNow": {
+    "description": "A short segment of a timeline bar.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "alertBarWalk": "περπάτημα {n}′",
+  "@alertBarWalk": {
+    "description": "A short segment of a timeline bar.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "alertBarWait": "περιμένεις {n}′",
+  "@alertBarWait": {
+    "description": "A short segment of a timeline bar.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "alertBeAtStop": "Θέλω να είμαι στη στάση",
+  "@alertBeAtStop": {
+    "description": "Label above chips: how many minutes early to be at the stop."
+  },
+  "alertMarginBefore": "{n}′ πριν",
+  "@alertMarginBefore": {
+    "description": "A chip: be at the stop this many minutes before the bus.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "alertWalk": "Περπάτημα",
+  "alertLeaveLateHint": "Αν το λεωφορείο αργήσει, σου λέμε να φύγεις αργότερα: ο χρόνος διορθώνεται με κάθε νέα θέση του λεωφορείου.",
+  "alertBeforeArrives": "πριν φτάσει",
+  "@alertBeforeArrives": {
+    "description": "Under a big minutes number."
+  },
+  "alertStopsBefore": "{n, plural, =1{στάση πριν} other{στάσεις πριν}}",
+  "@alertStopsBefore": {
+    "description": "Under a big number of stops.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "alertTitle": "Ειδοποίηση για τη στάση {stop}",
+  "@alertTitle": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "alertToward": "προς {headsign}",
+  "@alertToward": {
+    "description": "The direction of a line.",
+    "placeholders": {
+      "headsign": {
+        "type": "String"
+      }
+    }
+  },
+  "alertNearStart": "Η στάση σου είναι κοντά στην αφετηρία: θα σε ειδοποιήσουμε μόλις ξεκινήσει.",
+  "alertMeansNow": "Τώρα αυτό σημαίνει",
+  "alertWhenAt": "όταν είναι στο ",
+  "@alertWhenAt": {
+    "description": "Followed by a stop name in bold; keep the trailing space."
+  },
+  "alertWhenAtTail": ", {n, plural, =1{{n} στάση πριν} other{{n} στάσεις πριν}}",
+  "@alertWhenAtTail": {
+    "description": "After the bold stop name of alertWhenAt.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "alertTimeUpdates": "Ο χρόνος διορθώνεται με κάθε νέα θέση του λεωφορείου.",
+  "alertLeaveButton": "Πες μου πότε να φύγω",
+  "@alertLeaveButton": {
+    "description": "A button."
+  },
+  "alertNotifyMinutes": "Ειδοποίησέ με {n}′ πριν",
+  "@alertNotifyMinutes": {
+    "description": "A button.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "alertNotifyStops": "Ειδοποίησέ με {n, plural, =1{{n} στάση} other{{n} στάσεις}} πριν",
+  "@alertNotifyStops": {
+    "description": "A button.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "alertMoreOptions": "Περισσότερες επιλογές",
+  "alertModeMinutes": "Λεπτά πριν",
+  "@alertModeMinutes": {
+    "description": "A segmented button."
+  },
+  "alertModeStops": "Στάσεις πριν",
+  "@alertModeStops": {
+    "description": "A segmented button."
+  },
+  "alertModeLeave": "Φύγε εγκαίρως",
+  "@alertModeLeave": {
+    "description": "A segmented button."
+  },
+  "alertLiveLockScreen": "Live στην οθόνη κλειδώματος",
+  "alertLiveLockScreenSub": "Δείχνει την πορεία ως τη στάση σου",
+  "alertLateToo": "Πες μου και αν αργεί",
+  "@alertLateToo": {
+    "description": "A switch."
+  },
+  "alertLateTooSub": "Μία ειδοποίηση όταν ένα λεωφορείο για τη στάση σου έχει καθυστέρηση {n}′ ή παραπάνω",
+  "@alertLateTooSub": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "alertWeekdays": "Κάθε καθημερινή τέτοια ώρα;",
+  "alertLastOfDay": "Για το τελευταίο της ημέρας",
+  "alertLastOfDaySub": "Ειδοποίηση 15′ πριν περάσει από εδώ, από το πρόγραμμα",
+  "ruleEditMinutesBefore": "{n}′ πριν φτάσει",
+  "@ruleEditMinutesBefore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleEditStopsBefore": "{n, plural, =1{{n} στάση πριν φτάσει} other{{n} στάσεις πριν φτάσει}}",
+  "@ruleEditStopsBefore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleEditWhenLeave": "πότε να φύγω",
+  "@ruleEditWhenLeave": {
+    "description": "A word in the rule sentence: «…tell me when to leave…»."
+  },
+  "ruleEditTitle": "Κανόνας",
+  "@ruleEditTitle": {
+    "description": "Screen title."
+  },
+  "ruleEditNoStop": "Πρώτα αποθήκευσε μια στάση (καρτέλα Στάσεις).",
+  "ruleEditEvery": "Κάθε",
+  "@ruleEditEvery": {
+    "description": "Rule sentence: «Every Mon–Fri from 08:00 to 08:40 tell me 5′ before it arrives for the 602 at <stop>»."
+  },
+  "ruleEditFrom": "από",
+  "@ruleEditFrom": {
+    "description": "Rule sentence word, see ruleEditEvery."
+  },
+  "ruleEditUntil": "ως",
+  "@ruleEditUntil": {
+    "description": "Rule sentence word, see ruleEditEvery."
+  },
+  "ruleEditTellMe": "πες μου",
+  "@ruleEditTellMe": {
+    "description": "Rule sentence word, see ruleEditEvery."
+  },
+  "ruleEditForThe": "για το",
+  "@ruleEditForThe": {
+    "description": "Rule sentence word before a line number, see ruleEditEvery."
+  },
+  "ruleEditAt": "στο",
+  "@ruleEditAt": {
+    "description": "Rule sentence word before a stop name, see ruleEditEvery."
+  },
+  "ruleEditNotServed": "Το {line} δεν σταματά σε αυτή τη στάση (ή είναι το τέρμα του).",
+  "@ruleEditNotServed": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "ruleEditLeaveMath": "Περπάτημα {walk}′ + να είσαι εκεί 5′ νωρίτερα = ειδοποίηση {n}′ πριν φτάσει.",
+  "@ruleEditLeaveMath": {
+    "placeholders": {
+      "walk": {
+        "type": "int"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleEditEndAfterStart": "Το τέλος πρέπει να είναι μετά την αρχή.",
+  "ruleEditLateSub": "Όταν η καθυστέρηση φτάσει {n}′",
+  "@ruleEditLateSub": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleEditEarlier": "15′ νωρίτερα",
+  "@ruleEditEarlier": {
+    "description": "A button tooltip."
+  },
+  "ruleEditLater": "15′ αργότερα",
+  "@ruleEditLater": {
+    "description": "A button tooltip."
+  },
+  "ruleEditPickStopFirst": "Διάλεξε πρώτα στάση.",
+  "rulesDayMon": "Δε",
+  "@rulesDayMon": {
+    "description": "Two-letter weekday: Monday."
+  },
+  "rulesDayTue": "Τρ",
+  "@rulesDayTue": {
+    "description": "Two-letter weekday: Tuesday."
+  },
+  "rulesDayWed": "Τε",
+  "@rulesDayWed": {
+    "description": "Two-letter weekday: Wednesday."
+  },
+  "rulesDayThu": "Πε",
+  "@rulesDayThu": {
+    "description": "Two-letter weekday: Thursday."
+  },
+  "rulesDayFri": "Πα",
+  "@rulesDayFri": {
+    "description": "Two-letter weekday: Friday."
+  },
+  "rulesDaySat": "Σα",
+  "@rulesDaySat": {
+    "description": "Two-letter weekday: Saturday."
+  },
+  "rulesDaySun": "Κυ",
+  "@rulesDaySun": {
+    "description": "Two-letter weekday: Sunday."
+  },
+  "rulesMonFri": "Δε–Πα",
+  "@rulesMonFri": {
+    "description": "Weekdays, Monday to Friday."
+  },
+  "rulesEveryDay": "Κάθε μέρα",
+  "rulesWeekend": "Σα–Κυ",
+  "@rulesWeekend": {
+    "description": "The weekend, Saturday and Sunday."
+  },
+  "rulesMinutesBefore": "{n}′ πριν",
+  "@rulesMinutesBefore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesStopsBefore": "{n, plural, =1{{n} στάση πριν} other{{n} στάσεις πριν}}",
+  "@rulesStopsBefore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesAndIfLate": "και αν αργεί",
+  "rulesNewRule": "Νέος κανόνας",
+  "@rulesNewRule": {
+    "description": "A button."
+  },
+  "rulesNow": "Τώρα",
+  "@rulesNow": {
+    "description": "Section heading: alerts active now."
+  },
+  "rulesNowEmpty": "Πάτα το καμπανάκι δίπλα σε μια γραμμή στη στάση σου.",
+  "rulesTrip": "Ταξίδι με το {line} · κατεβαίνεις {stop}",
+  "@rulesTrip": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesStoppedFromCard": "Σταμάτησε από την κάρτα live",
+  "rulesUntil": "ως {time}",
+  "@rulesUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesWeekly": "Κάθε εβδομάδα",
+  "@rulesWeekly": {
+    "description": "Section heading: weekly rules."
+  },
+  "rulesWeeklyEmpty": "Π.χ. «Δε–Πα 08:00–08:40, 5′ πριν το 602 στη στάση σου».",
+  "rulesPaused": "Σε παύση",
+  "rulesStoppedToday": "Σταμάτησε για σήμερα",
+  "rulesRunningNow": "Τρέχει τώρα",
+  "rulesNext": "Επόμενη: {when} {time}",
+  "@rulesNext": {
+    "description": "{when} is rulesToday, rulesTomorrow or rulesInDays.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rulesToday": "σήμερα",
+  "rulesTomorrow": "αύριο",
+  "rulesInDays": "σε {n} μέρες",
+  "@rulesInDays": {
+    "description": "Two or more days.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesResume": "Συνέχισε",
+  "@rulesResume": {
+    "description": "A button."
+  },
+  "rulesExactHint": "Οι κανόνες μπορεί να ξεκινούν λίγα λεπτά αργότερα: το Android δεν μας έχει δώσει άδεια για ακριβή ξυπνητήρια.",
+  "rulesGrant": "Δώσε άδεια",
+  "@rulesGrant": {
+    "description": "A button: grant the exact-alarm permission."
+  },
+  "followNoLocation": "Χρειάζεται άδεια τοποθεσίας για να καταλάβει η εφαρμογή πότε ανεβαίνεις.",
+  "followStopNotOnLine": "Η στάση δεν βρέθηκε στη γραμμή.",
+  "followNotStarted": "Δεν ξεκίνησε η ειδοποίηση. Πάτα ξανά με την εφαρμογή ανοιχτή.",
+  "followLineNotLoaded": "Δεν φόρτωσε η γραμμή. Δοκίμασε ξανά με σύνδεση.",
+  "followReady": "Έτοιμο. Ανέβα στο {line} και θα σε ειδοποιήσουμε μία στάση πριν από {stop}, ακόμη κι αν η εφαρμογή είναι κλειστή.",
+  "@followReady": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "followStop": "Σταμάτα",
+  "@followStop": {
+    "description": "A button: stop following the trip."
+  },
+  "followButton": "Πες μου πότε να κατέβω",
+  "@followButton": {
+    "description": "A button."
+  },
+  "rideNoBus": "Δεν βρέθηκε λεωφορείο κοντά σου. Διάλεξέ το στον χάρτη και πάτα «Πού κατεβαίνω;».",
+  "rideAtTerminus": "Το λεωφορείο είναι στο τέρμα: καμία στάση μετά.",
+  "rideWhere": "Πού κατεβαίνεις;",
+  "rideVibrate": "Θα δονηθεί το κινητό μία στάση πριν: «Κατέβα στην επόμενη».",
+  "rideVibrateAlerts": "Θα δονηθεί το κινητό μία στάση πριν: «Κατέβα στην επόμενη». Το βλέπεις και στις Ειδοποιήσεις.",
+  "@rideVibrateAlerts": {
+    "description": "«Ειδοποιήσεις» is the alerts screen of the app."
+  },
+  "rideOnBoard": "Είσαι μέσα · θα σε ειδοποιήσουμε",
+  "rideNoPermission": "Χωρίς άδεια ειδοποιήσεων",
+  "rideGetOffAt": "Κατεβαίνεις στο",
+  "@rideGetOffAt": {
+    "description": "Above a big stop name."
+  },
+  "rideAbout": "περίπου {mins}",
+  "@rideAbout": {
+    "description": "{mins} is a short time such as 5′.",
+    "placeholders": {
+      "mins": {
+        "type": "String"
+      }
+    }
+  },
+  "favsAddStop": "Στάση",
+  "@favsAddStop": {
+    "description": "A button with a + icon: add a stop."
+  },
+  "favsWhereHome": "Πού είναι το σπίτι σου;",
+  "favsPlacesSub": "Μέρη: σπίτι, δουλειά και άλλα · μένουν μόνο στο κινητό",
+  "favsPlaces": "Μέρη",
+  "@favsPlaces": {
+    "description": "Page title: the saved places (home, work, others)."
+  },
+  "favsMorning": "Πρωί: πρώτα η στάση του σπιτιού",
+  "favsAfternoon": "Απόγευμα: πρώτα η στάση της δουλειάς",
+  "favsEmpty": "Καμία αποθηκευμένη στάση ακόμη. Πάτα «+ Στάση».",
+  "favsStops": "Στάσεις",
+  "@favsStops": {
+    "description": "Section heading."
+  },
+  "favsLines": "Γραμμές",
+  "@favsLines": {
+    "description": "Section heading."
+  },
+  "favsLinesEmpty": "Καμία γραμμή ακόμη. Πάτα το αστέρι σε μια γραμμή για να τη βλέπεις εδώ.",
+  "favsLastHome": "Το τελευταίο {line} για το σπίτι",
+  "@favsLastHome": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "favsLastHomeBody": "Φεύγει {departs} από {from} και περνά ~{time} από {stop}. Πρόγραμμα, όχι live.",
+  "@favsLastHomeBody": {
+    "placeholders": {
+      "departs": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "favsWillNotify": "Θα σε ειδοποιήσουμε",
+  "favsNoGpsBus": "κανένα λεωφορείο με GPS τώρα",
+  "favsOnRoad": "{n} στον δρόμο",
+  "@favsOnRoad": {
+    "description": "Buses of a line on the road now.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "favsAllOnTime": "όλα στην ώρα τους",
+  "favsLate": "{n, plural, =1{{n} αργεί} other{{n} αργούν}}",
+  "@favsLate": {
+    "description": "Buses running late.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "favsOptions": "Επιλογές",
+  "@favsOptions": {
+    "description": "Menu tooltip."
+  },
+  "favsIsHome": "Είναι το σπίτι",
+  "favsIsWork": "Είναι η δουλειά",
+  "favsNeither": "Ούτε σπίτι ούτε δουλειά",
+  "favsRemove": "Αφαίρεση",
+  "favsQuiet": "Χωρίς λεωφορείο με GPS τώρα: {lines}",
+  "@favsQuiet": {
+    "placeholders": {
+      "lines": {
+        "type": "String"
+      }
+    }
+  },
+  "favsAllLines": "Όλες οι γραμμές εδώ ({n}) ›",
+  "@favsAllLines": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "addStopTitle": "Ποια στάση θέλεις να κρατήσεις;",
+  "addStopSub": "Θα τη βρίσκεις στα αγαπημένα, με τις γραμμές που διαλέγεις.",
+  "addStopSearchHint": "Γράψε το όνομα της στάσης",
+  "addStopSearchHintOr": "Ή γράψε το όνομα της στάσης",
+  "addStopNone": "Δεν βρέθηκε στάση. Γράψε το όνομά της.",
+  "addStopMeters": "{m} μ.",
+  "@addStopMeters": {
+    "description": "A distance in metres.",
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "addStopWhichLines": "Ποιες γραμμές σε νοιάζουν εδώ;",
+  "addStopMaxLines": "Ως {n} γραμμές συνολικά.",
+  "@addStopMaxLines": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "addStopPickStop": "Διάλεξε στάση",
+  "@addStopPickStop": {
+    "description": "A disabled button says what is missing."
+  },
+  "addStopPickLine": "Διάλεξε τουλάχιστον μία γραμμή",
+  "@addStopPickLine": {
+    "description": "A disabled button says what is missing."
+  },
+  "linesPickerMax": "Ως {n} γραμμές σε όλη την εφαρμογή.",
+  "@linesPickerMax": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "stopReturn": "{place} (επιστροφή)",
+  "@stopReturn": {
+    "description": "A loop line heading back to {place}.",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "stopBellOn": "Ειδοποίηση για το {line}: ενεργή",
+  "@stopBellOn": {
+    "description": "A button tooltip.",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "stopBellOff": "Ειδοποίησέ με για το {line}",
+  "@stopBellOff": {
+    "description": "A button tooltip.",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "stopLinesCount": "{n, plural, =1{{n} γραμμή} other{{n} γραμμές}}",
+  "@stopLinesCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "stopAcross": "Απέναντι στάση · {m} μ.",
+  "@stopAcross": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "stopSave": "Αποθήκευση στάσης",
+  "@stopSave": {
+    "description": "A button tooltip."
+  },
+  "stopSaved": "Αποθηκευμένη στάση",
+  "@stopSaved": {
+    "description": "A button tooltip."
+  },
+  "stopHowToGet": "Πώς πάω εκεί",
+  "@stopHowToGet": {
+    "description": "A button: plan a trip to this stop."
+  },
+  "stopTripFrom": "Ταξίδι από εδώ",
+  "@stopTripFrom": {
+    "description": "A button: plan a trip from this stop."
+  },
+  "stopEstimate": "Οι χρόνοι είναι εκτίμηση από τα τελευταία δεδομένα και την ταχύτητα που έχει συνήθως η γραμμή. Διορθώνονται μόλις βρεθεί σήμα.",
+  "stopNoBus": "Κανένα λεωφορείο με GPS δεν έρχεται τώρα.",
+  "stopYourLines": "Οι γραμμές σου",
+  "@stopYourLines": {
+    "description": "Section heading."
+  },
+  "stopAlsoHere": "Περνούν επίσης",
+  "@stopAlsoHere": {
+    "description": "Section heading."
+  },
+  "stopAllLines": "Όλες οι γραμμές · +{n} ›",
+  "@stopAllLines": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "stopMissed": "Δεν ξεκίνησαν · δεν φάνηκε λεωφορείο να φεύγει από την αφετηρία",
+  "stopMissedRun": "→ {headsign} · των {time}",
+  "@stopMissedRun": {
+    "placeholders": {
+      "headsign": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stopOtherOption": "Άλλη επιλογή",
+  "@stopOtherOption": {
+    "description": "A button: plan another way."
+  },
+  "stopPlanned": "Δεν ξεκίνησαν ακόμη · από το πρόγραμμα",
+  "stopPlannedNote": "Ώρα αναχώρησης από την αφετηρία + η διαδρομή ως εδώ με μέση ταχύτητα. Όχι live.",
+  "stopQuiet": "Χωρίς λεωφορείο κοντά τώρα: {lines}",
+  "@stopQuiet": {
+    "placeholders": {
+      "lines": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFixSent": "Έστειλες διόρθωση θέσης για αυτή τη στάση. Ευχαριστούμε!",
+  "stopWrongPlace": "Λάθος θέση;",
+  "@stopWrongPlace": {
+    "description": "A button: report that the stop is in the wrong place on the map."
+  },
+  "vehicleOffline": "Δεν φορτώνει το λεωφορείο: χωρίς σύνδεση. Νέα προσπάθεια σε λίγο.",
+  "vehicleGone": "Το λεωφορείο #{id} δεν στέλνει θέση τώρα: μάλλον τελείωσε το δρομολόγιό του.",
+  "@vehicleGone": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleSeeLine": "Δες τα λεωφορεία του {line}",
+  "@vehicleSeeLine": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleAtYourStop": "στη στάση σου · {stop}",
+  "@vehicleAtYourStop": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleAtNextStop": "στην επόμενη στάση · {stop}",
+  "@vehicleAtNextStop": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleNotify": "Ειδοποίησέ με",
+  "@vehicleNotify": {
+    "description": "A button."
+  },
+  "vehicleWhereGetOff": "Πού κατεβαίνω;",
+  "@vehicleWhereGetOff": {
+    "description": "A button."
+  },
+  "vehicleDetails": "Λεπτομέρειες",
+  "vehicleNoSpeed": "— χλμ/ώ",
+  "vehicleSpeed": "{speed} χλμ/ώ",
+  "@vehicleSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "int"
+      }
+    }
+  },
+  "vehicleLineSpeeds": "ταχύτητες γραμμής",
+  "@vehicleLineSpeeds": {
+    "description": "A link to the speeds of the line."
+  },
+  "vehicleUsually": "συνήθως {usual}",
+  "@vehicleUsually": {
+    "description": "The usual speed in km/h.",
+    "placeholders": {
+      "usual": {
+        "type": "int"
+      }
+    }
+  },
+  "vehicleFixAge": "θέση πριν {ago}",
+  "@vehicleFixAge": {
+    "description": "{ago} is a short age such as 20″ or 2′.",
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleId": "όχημα {id}",
+  "@vehicleId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleTrip": "δρομολόγιο {trip}",
+  "@vehicleTrip": {
+    "placeholders": {
+      "trip": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleNextStops": "Επόμενες στάσεις",
+  "@vehicleNextStops": {
+    "description": "Section heading."
+  },
+  "vehicleAllNext": "Όλες οι επόμενες ({n})",
+  "@vehicleAllNext": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "vehicleUnknownTrip": "Δεν ξέρουμε ακόμη ποιο δρομολόγιο κάνει το λεωφορείο.",
+  "vehicleYourStop": "{stop} · η στάση σου",
+  "@vehicleYourStop": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "vehicleWhichStop": "Σε ποια στάση;",
+  "vehicleWhichStopSub": "Θα σε ειδοποιήσουμε πριν φτάσει εκεί το λεωφορείο.",
+  "goHomeKickerHome": "ΓΥΡΝΑΣ ΣΠΙΤΙ",
+  "@goHomeKickerHome": {
+    "description": "A kicker in capitals above a card title; keep it in capitals."
+  },
+  "goHomeKickerWork": "ΠΑΜΕ ΔΟΥΛΕΙΑ",
+  "@goHomeKickerWork": {
+    "description": "A kicker in capitals above a card title; keep it in capitals."
+  },
+  "goHomeKickerFrom": "ΑΠΟ {stop}",
+  "@goHomeKickerFrom": {
+    "description": "A kicker in capitals; {stop} is already in capitals.",
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "goHomeAskHomeSub": "Αρκεί μια περιοχή. Μένει μόνο στο κινητό σου.",
+  "goHomeNoneComing": "Κανένα από {lines} δεν έρχεται τώρα",
+  "@goHomeNoneComing": {
+    "placeholders": {
+      "lines": {
+        "type": "String"
+      }
+    }
+  },
+  "goHomeNext": "Το {line} → {toward}",
+  "@goHomeNext": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "toward": {
+        "type": "String"
+      }
+    }
+  },
+  "goHomeWith": "Με το {line} από {stop}",
+  "@goHomeWith": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "goHomeNoDirect": "Χωρίς απευθείας λεωφορείο",
+  "goHomeMyLocation": "Η θέση μου",
+  "@goHomeMyLocation": {
+    "description": "The start of a trip: where the phone is."
+  },
+  "goHomePassesIn": "περνά σε {mins}",
+  "@goHomePassesIn": {
+    "description": "{mins} is a short time such as 5′.",
+    "placeholders": {
+      "mins": {
+        "type": "String"
+      }
+    }
+  },
+  "goHomeTapForRoute": "Πάτα για διαδρομή με αλλαγή ή μετρό.",
+  "goHomeLeaveIn": "φύγε σε",
+  "@goHomeLeaveIn": {
+    "description": "Small label above a minutes value."
+  },
+  "goHomeLast": "{n, plural, =1{τελευταίο} other{τελευταία}}: {runs}",
+  "@goHomeLast": {
+    "description": "The last runs home today; {runs} is a list of goHomeRunAt.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "runs": {
+        "type": "String"
+      }
+    }
+  },
+  "goHomeRunAt": "{line} στις {time}",
+  "@goHomeRunAt": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stopfixThanks": "Ευχαριστούμε, το λάβαμε!",
+  "stopfixNotImmediate": "Η στάση δεν αλλάζει αμέσως: κάθε πρόταση ελέγχεται με το GPS των λεωφορείων.",
+  "stopfixTapMap": "Πάτα στον χάρτη εκεί που είναι το κολωνάκι",
+  "stopfixTooFar": "Πάνω από {m} μ. από τη στάση. Φέρε την πιο κοντά.",
+  "@stopfixTooFar": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "stopfixFailed": "Δεν στάλθηκε. Έλεγξε τη σύνδεση και ξαναδοκίμασε.",
+  "stopfixKnown": "Η μικρή τελεία είναι η θέση που ξέρουμε.",
+  "stopfixMoved": "Μετακίνηση {m} μ.",
+  "@stopfixMoved": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "stopfixSending": "Αποστολή…",
+  "stopfixSend": "Αποστολή",
+  "@stopfixSend": {
+    "description": "A button."
+  },
+  "stopfixStreetView": "Δες το σημείο στο Street View ›",
+  "stopfixPrivacy": "Στέλνεται η θέση της πινέζας, η στάση και ένας τυχαίος κωδικός συσκευής.",
+  "menuCity": "Πόλη",
+  "menuPlanner": "Διαδρομή",
+  "@menuPlanner": {
+    "description": "Menu item and page title: the trip planner."
+  },
+  "menuLines": "Γραμμές",
+  "menuUpdates": "Ενημερώσεις",
+  "@menuUpdates": {
+    "description": "Menu item: the operator's announcements (strikes, changed routes)."
+  },
+  "menuAlerts": "Ειδοποιήσεις",
+  "@menuAlerts": {
+    "description": "Menu item: the user's alert rules."
+  },
+  "menuPlaces": "Μέρη",
+  "menuWidgets": "Widgets",
+  "@menuWidgets": {
+    "description": "Menu item: the Android home-screen widgets."
+  },
+  "menuStats": "Στατιστικά",
+  "menuSettings": "Ρυθμίσεις",
+  "menuAbout": "Σχετικά",
+  "menuHowItWorks": "Πώς δουλεύει",
+  "menuCityBuses": "λεωφορεία",
+  "@menuCityBuses": {
+    "description": "After the agency in the city picker: «ΟΣΕΘ · λεωφορεία»."
+  },
+  "menuLinesError": "Δεν φόρτωσαν. Δοκίμασε ξανά",
+  "@menuLinesError": {
+    "description": "A button: the list of lines failed to load."
+  },
+  "menuLinesHint": "Αριθμός ή όνομα γραμμής",
+  "menuUpdatesSoon": "Εδώ θα βλέπεις τις ανακοινώσεις του ΟΑΣΑ: απεργίες, αλλαγές γραμμών. Έρχεται σύντομα.",
+  "menuPlaceAdd": "Πρόσθεσε διεύθυνση ή περιοχή",
+  "menuPlaceApprox": "περίπου",
+  "@menuPlaceApprox": {
+    "description": "After a saved place's label: the place is an area, not an exact address."
+  },
+  "menuOtherPlace": "Άλλο μέρος",
+  "menuPlacesNote": "Αρκεί μια περιοχή. Δεν κρατάμε κανένα δεδομένο: τα μέρη μένουν μόνο στο κινητό σου. Με το «Σπίτι» βλέπεις πώς γυρνάς· με τη «Δουλειά», πώς πας το πρωί.",
+  "menuNewPlace": "Νέο μέρος",
+  "menuNewPlaceHint": "Όνομα, π.χ. Σχολείο",
+  "menuWidgetStop": "«Η στάση μου»",
+  "@menuWidgetStop": {
+    "description": "The name of a home-screen widget."
+  },
+  "menuWidgetStopBody": "Οι επόμενες αφίξεις στην αγαπημένη σου στάση.",
+  "menuWidgetHome": "«Γυρνάς σπίτι»",
+  "@menuWidgetHome": {
+    "description": "The name of a home-screen widget."
+  },
+  "menuWidgetHomeBody": "Τα τελευταία λεωφορεία για το σπίτι σήμερα. Γεμίζει όταν ανοίξεις την εφαρμογή μακριά από το σπίτι.",
+  "menuLinkIdea": "Πρότεινε μια ιδέα",
+  "menuLinkWrongStop": "Λάθος θέση στάσης; Πες μας",
+  "menuLinkAbout": "Σχετικά · δεδομένα · ανοιχτό API",
+  "menuLinkWeb": "Ο χάρτης στο web",
+  "menuUnofficialNote": "Ανεπίσημη εφαρμογή. Δεν έχει σχέση με τον ΟΑΣΑ, τον ΟΑΣΘ, τη ΣΤΑΣΥ ή την Hellenic Train, και δεν εκπροσωπεί κανέναν από αυτούς.",
+  "@menuUnofficialNote": {
+    "description": "In About and on the welcome: the app must not pass as an operator's official app."
+  },
+  "menuVersion": "Έκδοση {version}",
+  "@menuVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "menuTerms": "Όροι χρήσης",
+  "menuPrivacy": "Πολιτική απορρήτου",
+  "menuLicenses": "Άδειες ανοιχτού κώδικα",
+  "menuDataSources": "Πηγές δεδομένων: ΟΑΣΑ (GTFS, άδεια CC BY-NC, και δημόσια δεδομένα telematics) · ΟΑΣΘ (δημόσια δεδομένα, data.gov.gr) · ΣΤΑΣΥ (GTFS) · Hellenic Train (railway.gov.gr). Χάρτης: OpenFreeMap, © OpenStreetMap contributors. Αναζήτηση διευθύνσεων: Photon (komoot), © OpenStreetMap contributors.",
+  "settingsTheme": "Θέμα",
+  "settingsThemeSystem": "Σύστημα",
+  "@settingsThemeSystem": {
+    "description": "Theme choice: follow the phone."
+  },
+  "settingsThemeLight": "Ανοιχτό",
+  "@settingsThemeLight": {
+    "description": "Theme choice."
+  },
+  "settingsThemeDark": "Σκούρο",
+  "@settingsThemeDark": {
+    "description": "Theme choice."
+  },
+  "settingsWalk": "Περπάτημα ως τη στάση του σπιτιού",
+  "settingsWalkNote": "Για τον κανόνα «πότε να φύγω».",
+  "settingsLiveCard": "Live κάρτα στις νέες ειδοποιήσεις",
+  "settingsLiveCardBody": "Η πορεία του λεωφορείου στην οθόνη κλειδώματος. Αλλάζει και σε κάθε ειδοποίηση.",
+  "settingsLastBus": "Παρασκευή και Σάββατο βράδυ: το τελευταίο για το σπίτι",
+  "settingsLastBusBody": "Στις 21:00 μια ειδοποίηση με το τελευταίο λεωφορείο της στάσης «Σπίτι»",
+  "settingsMapHelp": "Πώς διαβάζεται ο χάρτης",
+  "settingsMapHelpBody": "Χρώματα, σύμβολα, από πού έρχονται οι χρόνοι",
+  "settingsDeleteAll": "Διαγραφή όλων των δεδομένων",
+  "settingsDeleteAllBody": "Αγαπημένα, μέρη, ειδοποιήσεις, ρυθμίσεις. Η εφαρμογή ξεκινά από την αρχή.",
+  "settingsDeleteAllTitle": "Διαγραφή όλων των δεδομένων;",
+  "settingsDeleteAllWarning": "Θα διαγραφούν από αυτό το κινητό τα αγαπημένα, τα μέρη, οι ειδοποιήσεις και οι ρυθμίσεις. Δεν αναιρείται.",
+  "welcomeHomeTitle": "Καλώς ήρθες στις Στάσεις",
+  "welcomeHomeBody": "Κάθε λεωφορείο της πόλης στον χάρτη, ζωντανά. Το χρώμα του δείχνει αν αργεί σε σχέση με το πρόγραμμα.",
+  "welcomeStopTitle": "Στάσεις και αγαπημένα",
+  "welcomeStopBody": "Πάτα μια στάση για να δεις τι έρχεται και σε πόσα λεπτά. Με το αστέρι την κρατάς στα αγαπημένα.",
+  "welcomeAlertTitle": "Πες μου πότε να φύγω",
+  "welcomeAlertBody": "Πάτα το καμπανάκι δίπλα σε ένα λεωφορείο και θα σε ειδοποιήσουμε λίγο πριν φτάσει. Ή φτιάξε κανόνα για κάθε πρωί.",
+  "welcomePlanTitle": "Από εδώ ως εκεί",
+  "welcomePlanBody": "Η «Διαδρομή» στο μενού βρίσκει πώς πας κάπου, με τις αλλαγές και τους χρόνους από τα λεωφορεία που κινούνται τώρα.",
+  "welcomeSkip": "Παράλειψη",
+  "welcomeStart": "Ξεκίνα",
+  "@welcomeStart": {
+    "description": "The last welcome button: opens the map."
+  },
+  "welcomePermissionsTitle": "Δύο άδειες",
+  "welcomePermissionsBody": "Και οι δύο είναι προαιρετικές. Τις αλλάζεις όποτε θέλεις από τις ρυθμίσεις του κινητού.",
+  "welcomePrivacyTitle": "Χωρίς λογαριασμό, διαφημίσεις ή tracking",
+  "welcomePrivacyBody": "Η θέση σου, το σπίτι, η δουλειά και τα αγαπημένα μένουν μόνο στο κινητό σου.",
+  "welcomeLocationTitle": "Τοποθεσία",
+  "@welcomeLocationTitle": {
+    "description": "A permission card."
+  },
+  "welcomeLocationBody": "Για τις στάσεις κοντά σου και τον χρόνο περπατήματος. Η θέση μένει στο κινητό.",
+  "welcomeNotificationsTitle": "Ειδοποιήσεις",
+  "@welcomeNotificationsTitle": {
+    "description": "A permission card."
+  },
+  "welcomeNotificationsBody": "Για να σου λέμε πότε να φύγεις και πότε φτάνει το λεωφορείο σου.",
+  "welcomeGranted": "Δόθηκε",
+  "@welcomeGranted": {
+    "description": "A permission was granted."
+  },
+  "welcomeDenied": "Δεν δόθηκε · δοκίμασε ξανά",
+  "@welcomeDenied": {
+    "description": "A button: a permission was refused; ask again."
+  },
+  "welcomeAllow": "Επίτρεψε",
+  "@welcomeAllow": {
+    "description": "A button: ask for the permission."
+  },
+  "statsDayName": "{day, select, mon{Δευτέρα} tue{Τρίτη} wed{Τετάρτη} thu{Πέμπτη} fri{Παρασκευή} sat{Σάββατο} other{Κυριακή}}",
+  "@statsDayName": {
+    "description": "A weekday's full name, in a date such as «Δευτέρα 24 Νοεμβρίου».",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "statsMonthName": "{month, select, jan{Ιανουαρίου} feb{Φεβρουαρίου} mar{Μαρτίου} apr{Απριλίου} may{Μαΐου} jun{Ιουνίου} jul{Ιουλίου} aug{Αυγούστου} sep{Σεπτεμβρίου} oct{Οκτωβρίου} nov{Νοεμβρίου} other{Δεκεμβρίου}}",
+  "@statsMonthName": {
+    "description": "A month's name as it reads in a date (Greek: the genitive, «24 Νοεμβρίου»).",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "statsDate": "{weekday} {day} {month}",
+  "@statsDate": {
+    "description": "A date: «Δευτέρα 24 Νοεμβρίου», “Monday 24 November”.",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "statsTitle": "Στατιστικά δικτύου",
+  "statsTabYesterday": "Χθες",
+  "@statsTabYesterday": {
+    "description": "A tab: the newest full day."
+  },
+  "statsTabTrends": "Τάσεις",
+  "@statsTabTrends": {
+    "description": "A tab: the stored days together."
+  },
+  "statsLongError": "Δεν φόρτωσαν οι προηγούμενες μέρες.",
+  "statsNeedDays": "Χρειάζονται τουλάχιστον 2 πλήρεις μέρες.",
+  "statsLastDays": "Οι τελευταίες {count} πλήρεις μέρες",
+  "@statsLastDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsSpeedByHour": "Μέση ταχύτητα ανά ώρα",
+  "statsSpeedNote": "Η μπάρα: από την πιο αργή ως την πιο γρήγορη μέρα. Η τελεία: όλες μαζί.",
+  "statsWeekdaysWeekends": "Καθημερινές και Σαββατοκύριακα",
+  "statsKmhWeekdays": "χλμ/ώ καθημερινές ({count})",
+  "@statsKmhWeekdays": {
+    "description": "Under a speed; count: the number of days.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsKmhWeekends": "χλμ/ώ Σ/Κ ({count})",
+  "@statsKmhWeekends": {
+    "description": "Under a speed; count: the number of days.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsBusesByHour": "Λεωφορεία ανά ώρα",
+  "statsLegendWeekday": "καθημερινή",
+  "@statsLegendWeekday": {
+    "description": "A chart legend."
+  },
+  "statsLegendWeekend": "Σαββατοκύριακο",
+  "@statsLegendWeekend": {
+    "description": "A chart legend."
+  },
+  "statsChanged": "Γραμμές που άλλαξαν ({date})",
+  "@statsChanged": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "statsComparedWeekdays": "Σε σχέση με {count} προηγούμενες καθημερινές.",
+  "@statsComparedWeekdays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsComparedWeekends": "Σε σχέση με {count} προηγούμενες μέρες Σαββατοκύριακου.",
+  "@statsComparedWeekends": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsLongSource": "Μόνο πλήρεις μέρες (χωρίς κενά στις καταγραφές). Πηγή: καταγραφές θέσεων του ΟΑΣΑ από τον server μας.",
+  "statsWorst": "Χειρότερες γραμμές",
+  "statsDaysCount": "{count, plural, =1{1 μέρα} other{{count} μέρες}}",
+  "@statsDaysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsMissedTitle": "Δρομολόγια που δεν έγιναν",
+  "statsNoLines": "Καμία γραμμή με αρκετά δρομολόγια.",
+  "statsMissedOf": "{missed} από {measured} δεν έγιναν",
+  "@statsMissedOf": {
+    "placeholders": {
+      "missed": {
+        "type": "int"
+      },
+      "measured": {
+        "type": "int"
+      }
+    }
+  },
+  "statsExpiredDays": "{expired} από τις {count} μέρες μετρήθηκαν με παλιό πρόγραμμα: κάποια «χαμένα» δρομολόγια μπορεί να μην υπάρχουν πια.",
+  "@statsExpiredDays": {
+    "placeholders": {
+      "expired": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsSlowest": "Πιο αργές",
+  "statsKmh": "{speed} χλμ/ώ",
+  "@statsKmh": {
+    "description": "A speed, already formatted: «12,3 χλμ/ώ».",
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "statsHours": "{count} ώρες",
+  "@statsHours": {
+    "description": "Vehicle-hours measured on a line.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsNoDelayNote": "Καθυστέρηση ανά δρομολόγιο δεν καταγράφεται ακόμη· εδώ μετράνε τα χαμένα δρομολόγια και η ταχύτητα.",
+  "statsTrend": "{speed} χλμ/ώ (συνήθως {usual})",
+  "@statsTrend": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      },
+      "usual": {
+        "type": "String"
+      }
+    }
+  },
+  "statsDayError": "Δεν φόρτωσαν τα στατιστικά.",
+  "statsBuses": "λεωφορεία",
+  "@statsBuses": {
+    "description": "Under a number in a tile."
+  },
+  "statsLines": "γραμμές",
+  "@statsLines": {
+    "description": "Under a number in a tile."
+  },
+  "statsAvgKmh": "μέση χλμ/ώ",
+  "@statsAvgKmh": {
+    "description": "Under a speed in a tile."
+  },
+  "statsSlowLines": "Πιο αργές γραμμές",
+  "statsFastLines": "Πιο γρήγορες γραμμές",
+  "statsDaySource": "Πηγή: καταγραφές θέσεων του ΟΑΣΑ από τον server μας. Ανανεώνεται μία φορά τη μέρα.",
+  "statsTrips": "Δρομολόγια",
+  "statsTripsShare": "Έγινε το {percent}% των δρομολογίων",
+  "@statsTripsShare": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "statsRunOf": "{run} από {measured}",
+  "@statsRunOf": {
+    "placeholders": {
+      "run": {
+        "type": "int"
+      },
+      "measured": {
+        "type": "int"
+      }
+    }
+  },
+  "statsExpired": "Η σύγκριση γίνεται με το πρόγραμμα του ΟΑΣΑ της {date}, γιατί νεότερο δεν έχει δημοσιευτεί. Μερικά δρομολόγια που λείπουν μπορεί να μην υπάρχουν πια.",
+  "@statsExpired": {
+    "description": "date: d/m/yyyy.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "statsUnseen": "{count} γραμμές χωρίς κανένα δρομολόγιο",
+  "@statsUnseen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsKmHours": "{km} χλμ · {hours} ώρες",
+  "@statsKmHours": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "widgetsLive": "ζωντανά: {time}",
+  "@widgetsLive": {
+    "description": "Screen-reader label of a live arrival time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "widgetsLate": "αργεί {minutes}′",
+  "@widgetsLate": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "widgetsEarly": "νωρίτερα {minutes}′",
+  "@widgetsEarly": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "widgetsFromTimetable": "από το πρόγραμμα",
+  "@widgetsFromTimetable": {
+    "description": "Under a headsign: the time is from the timetable, no GPS."
+  },
+  "widgetsEstimate": "εκτίμηση",
+  "@widgetsEstimate": {
+    "description": "Under a headsign: offline, the time is estimated from the last data."
+  },
+  "widgetsStopsAway": "{count, plural, =1{1 στάση μακριά} other{{count} στάσεις μακριά}}",
+  "@widgetsStopsAway": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "widgetsThen": "μετά {times}",
+  "@widgetsThen": {
+    "description": "The next arrivals after the first: «μετά 12′, 25′».",
+    "placeholders": {
+      "times": {
+        "type": "String"
+      }
+    }
+  },
+  "widgetsReturn": "{headsign} (επιστροφή)",
+  "@widgetsReturn": {
+    "description": "A loop line on its way back.",
+    "placeholders": {
+      "headsign": {
+        "type": "String"
+      }
+    }
+  },
+  "widgetsOffline": "Χωρίς σύνδεση",
+  "widgetsLastData": "τελευταία δεδομένα πριν {ago}",
+  "@widgetsLastData": {
+    "description": "After «Offline ·»; ago: «5′».",
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "widgetsLiveNote": "Live",
+  "@widgetsLiveNote": {
+    "description": "Live data, before the first update time is known."
+  },
+  "widgetsUpdatedAt": "Τελευταία ενημέρωση {time}",
+  "@widgetsUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "widgetsLineTooltip": "Η γραμμή {line}",
+  "@widgetsLineTooltip": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "lineRemoveMine": "Βγάλε από τις γραμμές μου",
+  "lineAddMine": "Στις γραμμές μου",
+  "lineMaxMine": "Ως 5 γραμμές. Βγάλε μία από τις γραμμές σου πρώτα.",
+  "lineNow": "Τώρα",
+  "@lineNow": {
+    "description": "A tab of a line: its buses now."
+  },
+  "lineTimetable": "Δρομολόγια",
+  "@lineTimetable": {
+    "description": "A tab of a line: today's runs."
+  },
+  "lineTo": "προς {stop}",
+  "@lineTo": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "lineFrom": "από {stop}",
+  "@lineFrom": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "lineOtherDirection": "Η άλλη κατεύθυνση: προς {stop}",
+  "@lineOtherDirection": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "lineAll": "Όλες",
+  "@lineAll": {
+    "description": "A chip: every direction of the line."
+  },
+  "lineStopsLink": "στάσεις",
+  "@lineStopsLink": {
+    "description": "Beside a direction: opens its stops."
+  },
+  "lineStopsTitle": "Στάσεις",
+  "lineGaps": "Κενά από το μπροστινό: {gaps} στάσεις",
+  "@lineGaps": {
+    "description": "gaps: numbers of stops between buses, «3 · 5 · 2».",
+    "placeholders": {
+      "gaps": {
+        "type": "String"
+      }
+    }
+  },
+  "lineBigGap": "μεγάλο κενό μετά το {n}ο λεωφορείο",
+  "@lineBigGap": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lineScheduleError": "Δεν φόρτωσαν τα δρομολόγια.",
+  "lineScheduleMissing": "Τα δρομολόγια δεν είναι ακόμη διαθέσιμα.",
+  "lineNoRunsToday": "Κανένα δρομολόγιο σήμερα.",
+  "lineExpired": "Το πρόγραμμα του ΟΑΣΑ έχει λήξει: δείχνουμε τις ώρες του παλιού για την ίδια μέρα της εβδομάδας.",
+  "lineRunsToday": "{count} δρομολόγια σήμερα",
+  "@lineRunsToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lineRanSoFar": "έγιναν {seen} από {known} ως τώρα",
+  "@lineRanSoFar": {
+    "placeholders": {
+      "seen": {
+        "type": "int"
+      },
+      "known": {
+        "type": "int"
+      }
+    }
+  },
+  "lineSourceDaily": "Πρόγραμμα ημέρας ΟΑΣΑ, ώρα αναχώρησης από την αφετηρία.",
+  "lineSource": "Πρόγραμμα ΟΑΣΑ, ώρα αναχώρησης από την αφετηρία. Διαγραμμένη: δεν φάνηκε λεωφορείο.",
+  "lineNoGps": "Κανένα λεωφορείο με GPS τώρα.",
+  "lineEnRoute": "στη διαδρομή",
+  "lineNextStop": "επόμενη: {stop}",
+  "@lineNextStop": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "lineLoading": "Φόρτωση…",
+  "lineNoneOnWay": "Κανένα καθ’ οδόν τώρα",
+  "lineAlertTooltip": "Ειδοποίηση για το {line} στη στάση {stop}",
+  "@lineAlertTooltip": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "lineWalkDirections": "Οδηγίες με τα πόδια ως τη στάση",
+  "serviceHitChannelName": "Το λεωφορείο έρχεται",
+  "@serviceHitChannelName": {
+    "description": "Android notification channel name: alerts when a bus nears the stop"
+  },
+  "serviceHitChannelDescription": "Ειδοποίηση όταν το λεωφορείο πλησιάζει στη στάση σου",
+  "@serviceHitChannelDescription": {
+    "description": "Android notification channel description"
+  },
+  "serviceLiveChannelName": "Live πορεία λεωφορείου",
+  "@serviceLiveChannelName": {
+    "description": "Android notification channel name: the ongoing live card"
+  },
+  "serviceLiveChannelDescription": "Η πορεία του λεωφορείου σου ως τη στάση",
+  "@serviceLiveChannelDescription": {
+    "description": "Android notification channel description"
+  },
+  "serviceExactAlarmTitle": "Να ξεκινά ακριβώς στην ώρα του;",
+  "@serviceExactAlarmTitle": {
+    "description": "Dialog title: ask for the exact-alarm permission so a weekly alert starts on time"
+  },
+  "serviceExactAlarmBody": "Το Android θέλει την άδεια «Ξυπνητήρια και υπενθυμίσεις» για αυτό. Θα ανοίξουν οι ρυθμίσεις: άνοιξε τον διακόπτη και γύρνα πίσω. Χωρίς αυτήν, ο κανόνας ξεκινά, αλλά ίσως λίγα λεπτά αργότερα.",
+  "serviceExactAlarmLater": "Όχι τώρα",
+  "@serviceExactAlarmLater": {
+    "description": "Button"
+  },
+  "serviceExactAlarmOpenSettings": "Άνοιξε τις ρυθμίσεις",
+  "@serviceExactAlarmOpenSettings": {
+    "description": "Button"
+  },
+  "serviceRunningTitle": "Στάσεις · live",
+  "@serviceRunningTitle": {
+    "description": "Title of the foreground-service notification while alerts run"
+  },
+  "serviceRunningText": "Οι ειδοποιήσεις σου είναι ενεργές",
+  "serviceRuleStartsTitle": "Ξεκινά ο κανόνας σου",
+  "@serviceRuleStartsTitle": {
+    "description": "Notification when a weekly alert rule starts and the app must be opened"
+  },
+  "serviceRuleStartsBody": "Άνοιξε την εφαρμογή για live ειδοποιήσεις.",
+  "serviceNudgeTitleFriday": "Βράδυ Παρασκευής · το τελευταίο για το σπίτι",
+  "@serviceNudgeTitleFriday": {
+    "description": "Friday-evening notification title about the last bus home"
+  },
+  "serviceNudgeTitleSaturday": "Βράδυ Σαββάτου · το τελευταίο για το σπίτι",
+  "@serviceNudgeTitleSaturday": {
+    "description": "Saturday-evening notification title about the last bus home"
+  },
+  "serviceNudgeBody": "Δες πότε φεύγει το τελευταίο {line} για {stop} και βάλε ειδοποίηση.",
+  "@serviceNudgeBody": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceNudgeLastRun": "Το τελευταίο {line} φεύγει {time} από {from}. Θες ειδοποίηση;",
+  "@serviceNudgeLastRun": {
+    "description": "time: 24 h H:mm; from: the first stop",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceBoardedTitle": "Είσαι στο {line}",
+  "@serviceBoardedTitle": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceOneStopBefore": "Θα σε ειδοποιήσουμε μία στάση πριν από {stop}.",
+  "@serviceOneStopBefore": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceTripTitle": "Ταξίδι με το {line}",
+  "@serviceTripTitle": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceTripText": "Μόλις ανέβεις, θα σε ειδοποιήσουμε μία στάση πριν από {stop}.",
+  "@serviceTripText": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceIdleText": "Θα σε ειδοποιήσουμε όταν πλησιάσει το λεωφορείο.",
+  "serviceNoBusYet": "Δεν φαίνεται ακόμη λεωφορείο με GPS.",
+  "serviceArrivingNow": "{line} · φτάνει τώρα στο {stop}",
+  "@serviceArrivingNow": {
+    "description": "Live card title",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceArrivingIn": "{line} · {stop} σε {eta}",
+  "@serviceArrivingIn": {
+    "description": "Live card title; eta like 3′ or ~3′",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      },
+      "eta": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceArrivesAt": "φτάνει {time}",
+  "@serviceArrivesAt": {
+    "description": "time: 24 h H:mm, maybe with a leading ~",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceNextStop": "επόμενη στάση",
+  "@serviceNextStop": {
+    "description": "Live card: the bus is one stop away"
+  },
+  "serviceOfflineEstimate": "χωρίς σήμα, εκτίμηση",
+  "serviceOffline": "χωρίς σήμα",
+  "@serviceOffline": {
+    "description": "Live card subtitle when the phone has no network"
+  },
+  "serviceStop": "Σταμάτα",
+  "@serviceStop": {
+    "description": "Live card button: stop this alert for today"
+  },
+  "homeWidgetMyStop": "Η στάση μου",
+  "@homeWidgetMyStop": {
+    "description": "Home-screen widget: a saved stop that is neither home nor work"
+  },
+  "homeWidgetNoBus": "{place} · κανένα λεωφορείο με GPS",
+  "@homeWidgetNoBus": {
+    "description": "Home-screen widget subtitle",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "ruleHitDelay": "καθυστέρηση {min}′",
+  "@ruleHitDelay": {
+    "description": "Shown in brackets after the stop",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleHitIn": "σε ~{min}′",
+  "@ruleHitIn": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleHitNextStop": "Το {line} έρχεται: επόμενη στάση {stop}{late}.",
+  "@ruleHitNextStop": {
+    "description": "late: empty or ' (3 min late)'",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      },
+      "late": {
+        "type": "String"
+      }
+    }
+  },
+  "ruleHitArrives": "Το {line} φτάνει στη στάση {stop}{late}{eta}.",
+  "@ruleHitArrives": {
+    "description": "late: empty or ' (3 min late)'; eta: empty or ' in ~5 min'",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      },
+      "late": {
+        "type": "String"
+      },
+      "eta": {
+        "type": "String"
+      }
+    }
+  },
+  "ruleHitStopsAway": "Το {line} είναι {stops} πριν από {stop}{late}{eta}.",
+  "@ruleHitStopsAway": {
+    "description": "stops: '3 stops'; late: empty or ' (3 min late)'; eta: empty or ', in ~5 min'",
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "stops": {
+        "type": "String"
+      },
+      "stop": {
+        "type": "String"
+      },
+      "late": {
+        "type": "String"
+      },
+      "eta": {
+        "type": "String"
+      }
+    }
+  },
+  "ruleHitLateTitle": "{line} αργεί {min}′",
+  "@ruleHitLateTitle": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleHitLateBody": "Για τη στάση {stop}{eta}{stops}.",
+  "@ruleHitLateBody": {
+    "description": "eta: empty or ': arrives in ~5 min'; stops: empty or ' (3 stops)'",
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      },
+      "eta": {
+        "type": "String"
+      },
+      "stops": {
+        "type": "String"
+      }
+    }
+  },
+  "ruleHitLateEta": "φτάνει σε ~{min}′",
+  "@ruleHitLateEta": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleHitLeaveTitle": "Φύγε τώρα για το {line}",
+  "@ruleHitLeaveTitle": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "ruleHitLeaveBody": "Για να είσαι στη στάση {stop} πριν έρθει{eta}.",
+  "@ruleHitLeaveBody": {
+    "description": "eta: empty or ' (in ~5 min)'",
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      },
+      "eta": {
+        "type": "String"
+      }
+    }
+  },
+  "ruleHitRideTitle": "Κατέβα στην επόμενη",
+  "ruleHitRideBody": "Επόμενη στάση: {stop}.",
+  "@ruleHitRideBody": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "cityAthensName": "Αθήνα",
+  "cityAthensAgency": "ΟΑΣΑ",
+  "@cityAthensAgency": {
+    "description": "The transit agency of Athens"
+  },
+  "cityAthensIn": "στην Αθήνα",
+  "cityThessalonikiName": "Θεσσαλονίκη",
+  "cityThessalonikiAgency": "ΟΣΕΘ",
+  "@cityThessalonikiAgency": {
+    "description": "The transit agency of Thessaloniki"
+  },
+  "cityThessalonikiIn": "στη Θεσσαλονίκη",
+  "coreKindBusStop": "στάση λεωφορείων",
+  "coreKindMetro": "σταθμός μετρό",
+  "coreKindTram": "στάση τραμ",
+  "coreKindRail": "σταθμός προαστιακού",
+  "coreLastRunOnMonday": "τη Δευτέρα",
+  "@coreLastRunOnMonday": {
+    "description": "The day of a last run: «the last 040 passes on Thursday ~0:40»"
+  },
+  "coreLastRunOnTuesday": "την Τρίτη",
+  "@coreLastRunOnTuesday": {
+    "description": "The day of a last run: «the last 040 passes on Thursday ~0:40»"
+  },
+  "coreLastRunOnWednesday": "την Τετάρτη",
+  "@coreLastRunOnWednesday": {
+    "description": "The day of a last run: «the last 040 passes on Thursday ~0:40»"
+  },
+  "coreLastRunOnThursday": "την Πέμπτη",
+  "@coreLastRunOnThursday": {
+    "description": "The day of a last run: «the last 040 passes on Thursday ~0:40»"
+  },
+  "coreLastRunOnFriday": "την Παρασκευή",
+  "@coreLastRunOnFriday": {
+    "description": "The day of a last run: «the last 040 passes on Thursday ~0:40»"
+  },
+  "coreLastRunOnSaturday": "το Σάββατο",
+  "@coreLastRunOnSaturday": {
+    "description": "The day of a last run: «the last 040 passes on Thursday ~0:40»"
+  },
+  "coreLastRunOnSunday": "την Κυριακή",
+  "@coreLastRunOnSunday": {
+    "description": "The day of a last run: «the last 040 passes on Thursday ~0:40»"
+  },
+  "coreNearestMetro": "Κοντινότερος σταθμός μετρό",
+  "@coreNearestMetro": {
+    "description": "A place in the trip planner"
+  },
+  "coreToward": "προς {names}",
+  "@coreToward": {
+    "description": "The direction of a stop: its next stops' names",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "coreDistanceM": "{m} μ.",
+  "@coreDistanceM": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "coreDistanceKm": "{km} χλμ.",
+  "@coreDistanceKm": {
+    "description": "km: a number with one decimal, formatted by the app",
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  }
+}

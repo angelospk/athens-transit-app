@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'background/service.dart';
@@ -117,16 +117,16 @@ class TransitApp extends StatelessWidget {
     return ListenableBuilder(
       listenable: store,
       builder: (context, _) => MaterialApp(
-        title: 'Στάσεις',
+        onGenerateTitle: (c) => c.l10n.appName,
         navigatorKey: navKey,
         navigatorObservers: [pageLog],
         debugShowCheckedModeBanner: false,
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),
         themeMode: store.theme,
-        locale: const Locale('el'),
-        supportedLocales: const [Locale('el'), Locale('en')],
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localeListResolutionCallback: (locales, _) => debugLocale ?? resolveLocale(locales), // the device; else Greek
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: _Start(prefs, key: ValueKey(store.city)), // a new city: a new map
       ),
     );

@@ -1,5 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Greek: the default. English in values-en. -->
 <resources>
+    <string name="app_name">Στάσεις</string>
     <string name="widget_description">Η στάση μου: τα επόμενα λεωφορεία</string>
     <string name="home_widget_description">Γυρνάς σπίτι: τα τελευταία λεωφορεία της ημέρας</string>
+
+    <!-- «Η στάση μου» (StopWidgetProvider) -->
+    <string name="stop_widget_pick">Άνοιξε την εφαρμογή για να διαλέξεις στάση</string>
+    <!-- After the place: «Σπίτι · δεδομένα πριν 3′» -->
+    <string name="stop_widget_age">δεδομένα πριν %1$d′</string>
+    <string name="stop_widget_now">τώρα</string>
+
+    <!-- «Γυρνάς σπίτι» (HomeLastWidgetProvider) -->
+    <string name="home_last_kicker">ΤΕΛΕΥΤΑΙΟ ΓΙΑ ΣΠΙΤΙ</string>
+    <string name="home_last_head">Γυρνάς σπίτι · τα τελευταία</string>
+    <string name="home_last_empty">Άνοιξε την εφαρμογή μακριά από το σπίτι</string>
+    <string name="home_last_from">από %1$s</string>
+    <!-- «από Σύνταγμα · πριν 25′» -->
+    <string name="home_last_from_ago">από %1$s · πριν %2$s</string>
+    <string name="home_last_all_gone">%1$s · τα τελευταία έφυγαν</string>
+    <string name="home_last_all_gone_small">Τα τελευταία έφυγαν · %1$s</string>
+    <!-- «από Σύνταγμα · πρώτα χάνεται το 040» -->
+    <string name="home_last_first_goes">%1$s · πρώτα χάνεται το %2$s</string>
+    <string name="home_last_gone">έφυγε</string>
+    <!-- «σε 18′» -->
+    <string name="home_last_in">σε %1$s</string>
+    <string name="home_last_in_from">σε %1$s · %2$s</string>
+    <!-- Durations: «45′», «1ώ 12′» -->
+    <string name="duration_min">%1$d′</string>
+    <string name="duration_hour_min">%1$dώ %2$d′</string>
+
+    <!-- The widget picker's previews: sample data -->
+    <string name="preview_stop" translatable="false">Σύνταγμα</string>
+    <string name="preview_to_1" translatable="false">→ Πειραιάς</string>
+    <string name="preview_to_2" translatable="false">→ Μεταμόρφωση</string>
+    <string name="preview_to_3" translatable="false">→ Βούλα</string>
+    <string name="preview_stop_sub">Σπίτι · δεδομένα πριν 1′</string>
+    <string name="preview_home_from">από Σύνταγμα · πρώτα χάνεται το 040</string>
+    <string name="preview_in_18">σε 18′</string>
+    <string name="preview_in_48">σε 48′</string>
+    <string name="preview_in_1h23">σε 1ώ 23′</string>
 </resources>
