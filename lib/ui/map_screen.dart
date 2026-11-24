@@ -577,7 +577,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (mapSel.value case BusSel(line: final l, vehicleId: final v) when l == line && v == vehicle) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       duration: const Duration(seconds: 20),
-      content: Text('Είσαι στο $line; Πες μου πού κατεβαίνεις.'),
+      content: Text('Είσαι στο $line; Διάλεξε πού κατεβαίνεις.'),
       action: SnackBarAction(label: 'Άνοιξέ το', onPressed: () => showOnMap(BusSel(line, vehicle))),
     ));
   }
@@ -1176,7 +1176,7 @@ class _HomeSheet extends StatelessWidget {
             child: Row(children: [
               const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
               const SizedBox(width: 10),
-              Text('Βρίσκω τη θέση σου…', style: TextStyle(color: t.muted)),
+              Text('Αναζήτηση θέσης…', style: TextStyle(color: t.muted)),
             ]),
           )
         else
@@ -1188,7 +1188,7 @@ class _HomeSheet extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Δες τι περνάει κοντά σου', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
-              Text('Με την τοποθεσία σου δείχνω τις πιο κοντινές στάσεις και πότε έρχεται το λεωφορείο. Η θέση μένει στο κινητό.',
+              Text('Με την τοποθεσία σου βλέπεις τις πιο κοντινές στάσεις και πότε έρχεται το λεωφορείο. Η θέση μένει στο κινητό.',
                   style: TextStyle(fontSize: 13.5, height: 1.35, color: t.muted)),
               const SizedBox(height: 10),
               FilledButton.icon(onPressed: onLocate, icon: const Icon(Icons.my_location), label: const Text('Χρήση της θέσης μου')),
@@ -1207,7 +1207,7 @@ class _HomeSheet extends StatelessWidget {
       return [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text(ix == null ? 'Φορτώνω τις στάσεις…' : 'Καμία στάση σε 2,5 χλμ.', style: TextStyle(color: t.muted)),
+          child: Text(ix == null ? 'Φόρτωση στάσεων…' : 'Καμία στάση σε 2,5 χλμ.', style: TextStyle(color: t.muted)),
         ),
       ];
     }
@@ -1697,7 +1697,7 @@ class _MyLines extends StatelessWidget {
       if (rows.isEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text('Καμία γραμμή επιλεγμένη. Διάλεξε από το κουμπί του χάρτη (κατέβασε το φύλλο).', style: TextStyle(color: t.muted)),
+          child: Text('Καμία γραμμή επιλεγμένη. Διάλεξε από το κουμπί του χάρτη (σύρε το πλαίσιο προς τα κάτω).', style: TextStyle(color: t.muted)),
         ),
     ]);
   }

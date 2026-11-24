@@ -287,7 +287,7 @@ class _LinePanelState extends State<LinePanel> {
           if (snap.hasError || j == null) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(snap.hasError ? 'Δεν φόρτωσαν τα δρομολόγια.' : 'Τα δρομολόγια θέλουν τον server μας· δεν τα δίνει ακόμη.', style: TextStyle(color: t.muted)),
+              child: Text(snap.hasError ? 'Δεν φόρτωσαν τα δρομολόγια.' : 'Τα δρομολόγια δεν είναι ακόμη διαθέσιμα.', style: TextStyle(color: t.muted)),
             );
           }
           final wall = athensWall(DateTime.now().toUtc());
@@ -303,7 +303,7 @@ class _LinePanelState extends State<LinePanel> {
             if (j['expired'] == true)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Text('Το πρόγραμμα του ΟΑΣΑ έχει λήξει: οι ώρες είναι της ίδιας μέρας της εβδομάδας από το παλιό.', style: TextStyle(fontSize: 13, color: t.late)),
+                child: Text('Το πρόγραμμα του ΟΑΣΑ έχει λήξει: δείχνουμε τις ώρες του παλιού για την ίδια μέρα της εβδομάδας.', style: TextStyle(fontSize: 13, color: t.late)),
               ),
             for (final dir in dirs) ...() {
               final deps = [for (final x in dir['departures'] as List? ?? const []) x as Map<String, dynamic>];

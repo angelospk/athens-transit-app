@@ -67,7 +67,7 @@ class _SmartCardState extends State<SmartCard> {
           onTap: () => askHome(context),
           kicker: 'ΓΥΡΝΑΣ ΣΠΙΤΙ',
           title: 'Πού είναι το σπίτι σου;',
-          lines: const ['Αρκεί μια περιοχή. Ανώνυμο: μένει μόνο στο κινητό.'],
+          lines: const ['Αρκεί μια περιοχή. Μένει μόνο στο κινητό σου.'],
         ),
       Smart.nextFav => const _NextFav(),
       Smart.none => null,
@@ -248,7 +248,7 @@ class _TripCardState extends State<TripCard> {
     final title = n != null
         ? 'Με το ${n.b.line} από ${titleCase(n.b.stop)}'
         : _boards.isEmpty
-            ? (widget.ix == null ? 'Ψάχνω…' : 'Χωρίς απευθείας λεωφορείο')
+            ? (widget.ix == null ? 'Αναζήτηση…' : 'Χωρίς απευθείας λεωφορείο')
             : 'Με το ${_boards.first.line} από ${titleCase(_boards.first.stop)}';
     return SmartShell(
       onTap: () => showPlanner(from: (label: 'Η θέση μου', pts: [widget.me]), to: (label: widget.home ? 'Σπίτι' : 'Δουλειά', pts: [widget.to])),
@@ -257,7 +257,7 @@ class _TripCardState extends State<TripCard> {
       lines: [
         if (n != null) 'περνά σε ${mins(n.a.etaS)}',
         if (_boards.isEmpty && widget.ix != null) 'Πάτα για διαδρομή με αλλαγή ή μετρό.',
-        if (n == null && _boards.isNotEmpty) 'Δεν βλέπω λεωφορείο να έρχεται τώρα.',
+        if (n == null && _boards.isNotEmpty) 'Κανένα λεωφορείο με GPS δεν έρχεται τώρα.',
       ],
       minutesLabel: n == null ? null : 'φύγε σε',
       minutes: n == null ? null : (n.leaveS < 60 ? 'τώρα' : '${(n.leaveS / 60).floor()}′'),

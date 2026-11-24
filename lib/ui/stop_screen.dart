@@ -262,7 +262,7 @@ class _StopPanelState extends State<StopPanel> {
                         GestureDetector(
                           onTap: () => mapSel.value =
                               StopSel(StopRef(name: a.name, lat: a.lat, lon: a.lon, lines: linesAt(_ix!, a.name, a.lat, a.lon))),
-                          child: Text('Απέναντι στάση · ${a.m} μ',
+                          child: Text('Απέναντι στάση · ${a.m} μ.',
                               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.primary)),
                         ),
                       ],
@@ -329,7 +329,7 @@ class _StopPanelState extends State<StopPanel> {
             if (missed.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 16, bottom: 4),
-                child: Text('Δεν ξεκίνησαν · δεν είδα λεωφορείο να φεύγει από την αφετηρία', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.late)),
+                child: Text('Δεν ξεκίνησαν · δεν φάνηκε λεωφορείο να φεύγει από την αφετηρία', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.late)),
               ),
               for (final m in missed)
                 Row(children: [

@@ -5,7 +5,7 @@ import 'models.dart';
 enum AlertMode { minutes, stops }
 
 /// What the alert is for: the bus reaching the stop, time to leave for it (screen 16), getting off
-/// there (screen 17), or a followed trip («Ακολούθησέ με»): the service looks for the bus the phone
+/// there (screen 17), or a followed trip («Πες μου πότε να κατέβω»): the service looks for the bus the phone
 /// rides, then alerts as [ride] for that bus. It changes only the words; when it fires is set by mode
 /// and n.
 enum RuleKind { arrive, leave, ride, board }
@@ -280,8 +280,8 @@ String hitText(RuleHit h, String stop) {
   final e = h.etaS;
   final inMin = e == null ? '' : ', σε ~${(e / 60).round()}′';
   final left = h.stopsLeft;
-  if (left == 1) return 'Το ${h.line} έρχεται: επόμενη στάση του η $stop$late.';
-  if (left == null) return 'Το ${h.line} φτάνει στη $stop$late${e == null ? '' : ' σε ~${(e / 60).round()}′'}.';
+  if (left == 1) return 'Το ${h.line} έρχεται: επόμενη στάση $stop$late.';
+  if (left == null) return 'Το ${h.line} φτάνει στη στάση $stop$late${e == null ? '' : ' σε ~${(e / 60).round()}′'}.';
   return 'Το ${h.line} είναι $left στάσεις πριν από $stop$late$inMin.';
 }
 
@@ -295,7 +295,7 @@ String hitText(RuleHit h, String stop) {
     : switch (r.kind) {
       RuleKind.arrive => ('${h.line} → $stop', hitText(h, stop)),
       RuleKind.leave => ('Φύγε τώρα για το ${h.line}', 'Για να είσαι στη στάση $stop πριν έρθει${h.etaS == null ? '' : ' (σε ~${(h.etaS! / 60).round()}′)'}.'),
-      RuleKind.ride || RuleKind.board => ('Κατέβα στην επόμενη', 'Η επόμενη στάση του ${h.line} είναι η $stop.'),
+      RuleKind.ride || RuleKind.board => ('Κατέβα στην επόμενη', 'Επόμενη στάση: $stop.'),
     };
 
 /// When a weekly rule next starts (strictly after [nowUtc]), or null for one-off and disabled rules.

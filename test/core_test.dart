@@ -442,7 +442,7 @@ void main() {
 
     test('hit text matches the web wording', () {
       expect(hitText(const RuleHit(ruleId: 'r', line: '040', vehicleId: 'x', stopsLeft: 1, etaS: 50, delayS: null), 'ΠΑΝΕΠΙΣΤΗΜΙΟ'),
-          'Το 040 έρχεται: επόμενη στάση του η ΠΑΝΕΠΙΣΤΗΜΙΟ.');
+          'Το 040 έρχεται: επόμενη στάση ΠΑΝΕΠΙΣΤΗΜΙΟ.');
       expect(hitText(const RuleHit(ruleId: 'r', line: '040', vehicleId: 'x', stopsLeft: 3, etaS: 290, delayS: 200), 'ΑΓΟΡΑ'),
           'Το 040 είναι 3 στάσεις πριν από ΑΓΟΡΑ (καθυστέρηση 3′), σε ~5′.');
     });

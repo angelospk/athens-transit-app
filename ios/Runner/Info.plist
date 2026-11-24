@@ -33,7 +33,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Για να δείξει τις στάσεις κοντά σου και πόσο απέχεις από τη στάση σου.</string>
+	<string>Για να βλέπεις τις στάσεις κοντά σου και πόσο περπατάς ως τη στάση σου. Η θέση σου μένει στο κινητό.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

@@ -125,7 +125,7 @@ class _StatsScreenState extends State<StatsScreen> {
       Row(children: [
         _tile(t, types.weekday.kmh == null ? '–' : _kmh(types.weekday.kmh!), 'χλμ/ώ καθημερινές (${types.weekday.days})'),
         const SizedBox(width: 8),
-        _tile(t, types.weekend.kmh == null ? '–' : _kmh(types.weekend.kmh!), 'χλμ/ώ Σαβ/κο (${types.weekend.days})'),
+        _tile(t, types.weekend.kmh == null ? '–' : _kmh(types.weekend.kmh!), 'χλμ/ώ Σ/Κ (${types.weekend.days})'),
       ]),
       const SizedBox(height: 10),
       Text('Λεωφορεία ανά ώρα', style: TextStyle(fontSize: 13, color: t.muted)),
@@ -282,12 +282,12 @@ class _StatsScreenState extends State<StatsScreen> {
 
   List<Widget> _tripsSection(Tones t, TripShare s) => [
         _title('Δρομολόγια'),
-        Text('Έγιναν ${(s.share * 100).round()}% των δρομολογίων', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+        Text('Έγινε το ${(s.share * 100).round()}% των δρομολογίων', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
         Text('${s.run} από ${s.measured}', style: TextStyle(color: t.muted)),
         if (s.expired)
           Padding(
             padding: const EdgeInsets.only(top: 6),
-            child: Text('Συγκρίνω με το πρόγραμμα του ΟΑΣΑ της ${s.gtfs.split('-').reversed.join('/')}, γιατί νεότερο δεν έχει δημοσιευτεί. Μερικά δρομολόγια που λείπουν μπορεί να μην υπάρχουν πια.',
+            child: Text('Η σύγκριση γίνεται με το πρόγραμμα του ΟΑΣΑ της ${s.gtfs.split('-').reversed.join('/')}, γιατί νεότερο δεν έχει δημοσιευτεί. Μερικά δρομολόγια που λείπουν μπορεί να μην υπάρχουν πια.',
                 style: TextStyle(fontSize: 13, color: t.late)),
           ),
         const SizedBox(height: 8),

@@ -1,7 +1,7 @@
 // A planned trip step by step (screen 28): walk to the stop, which bus and where to get off, the
 // change, the metro, the walk to the end. Leaving now, each bus step shows the next bus live that
 // there is time to reach, the first one also «φύγε σε N′»; «Φύγε εγκαίρως», «Πού κατεβαίνω;» and
-// «Ακολούθησέ με» follow the trip from there. A step opens its stop or station on the map.
+// «Πες μου πότε να κατέβω» follow the trip from there. A step opens its stop or station on the map.
 
 import 'dart:async';
 import 'dart:math';
@@ -276,7 +276,7 @@ class _NextBusState extends State<_NextBus> {
         const SizedBox(height: 6),
         if (next == null)
           Text(
-            _asked ? (_arrivals.isEmpty ? 'Κανένα λεωφορείο με GPS κοντά τώρα' : 'Δεν προλαβαίνεις αυτά που έρχονται τώρα') : 'Ψάχνω το επόμενο…',
+            _asked ? (_arrivals.isEmpty ? 'Κανένα λεωφορείο με GPS κοντά τώρα' : 'Δεν προλαβαίνεις αυτά που έρχονται τώρα') : 'Αναζήτηση επόμενου λεωφορείου…',
             style: TextStyle(fontSize: 13, color: t.muted),
           )
         else

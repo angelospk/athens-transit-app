@@ -50,11 +50,11 @@ Future<String> remindLast(BuildContext context,
   try {
     final sched = await d.api.lineSchedule(line);
     final r = sched == null ? null : lastRun(sched, st, variantId, i);
-    if (r == null) return 'Δεν βρήκα πρόγραμμα για το $line.';
+    if (r == null) return 'Δεν βρέθηκε πρόγραμμα για το $line.';
     final at = athensDayUtc(now, r.atStopS);
     if (at.isBefore(now)) return 'Το τελευταίο $line πέρασε ήδη (~${dayClock(r.atStopS)}).';
     if (!context.mounted || !await AlertService.ensurePermissions(context)) {
-      return 'Χωρίς άδεια ειδοποιήσεων δεν μπορώ να σε ειδοποιήσω.';
+      return 'Για να σε ειδοποιήσουμε, χρειάζεται άδεια ειδοποιήσεων.';
     }
     var fire = at.subtract(Duration(minutes: beforeMin));
     if (fire.isBefore(now)) fire = now.add(const Duration(seconds: 5));
@@ -64,7 +64,7 @@ Future<String> remindLast(BuildContext context,
       'Από ${titleCase(stopName)} ~${dayClock(r.atStopS)} (φεύγει ${gtfsClock(r.t)} από την αφετηρία).',
     );
     final day = lastRunDayLabel(now, at);
-    return 'Θα σε ειδοποιήσω $beforeMin′ πριν: το τελευταίο $line περνά ${day == null ? '' : '$day '}~${dayClock(r.atStopS)}.';
+    return 'Θα σε ειδοποιήσουμε $beforeMin′ πριν: το τελευταίο $line περνά ${day == null ? '' : '$day '}~${dayClock(r.atStopS)}.';
   } catch (_) {
     return 'Δεν φόρτωσε το πρόγραμμα. Δοκίμασε ξανά με σύνδεση.';
   }
@@ -164,9 +164,9 @@ class _AlertSheetState extends State<AlertSheet> {
           ? (weekly
               ? 'Κανόνας: Δε–Πα τέτοια ώρα.${exact ? '' : ' Χωρίς άδεια για ακριβή ξυπνητήρια μπορεί να ξεκινά λίγα λεπτά αργότερα.'}'
               : leave
-                  ? 'Θα σου πω πότε να φύγεις για το ${widget.line}.'
-                  : 'Θα σε ειδοποιήσω για το ${widget.line}.')
-          : 'Χωρίς άδεια ειδοποιήσεων δεν μπορώ να σε ειδοποιήσω.'),
+                  ? 'Θα σου πούμε πότε να φύγεις για το ${widget.line}.'
+                  : 'Θα σε ειδοποιήσουμε για το ${widget.line}.')
+          : 'Για να σε ειδοποιήσουμε, χρειάζεται άδεια ειδοποιήσεων.'),
     ));
   }
 
@@ -188,15 +188,15 @@ class _AlertSheetState extends State<AlertSheet> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(14)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Χρειάζομαι τη θέση σου', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            const Text('Πόσο απέχεις από τη στάση;', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            Text('Για να υπολογίσω πόσο περπατάς ως τη στάση και να σου πω πότε να ξεκινήσεις, ώστε να είσαι εκεί έγκαιρα. Η θέση μένει στο κινητό.',
+            Text('Με τη θέση σου υπολογίζεται πόσο περπατάς ως τη στάση και πότε να ξεκινήσεις, για να είσαι εκεί έγκαιρα. Η θέση μένει στο κινητό.',
                 style: TextStyle(fontSize: 13.5, height: 1.35, color: t.muted)),
             const SizedBox(height: 10),
             FilledButton.tonalIcon(
               onPressed: locating ? null : _locate,
               icon: const Icon(Icons.my_location),
-              label: Text(locating ? 'Ψάχνω…' : 'Χρήση της θέσης μου'),
+              label: Text(locating ? 'Αναζήτηση θέσης…' : 'Χρήση της θέσης μου'),
             ),
           ]),
         ),
@@ -250,7 +250,7 @@ class _AlertSheetState extends State<AlertSheet> {
         Text('$w′', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
         IconButton(tooltip: 'Περισσότερο', onPressed: w < 60 ? () => setState(() => walk = w + 1) : null, icon: const Icon(Icons.add)),
       ]),
-      Text('Αν το λεωφορείο αργήσει, σου λέω να φύγεις αργότερα: ο χρόνος διορθώνεται με κάθε νέα θέση του λεωφορείου.', style: TextStyle(fontSize: 13, color: t.muted)),
+      Text('Αν το λεωφορείο αργήσει, σου λέμε να φύγεις αργότερα: ο χρόνος διορθώνεται με κάθε νέα θέση του λεωφορείου.', style: TextStyle(fontSize: 13, color: t.muted)),
     ];
   }
 
@@ -276,7 +276,7 @@ class _AlertSheetState extends State<AlertSheet> {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Ειδοποίησέ με στο ${titleCase(widget.stop.name)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              Text('Ειδοποίηση για τη στάση ${titleCase(widget.stop.name)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
               Text('προς ${titleCase(v.headsign)}', style: TextStyle(fontSize: 13, color: t.muted)),
             ]),
           ),
@@ -303,7 +303,7 @@ class _AlertSheetState extends State<AlertSheet> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(color: t.surface, borderRadius: BorderRadius.circular(14)),
           child: mean == null
-              ? const Text('Η στάση σου είναι κοντά στην αφετηρία: θα σε ειδοποιήσω μόλις ξεκινήσει.', style: TextStyle(fontSize: 14, height: 1.35))
+              ? const Text('Η στάση σου είναι κοντά στην αφετηρία: θα σε ειδοποιήσουμε μόλις ξεκινήσει.', style: TextStyle(fontSize: 14, height: 1.35))
               : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text('Τώρα αυτό σημαίνει', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t.muted)),
                   const SizedBox(height: 6),

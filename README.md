@@ -25,10 +25,10 @@ What it does:
   not start («Δεν ξεκίνησαν») with another option; a line's timetable with each run seen or missed,
   the gaps between its buses and slow stretches ahead.
 - **Διαδρομή (planner)**: bus without or with one change, bus + metro; a step-by-step screen with the
-  next bus live, «φύγε σε N′», «Πού κατεβαίνω;» and «Ακολούθησέ με».
+  next bus live, «φύγε σε N′», «Πού κατεβαίνω;» and «Πες μου πότε να κατέβω».
 - **Alerts that run with the app closed**: minutes or stops before the bus, «Φύγε εγκαίρως» from your
   position, «Πες μου και αν αργεί», weekly rules, a live card on the lock screen, «Πού κατεβαίνω;» (one
-  stop before you get off), «Ακολούθησέ με» (notices when you board), the last bus of the day and a
+  stop before you get off), «Πες μου πότε να κατέβω» (notices when you board), the last bus of the day and a
   Friday/Saturday evening suggestion for the last bus home.
 - **Αγαπημένα** and **Μέρη** (named places, kept on the phone), network statistics, home-screen widgets
   «Η στάση μου» and «Γυρνάς σπίτι».

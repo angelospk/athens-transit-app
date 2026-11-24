@@ -100,7 +100,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Text(
                     error != null
-                        ? 'Δεν φορτώνει το λεωφορείο: χωρίς σύνδεση. Ξαναδοκιμάζω σε λίγο.'
+                        ? 'Δεν φορτώνει το λεωφορείο: χωρίς σύνδεση. Νέα προσπάθεια σε λίγο.'
                         : 'Το λεωφορείο #${widget.vehicleId} δεν στέλνει θέση τώρα: μάλλον τελείωσε το δρομολόγιό του.',
                     style: TextStyle(fontSize: 15, color: t.muted)),
               ),
@@ -218,7 +218,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
           _stopRow(t, s, stops, k, etas[k - nextK], myIds.contains(stops[k])),
       if (nextK >= 0 && !allStops && stops.length > from + 8)
         TextButton(onPressed: () => setState(() => allStops = true), child: Text('Όλες οι επόμενες (${stops.length - from})')),
-      if (nextK < 0) Text('Το λεωφορείο δεν έχει αντιστοιχιστεί σε δρομολόγιο.', style: TextStyle(color: t.muted)),
+      if (nextK < 0) Text('Δεν ξέρουμε ακόμη ποιο δρομολόγιο κάνει το λεωφορείο.', style: TextStyle(color: t.muted)),
     ]);
   }
 
@@ -266,7 +266,7 @@ class _VehiclePanelState extends State<VehiclePanel> {
         maxChildSize: .9,
         builder: (c, scroll) => ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), children: [
           const Text('Σε ποια στάση;', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-          Text('Σε ειδοποιώ πριν φτάσει εκεί το λεωφορείο.', style: TextStyle(fontSize: 13, color: t.muted)),
+          Text('Θα σε ειδοποιήσουμε πριν φτάσει εκεί το λεωφορείο.', style: TextStyle(fontSize: 13, color: t.muted)),
           const SizedBox(height: 8),
           for (final k in order)
             ListTile(

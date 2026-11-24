@@ -67,9 +67,9 @@ class _StopFixBarState extends State<StopFixBar> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Ευχαριστούμε, το πήραμε!', style: title),
+          const Text('Ευχαριστούμε, το λάβαμε!', style: title),
           const SizedBox(height: 4),
-          Text('Η στάση δεν αλλάζει αμέσως: κάθε πρόταση ελέγχεται με τα GPS των λεωφορείων.', style: hint),
+          Text('Η στάση δεν αλλάζει αμέσως: κάθε πρόταση ελέγχεται με το GPS των λεωφορείων.', style: hint),
           const SizedBox(height: 12),
           FilledButton(onPressed: widget.onClose, child: const Text('Κλείσιμο')),
         ],
@@ -83,7 +83,7 @@ class _StopFixBarState extends State<StopFixBar> {
         const SizedBox(height: 4),
         Text(
           tooFar
-              ? 'Πάνω από $maxMoveM μ από τη στάση. Φέρ’ την πιο κοντά.'
+              ? 'Πάνω από $maxMoveM μ. από τη στάση. Φέρε την πιο κοντά.'
               : _status == _Status.failed
               ? 'Δεν στάλθηκε. Έλεγξε τη σύνδεση και ξαναδοκίμασε.'
               : moved < minMoveM

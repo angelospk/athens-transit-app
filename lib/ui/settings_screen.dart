@@ -96,7 +96,7 @@ Future<void> _deleteAll(BuildContext context) async {
     context: context,
     builder: (c) => AlertDialog(
       title: const Text('Διαγραφή όλων των δεδομένων;'),
-      content: const Text('Σβήνω από αυτό το κινητό τα αγαπημένα, τα μέρη, τις ειδοποιήσεις και τις ρυθμίσεις. Δεν αναιρείται.'),
+      content: const Text('Θα διαγραφούν από αυτό το κινητό τα αγαπημένα, τα μέρη, οι ειδοποιήσεις και οι ρυθμίσεις. Δεν αναιρείται.'),
       actions: [
         TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Άκυρο')),
         FilledButton(
