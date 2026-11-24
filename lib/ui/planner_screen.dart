@@ -2,7 +2,7 @@
 // planner (core/tp.dart, the web's planner) finds the bus lines with no change or one; each result
 // shows walking, riding and, when leaving now, the next bus live at the stop to board, so "leave in N′"
 // is real. With "Με μετρό" a metro or tram line between the two ends comes first. A result opens the
-// trip step by step (route_screen.dart), with «Φύγε εγκαίρως», «Πού κατεβαίνω;» and «Ακολούθησέ με».
+// trip step by step (route_screen.dart), with «Φύγε εγκαίρως», «Πού κατεβαίνω;» and «Πες μου πότε να κατέβω».
 
 import 'dart:async';
 import 'dart:math';
@@ -164,7 +164,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
                 Expanded(
                   child: Column(
                     children: [
-                      _endTile(t, Icons.trip_origin, 'Από', from?.label ?? (_locating ? 'Βρίσκω τη θέση σου…' : 'Πού είσαι;'), () => _pick(true)),
+                      _endTile(t, Icons.trip_origin, 'Από', from?.label ?? (_locating ? 'Αναζήτηση θέσης…' : 'Πού είσαι;'), () => _pick(true)),
                       Divider(height: 1, indent: 52, color: t.rule),
                       _endTile(t, Icons.place, 'Προς', to?.label ?? 'Πού πας; στάση, περιοχή, κατάστημα, διεύθυνση', () => _pick(false)),
                     ],
@@ -228,8 +228,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
               padding: const EdgeInsets.all(16),
               child: Text(
                 from == null
-                    ? 'Διάλεξε από πού φεύγεις, ή δώσε άδεια θέσης: με αυτή υπολογίζω πόσο περπατάς ως τη στάση.'
-                    : 'Διάλεξε πού πας. Βρίσκω λεωφορεία χωρίς αλλαγή ή με μία, και το μετρό όταν σε βολεύει.',
+                    ? 'Διάλεξε από πού φεύγεις ή δώσε άδεια τοποθεσίας: έτσι υπολογίζεται πόσο περπατάς ως τη στάση.'
+                    : 'Διάλεξε πού πας. Θα δεις λεωφορεία χωρίς αλλαγή ή με μία, και το μετρό όταν σε βολεύει.',
                 style: TextStyle(color: t.muted),
               ),
             ),
@@ -289,7 +289,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
         Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
-            'Δεν βρήκα λεωφορείο ως 500 μ. από τις δύο άκρες, ούτε με μία αλλαγή. Δοκίμασε μια κοντινή στάση ή το μετρό.',
+            'Δεν βρέθηκε λεωφορείο σε 500 μ. από την αφετηρία και τον προορισμό σου, ούτε με μία αλλαγή. Δοκίμασε μια κοντινή στάση ή το μετρό.',
             style: TextStyle(color: t.muted),
           ),
         ),
@@ -315,7 +315,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
         child: Text(
           now
               ? 'Χρόνοι: περπάτημα 4,5 χλμ/ώ, λεωφορείο 15 χλμ/ώ με τις στάσεις· η αναμονή είναι live από το GPS των λεωφορείων.'
-              : 'Για αργότερα δεν ξέρω ποιο λεωφορείο θα έρθει: οι χρόνοι είναι χωρίς αναμονή.',
+              : 'Για αργότερα δεν ξέρουμε ποιο λεωφορείο θα έρθει: οι χρόνοι είναι χωρίς αναμονή.',
           style: TextStyle(fontSize: 12, color: t.muted),
         ),
       ),
@@ -717,7 +717,7 @@ class _PlacePickerState extends State<_PlacePicker> {
                       if (!context.mounted) return;
                       if (p == null) {
                         ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(content: Text('Δεν βρήκα τη θέση σου. Άνοιξε την τοποθεσία ή διάλεξε ένα μέρος.')));
+                            .showSnackBar(const SnackBar(content: Text('Δεν βρέθηκε η θέση σου. Ενεργοποίησε την τοποθεσία ή διάλεξε ένα μέρος.')));
                         return;
                       }
                       Navigator.pop(context, widget.home ? (label: _nearMe, pts: [approxPoint(p)]) : (label: 'Η θέση μου', pts: [p]));
@@ -746,7 +746,7 @@ class _PlacePickerState extends State<_PlacePicker> {
                   if (_c.text.trim().length >= 2 && _hits.isEmpty && _osm.isEmpty)
                     Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Text('Ψάχνω…', style: TextStyle(color: t.muted)),
+                      child: Text('Αναζήτηση…', style: TextStyle(color: t.muted)),
                     ),
                 ],
               ),

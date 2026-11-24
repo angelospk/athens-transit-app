@@ -140,7 +140,7 @@ class _LinesScreenState extends State<LinesScreen> {
       builder: (context, snap) {
         if (snap.hasError) {
           return Center(
-            child: TextButton(onPressed: () => setState(() => _all = Deps.of(context).api.lines()), child: const Text('Δεν φόρτωσαν. Ξανά')),
+            child: TextButton(onPressed: () => setState(() => _all = Deps.of(context).api.lines()), child: const Text('Δεν φόρτωσαν. Δοκίμασε ξανά')),
           );
         }
         final all = snap.data;
@@ -222,7 +222,7 @@ class PlacesScreen extends StatelessWidget {
           ListTile(leading: const Icon(Icons.add_location_alt_outlined), title: const Text('Άλλο μέρος'), onTap: () => _addOther(context)),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Text('Αρκεί μια περιοχή. Δεν κρατάμε κανένα δεδομένο: τα μέρη μένουν μόνο στο κινητό σου. Με «Σπίτι» βλέπεις πώς γυρνάς· με «Δουλειά», τα πρωινά, πώς πας.',
+            child: Text('Αρκεί μια περιοχή. Δεν κρατάμε κανένα δεδομένο: τα μέρη μένουν μόνο στο κινητό σου. Με το «Σπίτι» βλέπεις πώς γυρνάς· με τη «Δουλειά», πώς πας το πρωί.',
                 style: TextStyle(fontSize: 13, color: t.muted)),
           ),
         ]);

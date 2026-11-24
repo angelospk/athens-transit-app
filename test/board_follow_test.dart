@@ -1,4 +1,4 @@
-// «Ακολούθησέ με» with the app closed: the service samples the phone every 10 s and the buses of the
+// «Πες μου πότε να κατέβω» with the app closed: the service samples the phone every 10 s and the buses of the
 // followed line as polled (fixes up to a minute old, moved on along their path to the phone's time).
 import 'package:athens_transit/core/board.dart';
 import 'package:athens_transit/core/geo.dart';

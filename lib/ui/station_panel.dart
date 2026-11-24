@@ -113,7 +113,7 @@ class _StationPanelState extends State<StationPanel> {
             padding: EdgeInsets.all(20),
             child: Center(child: CircularProgressIndicator()),
           ),
-        if (_loaded && _failed) _note(t, 'Δεν φόρτωσαν οι αναχωρήσεις. Δοκιμάζω ξανά σε λίγο.'),
+        if (_loaded && _failed) _note(t, 'Δεν φόρτωσαν οι αναχωρήσεις. Νέα προσπάθεια σε λίγο.'),
         if (_loaded && !_failed) ...(rail ? _trainRows(t) : _metroRows(t)),
         if (stops.isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -230,7 +230,7 @@ class _StationPanelState extends State<StationPanel> {
   // Metro/tram: the backend's timetable rows (line, headsign, minutes), or why there are none.
   List<Widget> _metroRows(Tones t) {
     final j = _metro;
-    if (j == null) return [_note(t, 'Τα δρομολόγια μετρό και τραμ θέλουν τον server μας· δεν τα δίνει ακόμη.')];
+    if (j == null) return [_note(t, 'Τα δρομολόγια μετρό και τραμ δεν είναι ακόμη διαθέσιμα.')];
     final deps = [for (final d in j['departures'] as List? ?? const []) d as Map<String, dynamic>];
     if (deps.isEmpty) return [_note(t, 'Καμία αναχώρηση στην επόμενη ώρα.')];
     return [

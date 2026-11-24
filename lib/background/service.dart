@@ -44,14 +44,14 @@ const _iosStartBase = 200000, _iosStarts = 40; // weekly rule starts of the next
 const _iosNudgeBase = 200100, _iosNudges = 4; // two Fridays and two Saturdays
 const _tickMs = 10000; // the card is recounted this often; each line is polled when its data is due
 const _serviceId = 7; // also the id of the service's notification, which the live card replaces
-const _boardedPrefix = 'boarded_v1.'; // + rule id → the vehicle a followed trip («Ακολούθησέ με») rides
+const _boardedPrefix = 'boarded_v1.'; // + rule id → the vehicle a followed trip («Πες μου πότε να κατέβω») rides
 const _locationKey = 'service_location_v1'; // the running service may read the location
 const _stoppedPrefix = 'stopped_v1.'; // + rule id → until (Unix s): stopped from the card ("Σταμάτα"). One key
 // per rule, so the app (resume) and the service (stop) never overwrite each other's entries.
 final _notes = FlutterLocalNotificationsPlugin();
 
 const _hitChannel = AndroidNotificationDetails('hits', 'Το λεωφορείο έρχεται',
-    channelDescription: 'Μία ειδοποίηση όταν το λεωφορείο φτάνει όσο νωρίς ζήτησες',
+    channelDescription: 'Ειδοποίηση όταν το λεωφορείο πλησιάζει στη στάση σου',
     importance: Importance.high, priority: Priority.high, category: AndroidNotificationCategory.reminder, icon: 'ic_stat_bus');
 
 Future<void> _initNotes({void Function(String payload)? onOpen}) => _notes.initialize(
@@ -120,7 +120,7 @@ class AlertService {
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'live',
         channelName: 'Live πορεία λεωφορείου',
-        channelDescription: 'Πού είναι το λεωφορείο σου ως τη στάση',
+        channelDescription: 'Η πορεία του λεωφορείου σου ως τη στάση',
         onlyAlertOnce: true,
         visibility: NotificationVisibility.VISIBILITY_PUBLIC,
       ),
@@ -268,7 +268,7 @@ class AlertService {
       serviceId: _serviceId,
       serviceTypes: [ForegroundServiceTypes.dataSync, if (location) ForegroundServiceTypes.location],
       notificationTitle: 'Στάσεις · live',
-      notificationText: 'Παρακολουθώ τις γραμμές σου…',
+      notificationText: 'Οι ειδοποιήσεις σου είναι ενεργές',
       callback: startCallback,
     );
   }
@@ -561,7 +561,7 @@ class RuleTask extends TaskHandler {
       await _notes.show(
         id: 'board|${r.id}'.hashCode & 0x7fffffff,
         title: 'Είσαι στο ${r.line}',
-        body: 'Θα σε ειδοποιήσω μία στάση πριν από ${titleCase(r.stopName)}.',
+        body: 'Θα σε ειδοποιήσουμε μία στάση πριν από ${titleCase(r.stopName)}.',
         notificationDetails: const NotificationDetails(android: _hitChannel),
       );
     }
@@ -574,14 +574,14 @@ class RuleTask extends TaskHandler {
     if (rules.isEmpty && looking.isNotEmpty) {
       final r = looking.first;
       await FlutterForegroundTask.updateService(
-          notificationTitle: 'Σε ακολουθώ · ${r.line}', notificationText: 'Όταν ανέβεις, σε ειδοποιώ πριν από ${titleCase(r.stopName)}.');
+          notificationTitle: 'Ταξίδι με το ${r.line}', notificationText: 'Μόλις ανέβεις, θα σε ειδοποιήσουμε μία στάση πριν από ${titleCase(r.stopName)}.');
       return;
     }
     if (rules.isEmpty) {
-      await FlutterForegroundTask.updateService(notificationTitle: 'Στάσεις', notificationText: 'Σε ειδοποιώ όταν έρθει το λεωφορείο.');
+      await FlutterForegroundTask.updateService(notificationTitle: 'Στάσεις', notificationText: 'Θα σε ειδοποιήσουμε όταν πλησιάσει το λεωφορείο.');
       return;
     }
-    String title = '${rules.first.line} · ${titleCase(rules.first.stopName)}', text = 'Κανένα λεωφορείο με GPS ακόμη.';
+    String title = '${rules.first.line} · ${titleCase(rules.first.stopName)}', text = 'Δεν φαίνεται ακόμη λεωφορείο με GPS.';
     var progress = -1;
     String? chip, open;
     var ruleId = rules.first.id;

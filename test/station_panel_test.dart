@@ -71,6 +71,6 @@ void main() {
   testWidgets('a metro station without the backend says so instead of an empty list', (t) async {
     final client = MockClient((r) async => http.Response('{"error":"warming_up"}', 503));
     await open(t, const StationSel('ΣΥΝΤΑΓΜΑ', (37.975, 23.735), lines: ['M2', 'M3']), client);
-    expect(find.textContaining('δεν τα δίνει ακόμη'), findsOneWidget);
+    expect(find.textContaining('δεν είναι ακόμη διαθέσιμα'), findsOneWidget);
   });
 }

@@ -24,11 +24,11 @@ Future<void> markWelcomed(SharedPreferences p) => p.setBool(welcomeKey, true);
 // part of it to show: the map, or the sheet at the bottom.
 const _cards = [
   ('home', Alignment.center, 'Καλώς ήρθες στις Στάσεις',
-      'Κάθε λεωφορείο της Αθήνας στον χάρτη, ζωντανά. Το χρώμα του δείχνει αν αργεί σε σχέση με το πρόγραμμα.'),
+      'Κάθε λεωφορείο της πόλης στον χάρτη, ζωντανά. Το χρώμα του δείχνει αν αργεί σε σχέση με το πρόγραμμα.'),
   ('stop', Alignment.bottomCenter, 'Στάσεις και αγαπημένα',
       'Πάτα μια στάση για να δεις τι έρχεται και σε πόσα λεπτά. Με το αστέρι την κρατάς στα αγαπημένα.'),
   ('alert', Alignment.bottomCenter, 'Πες μου πότε να φύγω',
-      'Πάτα το καμπανάκι δίπλα σε ένα λεωφορείο: σε ειδοποιώ λίγο πριν φτάσει. Ή φτιάξε κανόνα για κάθε πρωί.'),
+      'Πάτα το καμπανάκι δίπλα σε ένα λεωφορείο και θα σε ειδοποιήσουμε λίγο πριν φτάσει. Ή φτιάξε κανόνα για κάθε πρωί.'),
   ('plan', Alignment.topCenter, 'Από εδώ ως εκεί',
       'Η «Διαδρομή» στο μενού βρίσκει πώς πας κάπου, με τις αλλαγές και τους χρόνους από τα λεωφορεία που κινούνται τώρα.'),
 ];
@@ -150,7 +150,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           key: const ValueKey('ask-notifications'),
           icon: Icons.notifications_outlined,
           title: 'Ειδοποιήσεις',
-          body: 'Για να σου πω πότε να φύγεις και πότε φτάνει το λεωφορείο σου.',
+          body: 'Για να σου λέμε πότε να φύγεις και πότε φτάνει το λεωφορείο σου.',
           allowed: _notes,
           onAsk: () async {
             final ok = await widget.askNotifications();
@@ -226,7 +226,7 @@ class _Permission extends StatelessWidget {
                   Text('Δόθηκε', style: TextStyle(fontWeight: FontWeight.w600, color: t.onTime)),
                 ]),
               // Refused: another tap asks again, or opens the phone's settings when it no longer asks.
-              false => OutlinedButton(onPressed: onAsk, child: const Text('Δεν δόθηκε · ξανά')),
+              false => OutlinedButton(onPressed: onAsk, child: const Text('Δεν δόθηκε · δοκίμασε ξανά')),
               null => FilledButton.tonal(onPressed: onAsk, child: const Text('Επίτρεψε')),
             },
           ]),

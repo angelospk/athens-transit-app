@@ -91,7 +91,7 @@ class _RulesScreenState extends State<RulesScreen> with WidgetsBindingObserver {
               for (final r in oneOff)
                 _RuleCard(
                   rule: r,
-                  text: r.kind == RuleKind.board ? 'Ακολουθώ το ${r.line} · κατεβαίνεις ${titleCase(r.stopName)}' : '${titleCase(r.stopName)} · ${whenText(r)}',
+                  text: r.kind == RuleKind.board ? 'Ταξίδι με το ${r.line} · κατεβαίνεις ${titleCase(r.stopName)}' : '${titleCase(r.stopName)} · ${whenText(r)}',
                   sub: stopped.contains(r.id) ? 'Σταμάτησε από την κάρτα live' : '${r.live ? 'Live στην οθόνη κλειδώματος · ' : ''}ως ${hm(_wallMin(r.untilS!))}',
                   resume: stopped.contains(r.id) ? () => _resume(d, r) : null,
                   onDelete: () async {

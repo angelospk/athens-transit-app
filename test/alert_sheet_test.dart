@@ -60,7 +60,7 @@ void main() {
 
   testWidgets('«Φύγε εγκαίρως» from a trip opens the sheet on that mode', (t) async {
     await pump(t, leave: true);
-    expect(find.text('Χρειάζομαι τη θέση σου'), findsOneWidget);
+    expect(find.text('Πόσο απέχεις από τη στάση;'), findsOneWidget);
     expect(find.text('Πες μου πότε να φύγω'), findsOneWidget);
   });
 }

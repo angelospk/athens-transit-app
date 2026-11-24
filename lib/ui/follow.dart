@@ -1,4 +1,4 @@
-// «Ακολούθησέ με» on a planned trip: a one-off rule for its first bus. The background service samples
+// «Πες μου πότε να κατέβω» on a planned trip: a one-off rule for its first bus. The background service samples
 // the phone (location while the app was in use is enough: the service starts from here) and the buses
 // of that direction; once the phone rides one, it alerts one stop before the stop to get off at, as
 // «Πού κατεβαίνω;» does. It works with the app closed and the screen off.
@@ -35,18 +35,18 @@ class _FollowButtonState extends State<FollowButton> {
       if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
       if (!mounted) return;
       if (p == LocationPermission.denied || p == LocationPermission.deniedForever || !await Geolocator.isLocationServiceEnabled()) {
-        _say('Χρειάζομαι την τοποθεσία για να καταλάβω πότε ανεβαίνεις.');
+        _say('Χρειάζεται άδεια τοποθεσίας για να καταλάβει η εφαρμογή πότε ανεβαίνεις.');
         return;
       }
       if (!mounted) return;
       if (!await AlertService.ensurePermissions(context)) {
-        _say('Χωρίς άδεια ειδοποιήσεων δεν μπορώ να σε ειδοποιήσω.');
+        _say('Για να σε ειδοποιήσουμε, χρειάζεται άδεια ειδοποιήσεων.');
         return;
       }
       final st = d.live.statics[b.line!] ??= await d.api.lineStatic(b.line!);
       final stops = st.variants[b.variant!]?.stops;
       if (stops == null || b.j == null || b.j! >= stops.length) {
-        _say('Δεν βρήκα τη στάση στη γραμμή.');
+        _say('Η στάση δεν βρέθηκε στη γραμμή.');
         return;
       }
       final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
@@ -72,7 +72,7 @@ class _FollowButtonState extends State<FollowButton> {
       // meanwhile, it refuses.
       if (!await FlutterForegroundTask.isRunningService) {
         d.store.removeRule(id);
-        _say('Δεν ξεκίνησε η παρακολούθηση. Πάτα ξανά με την εφαρμογή ανοιχτή.');
+        _say('Δεν ξεκίνησε η ειδοποίηση. Πάτα ξανά με την εφαρμογή ανοιχτή.');
         return;
       }
       if (mounted) setState(() => _on = id);
@@ -109,7 +109,7 @@ class _FollowButtonState extends State<FollowButton> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Σε ακολουθώ. Όταν ανέβεις στο ${b.line}, το καταλαβαίνω και σε ειδοποιώ μία στάση πριν από ${titleCase(b.to)}, και με κλειστή εφαρμογή.',
+              'Έτοιμο. Ανέβα στο ${b.line} και θα σε ειδοποιήσουμε μία στάση πριν από ${titleCase(b.to)}, ακόμη κι αν η εφαρμογή είναι κλειστή.',
               style: const TextStyle(fontSize: 14, height: 1.35),
             ),
           ),
@@ -122,7 +122,7 @@ class _FollowButtonState extends State<FollowButton> {
       height: 48,
       child: FilledButton.icon(
         icon: _busy ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.my_location),
-        label: const Text('Ακολούθησέ με'),
+        label: const Text('Πες μου πότε να κατέβω'),
         onPressed: _busy ? null : _follow,
       ),
     );

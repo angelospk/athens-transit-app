@@ -152,7 +152,7 @@ class _LastHomeState extends State<_LastHome> {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 icon: Icon(_set ? Icons.check : Icons.notifications_active_outlined, size: 18),
-                label: Text(_set ? 'Θα σε ειδοποιήσω' : 'Ειδοποίησέ με 30′ πριν'),
+                label: Text(_set ? 'Θα σε ειδοποιήσουμε' : 'Ειδοποίησέ με 30′ πριν'),
                 onPressed: _set
                     ? null
                     : () async {

@@ -39,7 +39,7 @@ Future<void> rideFromHere(BuildContext context, {required String line, required 
   final st = d.live.statics[line];
   if (!context.mounted) return;
   if (st == null || bus == null) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρήκα το λεωφορείο δίπλα σου. Διάλεξέ το στον χάρτη και πάτα «Πού κατεβαίνω;».')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Δεν βρέθηκε λεωφορείο κοντά σου. Διάλεξέ το στον χάρτη και πάτα «Πού κατεβαίνω;».')));
     showOnMap(LineSel(line, variants: {variant}));
     return;
   }
@@ -126,7 +126,7 @@ Future<void> showRide(BuildContext context, {required String line, required Line
           Row(children: [
             LineBadge(line),
             const SizedBox(width: 12),
-            Expanded(child: Text(ok ? 'Είσαι μέσα · σε παρακολουθώ' : 'Χωρίς άδεια ειδοποιήσεων', style: TextStyle(fontSize: 14, color: c.tones.muted))),
+            Expanded(child: Text(ok ? 'Είσαι μέσα · θα σε ειδοποιήσουμε' : 'Χωρίς άδεια ειδοποιήσεων', style: TextStyle(fontSize: 14, color: c.tones.muted))),
           ]),
           const SizedBox(height: 14),
           Text('Κατεβαίνεις στο', style: TextStyle(fontSize: 14, color: c.tones.muted)),

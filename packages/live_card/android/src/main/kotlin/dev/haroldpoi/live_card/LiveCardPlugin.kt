@@ -174,7 +174,7 @@ class LiveCardEndReceiver : BroadcastReceiver() {
         val n = NotificationCompat.Builder(ctx, "live") // the service's own low channel
             .setSmallIcon(if (icon != 0) icon else ctx.applicationInfo.icon)
             .setContentTitle("Η ειδοποίηση σταμάτησε")
-            .setContentText("Δεν θα σε ειδοποιήσω ξανά για αυτό σήμερα.")
+            .setContentText("Δεν θα σε ειδοποιήσουμε ξανά για αυτό σήμερα.")
             .setShowWhen(false)
             .setTimeoutAfter(15_000)
             .build()

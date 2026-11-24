@@ -1,6 +1,6 @@
 // "Am I on a bus?" from the phone's own track: a bus whose shown position stayed within reach of
 // the phone for a minute while both moved. The app samples both while it is open (the map); the
-// background service does too for a followed trip («Ακολούθησέ με», BoardWatch).
+// background service does too for a followed trip («Πες μου πότε να κατέβω», BoardWatch).
 
 import 'dart:math';
 

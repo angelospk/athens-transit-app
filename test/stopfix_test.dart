@@ -110,7 +110,7 @@ void main() {
     await t.tap(find.text('Αποστολή'));
     await t.pumpAndSettle();
     expect(calls, 1);
-    expect(find.text('Ευχαριστούμε, το πήραμε!'), findsOneWidget);
+    expect(find.text('Ευχαριστούμε, το λάβαμε!'), findsOneWidget);
     await t.tap(find.text('Κλείσιμο'));
     expect(closed, 1);
   });
