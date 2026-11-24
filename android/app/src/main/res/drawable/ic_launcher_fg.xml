@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Launcher icon foreground: the status bar's bus, white, in the middle 48 dp of the 108 dp canvas. -->
+<!-- Launcher icon foreground: a route through a stop, with the live bus (amber) on its way.
+     Drawn on the 1024 grid of docs/store/graphics/icon.svg, scaled so the line ends stay inside the 66 dp safe circle. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <group android:translateX="30" android:translateY="30" android:scaleX="2" android:scaleY="2">
-        <path android:fillColor="#FFFFFFFF"
-            android:pathData="M8,2h8a3,3 0,0 1,3 3v11a2,2 0,0 1,-1 1.73V20a1,1 0,0 1,-1 1h-1a1,1 0,0 1,-1 -1v-2H9v2a1,1 0,0 1,-1 1H7a1,1 0,0 1,-1 -1v-2.27A2,2 0,0 1,5 16V5a3,3 0,0 1,3 -3zM7,6v5h10V6zM8,13.5a1.25,1.25 0,1 0,0 2.5a1.25,1.25 0,0 0,0 -2.5zM16,13.5a1.25,1.25 0,1 0,0 2.5a1.25,1.25 0,0 0,0 -2.5z" />
+    <group android:scaleX="0.062" android:scaleY="0.062" android:translateX="22.256" android:translateY="22.256">
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="84" android:strokeLineCap="round"
+            android:pathData="M150,830 C380,830 360,512 512,512 S650,194 874,194" />
+        <path android:fillColor="#FF1E58C6" android:strokeColor="#FFFFFFFF" android:strokeWidth="52"
+            android:pathData="M408,512 a104,104 0 1,0 208,0 a104,104 0 1,0 -208,0 z" />
+        <path android:fillColor="#FFFFB000" android:strokeColor="#FF1B4FB5" android:strokeWidth="22"
+            android:pathData="M236,790 a64,64 0 1,0 128,0 a64,64 0 1,0 -128,0 z" />
     </group>
 </vector>
