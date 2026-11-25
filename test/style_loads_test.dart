@@ -113,6 +113,24 @@ void main() {
       expect(n, 2);
     });
 
+    test('a new style fills at once, while the old style\'s fill still runs', () async {
+      final s = StyleLoads();
+      await s.load((_) async {});
+      final gate = Completer<void>();
+      final first = s.fill({
+        'metro': () async {
+          await gate.future;
+          throw Exception('offline');
+        }
+      });
+      await s.load((_) async {});
+      var filled = false;
+      await s.fill({'metro': () async => filled = true});
+      expect(filled, isTrue);
+      gate.complete();
+      await first;
+    });
+
     test('a fill that ends after a new style load does not count for the new style', () async {
       final s = StyleLoads();
       await s.load((_) async {});

@@ -11,7 +11,7 @@ class StyleLoads {
   int _gen = 0;
   Future<void> _last = Future.value();
   final _done = <String>{};
-  final _busy = <String>{};
+  final _busy = <String>{}; // "generation:key": a new style does not wait for the old style's fill
 
   /// Runs [setup] for a style load, after the setup before it. [current] is false once a newer load
   /// started.
@@ -30,7 +30,7 @@ class StyleLoads {
     final gen = _gen;
     await Future.wait([
       for (final MapEntry(:key, :value) in fills.entries)
-        if (!_done.contains(key) && _busy.add(key))
+        if (!_done.contains(key) && _busy.add('$gen:$key'))
           () async {
             try {
               await value();
@@ -38,7 +38,7 @@ class StyleLoads {
             } catch (_) {
               // tried again at the next call
             } finally {
-              _busy.remove(key);
+              _busy.remove('$gen:$key');
             }
           }(),
     ]);

@@ -445,7 +445,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         enableInteraction: false));
     check();
     _styled = true;
-    await _loadTiles(force: true); // fills the metro, rail and stops too
+    _loadTiles(force: true).ignore(); // fills the metro, rail and stops too; not awaited, so slow tiles never hold up the next style's setup
     if (mapSel.value != null && mounted) _onSel(); // opened before the map was ready (a tapped notification)
   }
 
