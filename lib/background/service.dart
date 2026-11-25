@@ -126,7 +126,9 @@ class AlertService {
         onlyAlertOnce: true,
         visibility: NotificationVisibility.VISIBILITY_PUBLIC,
       ),
-      iosNotificationOptions: const IOSNotificationOptions(showNotification: true, playSound: false),
+      // iOS has no foreground service: the task runs only while the app is open, so a notification that
+      // says alerts are on would stay on screen unchanged after iOS suspends the app (#37).
+      iosNotificationOptions: const IOSNotificationOptions(showNotification: false, playSound: false),
       foregroundTaskOptions: ForegroundTaskOptions(eventAction: ForegroundTaskEventAction.repeat(_tickMs), allowWakeLock: true),
     );
     void open(String? payload) {
