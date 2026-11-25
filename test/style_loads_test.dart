@@ -19,6 +19,7 @@ void main() {
         await gate.future;
         runs.add('a end');
       });
+      await pumpEventQueue(); // the first setup runs
       final b = s.load((current) async => runs.add('b'));
       await pumpEventQueue();
       expect(firstCurrent(), isFalse, reason: 'the first setup stops at its next step');
@@ -42,6 +43,7 @@ void main() {
         await gate.future;
         throw StateError('layer source not found');
       });
+      await pumpEventQueue();
       var ran = false;
       final b = s.load((current) async => ran = current());
       gate.complete();
@@ -49,6 +51,15 @@ void main() {
       await b;
       expect(ran, isTrue);
     });
+  });
+
+  test('a load superseded before its setup started skips it', () async {
+    final s = StyleLoads();
+    final runs = <String>[];
+    final a = s.load((_) async => runs.add('a'));
+    final b = s.load((_) async => runs.add('b'));
+    await Future.wait([a, b]);
+    expect(runs, ['b']);
   });
 
   group('StyleLoads.fill', () {

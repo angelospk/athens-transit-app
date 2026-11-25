@@ -28,6 +28,7 @@ import '../core/near_home.dart';
 import '../core/nearby.dart';
 import '../core/rail.dart';
 import '../core/stopfix.dart';
+import '../core/style_loads.dart';
 import '../data/api.dart' show MuniData;
 import '../data/basemap.dart';
 import '../data/locate.dart';
@@ -60,10 +61,15 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
+// A newer style load took over: this setup stops.
+class _Superseded implements Exception {
+  const _Superseded();
+}
+
 class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   MapLibreMapController? _map;
   bool _styled = false;
-  Future<void>? _styling;
+  final _loads = StyleLoads(); // one setup per style load, then its metro, rail and stops
   final _tiles = <String, List<Vehicle>>{}; // "z/x/y" → vehicles
   Set<String> _want = {};
   int _z = 13;
@@ -271,36 +277,47 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         left: 32, right: 32, top: 140, bottom: _h * _half + 24));
   }
 
-  // iOS (maplibre_gl 0.27) can report one style load twice: the second call joins the first, or
-  // finds its sources there and stops. Adding them again throws sourceAlreadyExists.
-  Future<void> _onStyle() => _styling ??= _addLayers().whenComplete(() => _styling = null);
+  // Each style load gets its own setup (core/style_loads.dart): in dark mode the lightened style
+  // replaces the first one while its setup can still run, and the new style starts empty.
+  Future<void> _onStyle() => _loads.load((current) => _addLayers(current).catchError((_) {}, test: (e) => e is _Superseded));
 
-  Future<void> _addLayers() async {
+  Future<void> _addLayers(bool Function() current) async {
     final m = _map!;
-    if ((await m.getSourceIds()).contains('metro')) return;
     if (!mounted) return;
-    final api = Deps.of(context).api;
+    final style = _styleFor;
     final dark = Theme.of(context).brightness == Brightness.dark;
     final halo = dark ? '#1B1D21' : '#FFFFFF';
+    // A newer style load or style stops this setup; iOS can report one load twice, so what the style
+    // already has is skipped (adding it again throws sourceAlreadyExists).
+    void check() {
+      if (!current() || !mounted || _styleFor != style) throw const _Superseded();
+    }
+
+    final have = {...await m.getSourceIds(), for (final id in await m.getLayerIds()) '$id'};
+    Future<void> add(String id, Future<void> Function() step) async {
+      check();
+      if (!have.contains(id)) await step();
+    }
+
     _styled = false;
     _routesKey = '';
     _routesPending = null;
     _routesGen++;
     _rail = null;
-    await m.addGeoJsonSource('metro', _empty);
+    await add('metro', () => m.addGeoJsonSource('metro', _empty));
     for (final tram in [false, true]) {
       final k = tram ? 'tram' : 'metro';
-      await m.addLineLayer('metro', '$k-track',
+      await add('$k-track', () => m.addLineLayer('metro', '$k-track',
           const LineLayerProperties(lineColor: ['get', 'color'], lineWidth: ['interpolate', ['linear'], ['zoom'], 10, 2, 14, 4, 17, 6], lineOpacity: .85, lineJoin: 'round', lineCap: 'round'),
-          filter: ['all', ['==', ['geometry-type'], 'LineString'], ['==', ['get', 'tram'], tram]], enableInteraction: false);
+          filter: ['all', ['==', ['geometry-type'], 'LineString'], ['==', ['get', 'tram'], tram]], enableInteraction: false));
     }
     // Suburban rail (Προαστιακός): its lines dashed, under the buses; stations tappable.
-    await m.addGeoJsonSource('rail', _empty);
-    await m.addLineLayer('rail', 'rail-track',
+    await add('rail', () => m.addGeoJsonSource('rail', _empty));
+    await add('rail-track', () => m.addLineLayer('rail', 'rail-track',
         const LineLayerProperties(lineColor: ['get', 'color'], lineWidth: ['interpolate', ['linear'], ['zoom'], 9, 1.5, 14, 3.5], lineDasharray: [2, 1.2], lineOpacity: .9),
-        filter: ['==', ['geometry-type'], 'LineString'], enableInteraction: false);
-    await m.addGeoJsonSource('stops', _empty);
-    await m.addCircleLayer('stops', 'stop-dot',
+        filter: ['==', ['geometry-type'], 'LineString'], enableInteraction: false));
+    await add('stops', () => m.addGeoJsonSource('stops', _empty));
+    await add('stop-dot', () => m.addCircleLayer('stops', 'stop-dot',
         CircleLayerProperties(
           circleRadius: ['interpolate', ['linear'], ['zoom'], 14, 2.5, 16, 5, 18, 7],
           circleColor: dark ? '#2A2D33' : '#FFFFFF',
@@ -308,20 +325,20 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           circleStrokeWidth: ['interpolate', ['linear'], ['zoom'], 14, 1, 16, 2],
         ),
         minzoom: 14,
-        enableInteraction: false);
+        enableInteraction: false));
     // A stop is a few pixels wide: a clear circle around it takes the taps.
-    await m.addCircleLayer('stops', 'stop-hit',
+    await add('stop-hit', () => m.addCircleLayer('stops', 'stop-hit',
         const CircleLayerProperties(circleRadius: ['interpolate', ['linear'], ['zoom'], 14, 9, 16, 14], circleColor: '#000000', circleOpacity: 0),
-        minzoom: 14);
+        minzoom: 14));
     // The open line's route: a white casing, the colour offset into its lane, and arrows.
-    await m.addGeoJsonSource('routes', _empty);
-    await m.addLineLayer('routes', 'route-casing',
+    await add('routes', () => m.addGeoJsonSource('routes', _empty));
+    await add('route-casing', () => m.addLineLayer('routes', 'route-casing',
         const LineLayerProperties(lineColor: '#FFFFFF', lineWidth: 8, lineOpacity: .9, lineOffset: _lanePx, lineJoin: 'round', lineCap: 'round'),
-        enableInteraction: false);
-    await m.addLineLayer('routes', 'route',
-        const LineLayerProperties(lineColor: ['get', 'color'], lineWidth: 5, lineOffset: _lanePx, lineJoin: 'round', lineCap: 'round'));
+        enableInteraction: false));
+    await add('route', () => m.addLineLayer('routes', 'route',
+        const LineLayerProperties(lineColor: ['get', 'color'], lineWidth: 5, lineOffset: _lanePx, lineJoin: 'round', lineCap: 'round')));
     // Arrows as a glyph: an image added with addImage is not drawn on Android (maplibre-native #4326).
-    await m.addSymbolLayer('routes', 'route-arrows',
+    await add('route-arrows', () => m.addSymbolLayer('routes', 'route-arrows',
         const SymbolLayerProperties(
           symbolPlacement: 'line',
           symbolSpacing: 70,
@@ -337,41 +354,41 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           textAllowOverlap: true,
           textIgnorePlacement: true,
         ),
-        enableInteraction: false);
-    await m.addGeoJsonSource('route-stops', _empty);
-    await m.addCircleLayer('route-stops', 'route-stop',
+        enableInteraction: false));
+    await add('route-stops', () => m.addGeoJsonSource('route-stops', _empty));
+    await add('route-stop', () => m.addCircleLayer('route-stops', 'route-stop',
         const CircleLayerProperties(circleRadius: ['interpolate', ['linear'], ['zoom'], 11, 3, 16, 6], circleColor: '#FFFFFF', circleStrokeColor: ['get', 'color'], circleStrokeWidth: 2.5),
-        enableInteraction: false);
-    await m.addCircleLayer('route-stops', 'route-stop-hit',
-        const CircleLayerProperties(circleRadius: ['interpolate', ['linear'], ['zoom'], 11, 8, 16, 14], circleColor: '#000000', circleOpacity: 0));
-    await m.addGeoJsonSource('picked', _empty);
-    await m.addCircleLayer('picked', 'picked-stop',
+        enableInteraction: false));
+    await add('route-stop-hit', () => m.addCircleLayer('route-stops', 'route-stop-hit',
+        const CircleLayerProperties(circleRadius: ['interpolate', ['linear'], ['zoom'], 11, 8, 16, 14], circleColor: '#000000', circleOpacity: 0)));
+    await add('picked', () => m.addGeoJsonSource('picked', _empty));
+    await add('picked-stop', () => m.addCircleLayer('picked', 'picked-stop',
         const CircleLayerProperties(circleRadius: 7, circleColor: '#FFFFFF', circleStrokeColor: '#1A1C1E', circleStrokeWidth: 3),
-        enableInteraction: false);
-    await m.addGeoJsonSource('fixpin', _empty); // «Λάθος θέση στάσης;»: where the user says the pole stands
-    await m.addCircleLayer('fixpin', 'fixpin-dot',
+        enableInteraction: false));
+    await add('fixpin', () => m.addGeoJsonSource('fixpin', _empty)); // «Λάθος θέση στάσης;»: where the user says the pole stands
+    await add('fixpin-dot', () => m.addCircleLayer('fixpin', 'fixpin-dot',
         const CircleLayerProperties(circleRadius: 9, circleColor: '#1A73E8', circleStrokeColor: '#FFFFFF', circleStrokeWidth: 3),
-        enableInteraction: false);
-    await m.addCircleLayer('rail', 'rail-station',
+        enableInteraction: false));
+    await add('rail-station', () => m.addCircleLayer('rail', 'rail-station',
         const CircleLayerProperties(circleRadius: ['interpolate', ['linear'], ['zoom'], 9, 2.5, 15, 7], circleColor: '#FFFFFF', circleStrokeColor: ['get', 'color'], circleStrokeWidth: 3),
-        filter: ['==', ['geometry-type'], 'Point']);
-    await m.addSymbolLayer('rail', 'rail-name',
+        filter: ['==', ['geometry-type'], 'Point']));
+    await add('rail-name', () => m.addSymbolLayer('rail', 'rail-name',
         SymbolLayerProperties(textField: ['get', 'name'], textFont: ['Noto Sans Regular'], textSize: 11, textOffset: [0, 1.2], textColor: dark ? '#C9CCD1' : '#43474E', textHaloColor: halo, textHaloWidth: 1.5),
-        filter: ['==', ['geometry-type'], 'Point'], minzoom: 12, enableInteraction: false);
+        filter: ['==', ['geometry-type'], 'Point'], minzoom: 12, enableInteraction: false));
     for (final tram in [false, true]) {
       final k = tram ? 'tram' : 'metro';
       final pt = ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'tram'], tram]];
-      await m.addCircleLayer('metro', '$k-station',
+      await add('$k-station', () => m.addCircleLayer('metro', '$k-station',
           const CircleLayerProperties(circleRadius: ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 7], circleColor: '#FFFFFF', circleStrokeColor: ['get', 'color'], circleStrokeWidth: 3),
-          filter: pt);
-      await m.addSymbolLayer('metro', '$k-name',
+          filter: pt));
+      await add('$k-name', () => m.addSymbolLayer('metro', '$k-name',
           SymbolLayerProperties(textField: ['get', 'name'], textFont: ['Noto Sans Regular'], textSize: 11, textOffset: [0, 1.2], textColor: dark ? '#C9CCD1' : '#43474E', textHaloColor: halo, textHaloWidth: 1.5),
-          filter: pt, minzoom: 13, enableInteraction: false);
+          filter: pt, minzoom: 13, enableInteraction: false));
     }
     // Buses as on the web: filled by delay (my lines by their colour, with the delay as the ring), a
     // dark triangle ahead in travel direction, faded when the position is old, and its age beside.
-    await m.addGeoJsonSource('vehicles', _empty);
-    await m.addSymbolLayer('vehicles', 'veh-arrow',
+    await add('vehicles', () => m.addGeoJsonSource('vehicles', _empty));
+    await add('veh-arrow', () => m.addSymbolLayer('vehicles', 'veh-arrow',
         const SymbolLayerProperties(
           textField: '▲',
           textFont: ['Noto Sans Bold'],
@@ -388,8 +405,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         ),
         filter: ['has', 'hd'],
         minzoom: 13,
-        enableInteraction: false);
-    await m.addCircleLayer('vehicles', 'veh-dot',
+        enableInteraction: false));
+    await add('veh-dot', () => m.addCircleLayer('vehicles', 'veh-dot',
         const CircleLayerProperties(
           circleRadius: ['interpolate', ['linear'], ['zoom'], 10, 3, 13, 7, 16, 11],
           circleColor: ['get', 'bg'],
@@ -397,8 +414,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           circleStrokeWidth: ['get', 'rw'],
           circleOpacity: ['get', 'op'],
           circleStrokeOpacity: ['get', 'op'],
-        ));
-    await m.addSymbolLayer('vehicles', 'veh-label',
+        )));
+    await add('veh-label', () => m.addSymbolLayer('vehicles', 'veh-label',
         const SymbolLayerProperties(
           textField: ['get', 'line'],
           textFont: ['Noto Sans Bold'],
@@ -409,8 +426,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           textIgnorePlacement: true,
         ),
         minzoom: 13,
-        enableInteraction: false);
-    await m.addSymbolLayer('vehicles', 'veh-age',
+        enableInteraction: false));
+    await add('veh-age', () => m.addSymbolLayer('vehicles', 'veh-age',
         SymbolLayerProperties(
           textField: ['get', 'age'],
           textFont: ['Noto Sans Bold'],
@@ -425,33 +442,46 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         ),
         filter: ['has', 'age'],
         minzoom: 13,
-        enableInteraction: false);
+        enableInteraction: false));
+    check();
     _styled = true;
-    api.metro().then((j) {
-      _metroJson = j;
-      if (mounted) setState(() => _metroSt = metroStations(j));
-      return m.setGeoJsonSource('metro', metroGeo(j, name: titleCase));
-    }).catchError((_) {});
-    api.suburban().then((sub) {
-      if (mounted) setState(() => _railSt = suburbanStations(sub));
-      return m.setGeoJsonSource('rail', railGeo(sub, name: titleCase));
-    }).catchError((_) {});
-    _ix ??= await api.trips();
-    if (mounted) setState(() {}); // the search can look up stops now
-    await m.setGeoJsonSource('stops', {
-      'type': 'FeatureCollection',
-      'features': [
-        for (final (i, s) in _ix!.s.indexed)
-          {
-            'type': 'Feature',
-            'id': 's$i',
-            'properties': {'i': i},
-            'geometry': {'type': 'Point', 'coordinates': [s.$3, s.$2]},
-          }
-      ],
-    });
-    await _loadTiles(force: true);
+    await _loadTiles(force: true); // fills the metro, rail and stops too
     if (mapSel.value != null && mounted) _onSel(); // opened before the map was ready (a tapped notification)
+  }
+
+  // The style's metro and rail lines and its stops. One that failed (offline, slow start) is tried
+  // again at the next camera idle or tile refresh, until it is on this style.
+  Future<void> _fillStatics(MapLibreMapController m) {
+    final api = Deps.of(context).api;
+    return _loads.fill({
+      'metro': () async {
+        final j = await api.metro();
+        _metroJson = j;
+        if (mounted) setState(() => _metroSt = metroStations(j));
+        await m.setGeoJsonSource('metro', metroGeo(j, name: titleCase));
+      },
+      'rail': () async {
+        final sub = await api.suburban();
+        if (mounted) setState(() => _railSt = suburbanStations(sub));
+        await m.setGeoJsonSource('rail', railGeo(sub, name: titleCase));
+      },
+      'stops': () async {
+        final ix = _ix ??= await api.trips();
+        if (mounted) setState(() {}); // the search can look up stops now
+        await m.setGeoJsonSource('stops', {
+          'type': 'FeatureCollection',
+          'features': [
+            for (final (i, s) in ix.s.indexed)
+              {
+                'type': 'Feature',
+                'id': 's$i',
+                'properties': {'i': i},
+                'geometry': {'type': 'Point', 'coordinates': [s.$3, s.$2]},
+              }
+          ],
+        });
+      },
+    });
   }
 
   static const _empty = {'type': 'FeatureCollection', 'features': <Object>[]};
@@ -459,6 +489,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Tile set of the view, padded by ~300 m and clamped to the box (contract rule 1).
   Future<void> _loadTiles({bool force = false}) async {
     final m = _map;
+    if (m != null && _styled && mounted) _fillStatics(m).ignore();
     if (m == null || !_styled || Deps.of(context).store.onlyMine) {
       _draw();
       return;
